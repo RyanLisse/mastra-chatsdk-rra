@@ -9,7 +9,6 @@ import {
   LoaderIcon, 
   CheckCircleFillIcon, 
   WarningIcon,
-  CrossIcon,
   MoreHorizontalIcon
 } from '@/components/icons';
 import { cn } from '@/lib/utils';

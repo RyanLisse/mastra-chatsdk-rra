@@ -1,7 +1,7 @@
 // tests/routes/chat-memory.test.ts
 import { expect, test, describe, beforeAll, afterEach } from "bun:test";
 import { config } from 'dotenv';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 // Load environment variables for testing
 config({ path: '.env.test' });

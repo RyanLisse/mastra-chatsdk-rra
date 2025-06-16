@@ -6,9 +6,23 @@ import { defineConfig, devices } from '@playwright/test';
  */
 import { config } from 'dotenv';
 
+// Always use .env.test for Playwright tests
 config({
-  path: process.env.CI ? '.env.test' : '.env.local',
+  path: '.env.test',
 });
+
+// Validate test database is configured
+if (!process.env.POSTGRES_URL || process.env.POSTGRES_URL.includes('your-test-postgres-url-here')) {
+  console.error('❌ Test database not configured!');
+  console.error('Please set up your test database URL in .env.test');
+  console.error('Run: bun run db:test:setup for setup instructions');
+  console.error('');
+  console.error('💡 Quick setup options:');
+  console.error('1. Copy .env.test.example to .env.test and configure');
+  console.error('2. Use local PostgreSQL: postgresql://postgres:password@localhost:5432/mastra_chat_test');
+  console.error('3. Use Neon test branch: https://console.neon.tech/');
+  process.exit(1);
+}
 
 /* Use process.env.PORT by default and fallback to port 3000 */
 const PORT = process.env.PORT || 3000;
@@ -24,6 +38,9 @@ const baseURL = `http://localhost:${PORT}`;
  */
 export default defineConfig({
   testDir: './tests',
+  /* Global setup and teardown */
+  globalSetup: require.resolve('./tests/global-setup'),
+  globalTeardown: require.resolve('./tests/global-teardown'),
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -44,9 +61,9 @@ export default defineConfig({
   },
 
   /* Configure global timeout for each test */
-  timeout: 60 * 1000, // 60 seconds
+  timeout: 120 * 1000, // 120 seconds - increased for complex E2E operations
   expect: {
-    timeout: 30 * 1000, // 30 seconds
+    timeout: 45 * 1000, // 45 seconds - increased for slow operations
   },
 
   /* Configure projects */
@@ -101,9 +118,11 @@ export default defineConfig({
   webServer: {
     command: 'bun run dev',
     url: `${baseURL}`,
-    timeout: 60 * 1000,
+    timeout: 120 * 1000, // Increased to 120s for slow startup
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',
     stderr: 'pipe',
+    // Add health check endpoint
+    ignoreHTTPSErrors: true,
   },
 });

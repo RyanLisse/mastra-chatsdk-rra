@@ -271,8 +271,8 @@ export const ThinkingMessage = () => {
               scale: [1, 1.1, 1]
             }}
             transition={{ 
-              rotate: { duration: 3, repeat: Infinity, ease: 'linear' },
-              scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+              rotate: { duration: 3, repeat: Number.POSITIVE_INFINITY, ease: 'linear' },
+              scale: { duration: 2, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }
             }}
           >
             <SparklesIcon size={14} />

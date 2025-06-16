@@ -162,12 +162,13 @@ export function useVoiceAssistant(options: VoiceAssistantOptions = {}): UseVoice
               }
               break;
             
-            case 'error':
+            case 'error': {
               const errorMsg = message.error || 'Voice session error';
               setError(errorMsg);
               setState('error');
               onError?.(errorMsg);
               break;
+            }
             
             case 'disconnect':
               setIsConnected(false);

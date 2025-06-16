@@ -143,7 +143,7 @@ export function VoiceStatus({
           {state === 'listening' && currentTranscription && (
             <motion.div
               animate={{ opacity: [1, 0.5, 1] }}
-              transition={{ duration: 1, repeat: Infinity }}
+              transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
               className="w-2 h-4 bg-current rounded-sm opacity-60"
             />
           )}

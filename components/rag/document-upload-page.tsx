@@ -3,18 +3,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { toast } from '@/components/toast';
 import { DocumentUploadZone, type UploadFile } from './document-upload-zone';
 import { FileQueue, type QueueItem } from './file-queue';
 import { ErrorList, type ErrorInfo } from './error-display';
 import { useDocumentProgress } from '@/hooks/use-document-progress';
-import { nanoid } from 'nanoid';
 import { 
-  UploadIcon, 
-  CheckCircleFillIcon, 
-  LoaderIcon,
   InfoIcon,
   FileIcon
 } from '@/components/icons';
@@ -292,7 +286,7 @@ export function DocumentUploadPage() {
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    return `${Number.parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   };
 
   return (

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/app/(auth)/auth';
 import { ragDatabase } from '@/lib/rag/database';
-import { ErrorResponseSchema, type ErrorResponse } from '@/lib/rag/validation';
+import type { ErrorResponse } from '@/lib/rag/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
+    const limit = Math.min(Number.parseInt(searchParams.get('limit') || '10'), 50);
     const includeStats = searchParams.get('stats') === 'true';
 
     // Get user's documents

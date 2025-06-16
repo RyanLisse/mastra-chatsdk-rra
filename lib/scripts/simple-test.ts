@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 import { MarkdownStrategy } from '../rag/strategies/markdown';
 import { JSONStrategy } from '../rag/strategies/json';
 

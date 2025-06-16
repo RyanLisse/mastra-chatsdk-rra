@@ -253,4 +253,74 @@ export class ChatPage {
       element.scrollTop = 0;
     });
   }
+
+  // Additional methods for comprehensive testing
+  async getAllMessages() {
+    const userMessages = await this.page.getByTestId('message-user').all();
+    const assistantMessages = await this.page.getByTestId('message-assistant').all();
+    
+    const allMessages = [];
+    
+    for (const msg of userMessages) {
+      const content = await msg.getByTestId('message-content').innerText().catch(() => '');
+      allMessages.push({ role: 'user', content, element: msg });
+    }
+    
+    for (const msg of assistantMessages) {
+      const content = await msg.getByTestId('message-content').innerText().catch(() => '');
+      allMessages.push({ role: 'assistant', content, element: msg });
+    }
+    
+    return allMessages;
+  }
+
+  async focusMessageInput() {
+    await this.multimodalInput.click();
+  }
+
+  async clearMessageInput() {
+    await this.multimodalInput.fill('');
+  }
+
+  async getMessageInputValue() {
+    return await this.multimodalInput.inputValue();
+  }
+
+  async isAtScrollBottom() {
+    return await this.isScrolledToBottom();
+  }
+
+  async waitForElementToAppear(testId: string, timeout = 10000) {
+    await this.page.waitForSelector(`[data-testid="${testId}"]`, { timeout });
+  }
+
+  async waitForElementToDisappear(testId: string, timeout = 10000) {
+    await this.page.waitForSelector(`[data-testid="${testId}"]`, { state: 'detached', timeout });
+  }
+
+  async getToastMessage() {
+    return await this.page.getByTestId('toast').innerText();
+  }
+
+  async uploadFile(filePath: string, mimeType: string, buffer: Buffer) {
+    this.page.on('filechooser', async (fileChooser) => {
+      await fileChooser.setFiles({
+        name: path.basename(filePath),
+        mimeType: mimeType,
+        buffer: buffer,
+      });
+    });
+
+    await this.page.getByTestId('attachments-button').click();
+  }
+
+  async openSidebar() {
+    const sidebarToggle = this.page.getByTestId('sidebar-toggle-button');
+    await sidebarToggle.click();
+  }
+
+  async closeSidebar() {
+    // Click outside sidebar or on close button if available
+    await this.page.click('main'); // Click on main content area
+  }
 }

@@ -111,7 +111,7 @@ function PureMessages({
               <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
                 <motion.div
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
                 >
                   <span className="text-primary">✨</span>
                 </motion.div>

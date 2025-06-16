@@ -5,8 +5,8 @@
  * This script tests the upload system with actual RoboRail documentation files
  */
 
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 import { DocumentProcessor } from '@/lib/rag/processor';
 import { progressTracker } from '@/lib/rag/progress';
 import { validateFile, detectFileType } from '@/lib/rag/validation';

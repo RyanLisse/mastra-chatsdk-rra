@@ -1,11 +1,8 @@
 import { db } from '@vercel/postgres';
-import { 
-  documentChunk, 
-  documentProcessing, 
-  type DocumentChunk, 
-  type DocumentProcessing 
+import type { 
+  DocumentChunk, 
+  DocumentProcessing 
 } from '@/lib/db/schema';
-import { eq, desc, and } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/vercel-postgres';
 import type { ProcessingStatus, ProcessingStage } from './progress/types';
 

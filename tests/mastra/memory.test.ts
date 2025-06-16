@@ -6,7 +6,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { sql } from 'drizzle-orm';
 import type { Message } from 'ai';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 // Load environment variables for testing
 // Try .env.local first, fallback to .env

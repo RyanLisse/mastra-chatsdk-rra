@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/app/(auth)/auth';
 import { progressTracker } from '@/lib/rag/progress';
-import { ErrorResponseSchema, type ErrorResponse } from '@/lib/rag/validation';
+import type { ErrorResponse } from '@/lib/rag/validation';
 
 export const dynamic = 'force-dynamic';
 

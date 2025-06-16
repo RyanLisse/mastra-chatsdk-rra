@@ -35,7 +35,7 @@ export function LoadingDots({ className, size = 'md' }: LoadingDotsProps) {
           }}
           transition={{
             duration: 1.5,
-            repeat: Infinity,
+            repeat: Number.POSITIVE_INFINITY,
             delay: index * 0.2,
             ease: 'easeInOut',
           }}
@@ -69,7 +69,7 @@ export function ThinkingIndicator({
       {showIcon && (
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
         >
           <Sparkles size={16} className="text-primary" />
         </motion.div>
@@ -94,7 +94,7 @@ export function ProgressSpinner({
   return (
     <motion.div
       animate={{ rotate: 360 }}
-      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+      transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
       className={className}
     >
       <Loader2 size={size} color={color} />
@@ -155,7 +155,7 @@ export function ProcessingIndicator({
         }}
         transition={{ 
           duration: 1.5, 
-          repeat: Infinity,
+          repeat: Number.POSITIVE_INFINITY,
           ease: 'easeInOut' 
         }}
       >

@@ -1,4 +1,4 @@
-import { type DocumentChunk } from '../validation';
+import type { DocumentChunk } from '../validation';
 
 export interface JSONProcessingOptions {
   preserveStructure: boolean;

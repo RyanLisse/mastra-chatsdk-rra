@@ -5,7 +5,6 @@ import { ragTool } from '../tools/rag';
 import { roboRailPrompt } from '../prompts';
 import type { Message } from 'ai';
 import { generateUUID } from '../../utils';
-import type { ReadableStream as NodeReadableStream } from 'stream/web';
 import { traceVoiceAgent, traceMemoryOperation, traceRAGTool } from '../../mastra/langsmith';
 
 export interface RoboRailVoiceAgentConfig {
@@ -22,7 +21,7 @@ export interface RoboRailVoiceAgentConfig {
 export class RoboRailVoiceAgent {
   private voice: OpenAIRealtimeVoice;
   private sessionId: string;
-  private isConnected: boolean = false;
+  private isConnected = false;
 
   constructor(config: RoboRailVoiceAgentConfig = {}) {
     this.sessionId = config.sessionId || this.generateSessionId();

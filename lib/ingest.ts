@@ -1,8 +1,8 @@
 import { createCohere } from '@ai-sdk/cohere';
 import { embed } from 'ai';
 import { db } from '@vercel/postgres';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 
 const cohere = createCohere({ 
   apiKey: process.env.COHERE_API_KEY || '' 

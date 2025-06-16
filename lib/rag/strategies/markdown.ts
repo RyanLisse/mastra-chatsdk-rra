@@ -1,5 +1,5 @@
 import matter from 'gray-matter';
-import { MarkdownFrontmatterSchema, type DocumentChunk } from '../validation';
+import type { DocumentChunk } from '../validation';
 
 export interface MarkdownProcessingOptions {
   preserveHeaders: boolean;
@@ -330,12 +330,12 @@ export class MarkdownStrategy {
 
     // Always start with the header
     const headerLine = lines[0];
-    currentChunk = headerLine + '\n';
+    currentChunk = `${headerLine}\n`;
     currentSize = headerLine.length;
 
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
-      const lineWithBreak = line + '\n';
+      const lineWithBreak = `${line}\n`;
       
       // Check if adding this line would exceed chunk size
       if (currentSize + lineWithBreak.length > this.options.chunkSize) {
@@ -346,7 +346,7 @@ export class MarkdownStrategy {
         
         // Start new chunk with context (header + overlap)
         const overlapLines = this.getOverlapLines(lines, i);
-        currentChunk = headerLine + '\n' + overlapLines.join('\n') + '\n' + lineWithBreak;
+        currentChunk = `${headerLine}\n${overlapLines.join('\n')}\n${lineWithBreak}`;
         currentSize = currentChunk.length;
       } else {
         currentChunk += lineWithBreak;

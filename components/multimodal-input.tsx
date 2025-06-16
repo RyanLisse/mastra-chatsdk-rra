@@ -29,7 +29,7 @@ import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
 import type { UseVoiceAssistantReturn } from '@/hooks/use-voice-assistant';
 import { VoiceButton } from './voice-button';
-import { ProgressSpinner, LoadingDots } from './ui/loading-indicators';
+import { ProgressSpinner, } from './ui/loading-indicators';
 import { cn } from '@/lib/utils';
 
 function PureMultimodalInput({
@@ -411,7 +411,7 @@ function PureStopButton({
         {status === 'streaming' ? (
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
           >
             <Loader2 size={14} className="text-red-600" />
           </motion.div>
@@ -447,7 +447,7 @@ function PureSendButton({
       whileTap={!isDisabled ? { scale: 0.95 } : {}}
       animate={isUploading ? { 
         background: ['#f3f4f6', '#e5e7eb', '#f3f4f6'],
-        transition: { duration: 1.5, repeat: Infinity } 
+        transition: { duration: 1.5, repeat: Number.POSITIVE_INFINITY } 
       } : {}}
     >
       <Button

@@ -1,12 +1,12 @@
 // tests/mastra/agent-memory-integration.test.ts
 import { expect, test, describe, beforeAll, afterEach, beforeEach } from "bun:test";
 import { config } from 'dotenv';
-import { createRoboRailAgent, RoboRailAgent } from '../../lib/ai/agents/roborail-agent';
+import { createRoboRailAgent, type RoboRailAgent } from '../../lib/ai/agents/roborail-agent';
 import { PostgresMemory } from '../../lib/mastra/memory';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { sql } from 'drizzle-orm';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 // Load environment variables for testing
 // Try .env.local first, fallback to .env

@@ -6,8 +6,8 @@
  */
 
 import { validateFile, detectFileType } from '../lib/rag/validation';
-import { readFileSync, statSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 
 const TEST_FILES = [
   'FAQ Data collection.extraction.md',

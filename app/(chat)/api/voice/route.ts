@@ -5,7 +5,7 @@ import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { getMessageCountByUserId } from '@/lib/db/queries';
 import { ChatSDKError } from '@/lib/errors';
 import { generateUUID } from '@/lib/utils';
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 export const maxDuration = 60;
 
@@ -225,7 +225,7 @@ export async function PUT(request: NextRequest) {
         await voiceAgent.speak(text);
         break;
 
-      case 'sendAudio':
+      case 'sendAudio': {
         if (!audioData) {
           return new ChatSDKError('bad_request:audio_required').toResponse();
         }
@@ -234,8 +234,9 @@ export async function PUT(request: NextRequest) {
         const audioArray = new Int16Array(audioBuffer.buffer, audioBuffer.byteOffset, audioBuffer.length / 2);
         await voiceAgent.sendAudio(audioArray);
         break;
+      }
 
-      case 'listen':
+      case 'listen': {
         if (!audioData) {
           return new ChatSDKError('bad_request:audio_required').toResponse();
         }
@@ -249,6 +250,7 @@ export async function PUT(request: NextRequest) {
         });
         await voiceAgent.listen(listenStream);
         break;
+      }
 
       default:
         return new ChatSDKError('bad_request:invalid_action').toResponse();

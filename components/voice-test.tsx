@@ -8,7 +8,7 @@ import { useVoiceAssistant } from '@/hooks/use-voice-assistant';
 import { VoiceButton } from './voice-button';
 import { VoiceStatus } from './voice-status';
 import { VoicePermissions } from './voice-permissions';
-import { PlayCircle, Square, RotateCcw } from 'lucide-react';
+import { PlayCircle, RotateCcw } from 'lucide-react';
 
 /**
  * Voice Test Component - For testing voice functionality in isolation

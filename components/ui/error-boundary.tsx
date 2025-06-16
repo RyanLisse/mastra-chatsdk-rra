@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Component, ReactNode } from 'react';
+import React, { Component, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { RefreshCw, AlertTriangle, Home, Bug } from 'lucide-react';
 import { Button } from './button';

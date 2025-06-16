@@ -3,7 +3,7 @@ import { auth } from '@/app/(auth)/auth';
 import { PostgresMemory } from '@/lib/mastra/memory';
 import { ChatSDKError } from '@/lib/errors';
 import { generateUUID } from '@/lib/utils';
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import type { Message } from 'ai';
 import { z } from 'zod';
 

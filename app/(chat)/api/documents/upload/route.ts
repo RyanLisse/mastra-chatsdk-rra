@@ -6,7 +6,6 @@ import {
   validateFile,
   detectFileType,
   UploadResponseSchema,
-  ErrorResponseSchema,
   type UploadResponse,
   type ErrorResponse
 } from '@/lib/rag/validation';

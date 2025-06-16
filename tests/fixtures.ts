@@ -1,6 +1,13 @@
-import { expect as baseExpect, test as baseTest } from '@playwright/test';
+import { expect as baseExpected, test as baseTest } from '@playwright/test';
 import { createAuthenticatedContext, type UserContext } from './helpers';
 import { getUnixTime } from 'date-fns';
+
+// Validate test environment
+if (process.env.NODE_ENV !== 'test' && process.env.PLAYWRIGHT !== 'true') {
+  console.warn('⚠️  Test environment not properly configured. Set NODE_ENV=test or PLAYWRIGHT=true');
+}
+
+const baseExpect = baseExpected;
 
 interface Fixtures {
   adaContext: UserContext;
