@@ -87,7 +87,7 @@ export class RoboRailVoiceAgent {
     this.voice.on('speaker', ({ audio }) => {
       // Audio data is handled by @mastra/node-audio automatically
       // This event can be used for additional processing if needed
-      console.log('Voice response generated:', audio.length, 'bytes');
+      console.log('Voice response generated:', audio?.length || 0, 'bytes');
     });
 
     // Handle connection events
