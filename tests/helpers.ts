@@ -1,5 +1,5 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import {
   type APIRequestContext,
   type Browser,
@@ -36,8 +36,8 @@ export async function createAuthenticatedContext({
 
   const context = await browser.newContext({
     extraHTTPHeaders: {
-      'x-test-mode': 'true'
-    }
+      'x-test-mode': 'true',
+    },
   });
   const page = await context.newPage();
 
@@ -46,36 +46,45 @@ export async function createAuthenticatedContext({
 
   try {
     // First, try to check if test auth endpoint is available
-    const testAuthResponse = await page.request.get('http://localhost:3000/api/test/auth');
-    
+    const testAuthResponse = await page.request.get(
+      'http://localhost:3000/api/test/auth',
+    );
+
     if (testAuthResponse.ok()) {
       console.log('Using test auth bypass');
       // Test environment detected, use direct navigation
       await page.goto('http://localhost:3000/');
-      
+
       // Wait for page to load and check if we're authenticated (no redirect to login)
       await page.waitForTimeout(2000);
-      
+
       // If we're still on the main page and not redirected, we're good
-      if (page.url().includes('localhost:3000') && !page.url().includes('/login')) {
+      if (
+        page.url().includes('localhost:3000') &&
+        !page.url().includes('/login')
+      ) {
         const chatPage = new ChatPage(page);
         try {
           await chatPage.createNewChat();
           await chatPage.chooseModelFromSelector('chat-model-reasoning');
-          await expect(chatPage.getSelectedModel()).resolves.toEqual('Reasoning model');
+          await expect(chatPage.getSelectedModel()).resolves.toEqual(
+            'Reasoning model',
+          );
         } catch (error) {
-          console.log('Chat page setup failed, but continuing with test context');
+          console.log(
+            'Chat page setup failed, but continuing with test context',
+          );
         }
 
         await page.waitForTimeout(1000);
         await context.storageState({ path: storageFile });
         await page.close();
 
-        const newContext = await browser.newContext({ 
+        const newContext = await browser.newContext({
           storageState: storageFile,
           extraHTTPHeaders: {
-            'x-test-mode': 'true'
-          }
+            'x-test-mode': 'true',
+          },
         });
         const newPage = await newContext.newPage();
 
@@ -87,7 +96,10 @@ export async function createAuthenticatedContext({
       }
     }
   } catch (error) {
-    console.log('Test auth bypass failed, falling back to registration:', error);
+    console.log(
+      'Test auth bypass failed, falling back to registration:',
+      error,
+    );
   }
 
   // Fall back to the original registration approach
@@ -106,17 +118,19 @@ export async function createAuthenticatedContext({
     const chatPage = new ChatPage(page);
     await chatPage.createNewChat();
     await chatPage.chooseModelFromSelector('chat-model-reasoning');
-    await expect(chatPage.getSelectedModel()).resolves.toEqual('Reasoning model');
+    await expect(chatPage.getSelectedModel()).resolves.toEqual(
+      'Reasoning model',
+    );
 
     await page.waitForTimeout(1000);
     await context.storageState({ path: storageFile });
     await page.close();
 
-    const newContext = await browser.newContext({ 
+    const newContext = await browser.newContext({
       storageState: storageFile,
       extraHTTPHeaders: {
-        'x-test-mode': 'true'
-      }
+        'x-test-mode': 'true',
+      },
     });
     const newPage = await newContext.newPage();
 
@@ -131,8 +145,8 @@ export async function createAuthenticatedContext({
     await page.close();
     const newContext = await browser.newContext({
       extraHTTPHeaders: {
-        'x-test-mode': 'true'
-      }
+        'x-test-mode': 'true',
+      },
     });
     const newPage = await newContext.newPage();
 

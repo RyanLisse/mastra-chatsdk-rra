@@ -1,6 +1,6 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { chatModels } from '@/lib/ai/models';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { chatModels } from '../../lib/ai/models';
 import { expect, type Page } from '@playwright/test';
 
 export class ChatPage {
@@ -141,7 +141,7 @@ export class ChatPage {
     const content = await lastMessageElement
       .getByTestId('message-content')
       .innerText()
-      .catch(() => null);
+      .catch(() => '');
 
     const reasoningElement = await lastMessageElement
       .getByTestId('message-reasoning')
@@ -175,7 +175,7 @@ export class ChatPage {
 
   async getRecentUserMessage() {
     const messageElements = await this.page.getByTestId('message-user').all();
-    const lastMessageElement = messageElements.at(-1);
+    const lastMessageElement = messageElements[messageElements.length - 1];
 
     if (!lastMessageElement) {
       throw new Error('No user message found');
@@ -184,7 +184,7 @@ export class ChatPage {
     const content = await lastMessageElement
       .getByTestId('message-content')
       .innerText()
-      .catch(() => null);
+      .catch(() => '');
 
     const hasAttachments = await lastMessageElement
       .getByTestId('message-attachments')
@@ -257,20 +257,28 @@ export class ChatPage {
   // Additional methods for comprehensive testing
   async getAllMessages() {
     const userMessages = await this.page.getByTestId('message-user').all();
-    const assistantMessages = await this.page.getByTestId('message-assistant').all();
-    
+    const assistantMessages = await this.page
+      .getByTestId('message-assistant')
+      .all();
+
     const allMessages = [];
-    
+
     for (const msg of userMessages) {
-      const content = await msg.getByTestId('message-content').innerText().catch(() => '');
+      const content = await msg
+        .getByTestId('message-content')
+        .innerText()
+        .catch(() => '');
       allMessages.push({ role: 'user', content, element: msg });
     }
-    
+
     for (const msg of assistantMessages) {
-      const content = await msg.getByTestId('message-content').innerText().catch(() => '');
+      const content = await msg
+        .getByTestId('message-content')
+        .innerText()
+        .catch(() => '');
       allMessages.push({ role: 'assistant', content, element: msg });
     }
-    
+
     return allMessages;
   }
 
@@ -295,7 +303,10 @@ export class ChatPage {
   }
 
   async waitForElementToDisappear(testId: string, timeout = 10000) {
-    await this.page.waitForSelector(`[data-testid="${testId}"]`, { state: 'detached', timeout });
+    await this.page.waitForSelector(`[data-testid="${testId}"]`, {
+      state: 'detached',
+      timeout,
+    });
   }
 
   async getToastMessage() {

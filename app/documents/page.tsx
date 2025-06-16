@@ -14,13 +14,15 @@ export default async function DocumentsPage() {
       <div className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">Document Upload</h1>
+            <h1 className="text-3xl font-bold text-foreground">
+              Document Upload
+            </h1>
             <p className="text-muted-foreground mt-2">
-              Upload markdown and JSON documents to add them to your knowledge base. 
-              Files are processed and made available for chat queries.
+              Upload markdown and JSON documents to add them to your knowledge
+              base. Files are processed and made available for chat queries.
             </p>
           </div>
-          
+
           <DocumentUploadPage />
         </div>
       </div>

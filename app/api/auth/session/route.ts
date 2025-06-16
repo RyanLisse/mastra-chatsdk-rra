@@ -5,7 +5,9 @@ import { auth } from '@/app/(auth)/auth';
 export async function GET(request: Request) {
   // During tests, return a mock session to support client-side useSession hook
   if (isTestEnvironment) {
-    console.log('Test environment: returning mock session for /api/auth/session');
+    console.log(
+      'Test environment: returning mock session for /api/auth/session',
+    );
     return NextResponse.json({
       user: {
         id: 'test-user-id',

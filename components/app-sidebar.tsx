@@ -57,7 +57,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
             </Tooltip>
           </div>
         </SidebarMenu>
-        
+
         {/* Navigation Menu */}
         <SidebarMenu className="mt-4">
           <div className="px-2">

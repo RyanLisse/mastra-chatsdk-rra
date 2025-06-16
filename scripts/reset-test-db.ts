@@ -1,7 +1,10 @@
 #!/usr/bin/env tsx
 
 import { config } from 'dotenv';
-import { createTestDatabase, validateTestDatabaseConfig } from '../lib/db/test-config';
+import {
+  createTestDatabase,
+  validateTestDatabaseConfig,
+} from '../lib/db/test-config';
 
 // Load test environment configuration
 config({
@@ -15,8 +18,10 @@ async function resetTestDatabase() {
     // Step 1: Validate configuration
     console.log('1️⃣ Validating test database configuration...');
     const dbConfig = validateTestDatabaseConfig();
-    
-    console.log(`   ✅ Using ${dbConfig.isTestBranch ? 'Neon test branch' : 'test database'}`);
+
+    console.log(
+      `   ✅ Using ${dbConfig.isTestBranch ? 'Neon test branch' : 'test database'}`,
+    );
     if (dbConfig.branchName) {
       console.log(`   🌿 Branch: ${dbConfig.branchName}`);
     }
@@ -30,7 +35,7 @@ async function resetTestDatabase() {
 
     // Step 3: Count existing data
     console.log('3️⃣ Checking existing test data...');
-    
+
     const counts = await testDb.connection`
       SELECT 
         (SELECT COUNT(*) FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%') as test_users,
@@ -38,7 +43,7 @@ async function resetTestDatabase() {
         (SELECT COUNT(*) FROM "Message_v2") as messages,
         (SELECT COUNT(*) FROM chat_sessions WHERE session_id LIKE '%test%') as sessions;
     `;
-    
+
     console.log(`   📊 Current data counts:`);
     console.log(`      - Test users: ${counts[0].test_users}`);
     console.log(`      - Chats: ${counts[0].chats}`);
@@ -60,7 +65,7 @@ async function resetTestDatabase() {
 
     // Step 6: Verify reset
     console.log('6️⃣ Verifying reset results...');
-    
+
     const newCounts = await testDb.connection`
       SELECT 
         (SELECT COUNT(*) FROM "User" WHERE email LIKE '%@roborail.com') as sample_users,
@@ -68,7 +73,7 @@ async function resetTestDatabase() {
         (SELECT COUNT(*) FROM "Message_v2") as messages,
         (SELECT COUNT(*) FROM "DocumentChunk") as doc_chunks;
     `;
-    
+
     console.log(`   📊 Fresh data counts:`);
     console.log(`      - Sample users: ${newCounts[0].sample_users}`);
     console.log(`      - Sample chats: ${newCounts[0].chats}`);
@@ -90,17 +95,18 @@ async function resetTestDatabase() {
     console.log('   - Sample chat conversations');
     console.log('   - Document chunks for RAG testing');
     console.log('   - Safety and maintenance procedures');
-
   } catch (error) {
     console.error('❌ Test database reset failed:', error);
-    
+
     if (error instanceof Error && error.message?.includes('connect')) {
       console.error('\n🔧 Troubleshooting connection issues:');
-      console.error('   1. Verify your .env.test file has the correct POSTGRES_URL');
+      console.error(
+        '   1. Verify your .env.test file has the correct POSTGRES_URL',
+      );
       console.error('   2. Ensure your Neon test branch is active');
       console.error('   3. Check your database credentials and network access');
     }
-    
+
     process.exit(1);
   }
 }

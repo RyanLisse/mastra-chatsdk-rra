@@ -8,34 +8,37 @@ import { ChatSDKError } from '@/lib/errors';
 export async function GET() {
   try {
     const session = await auth();
-    
+
     if (!session?.user) {
       return new ChatSDKError('unauthorized:auth').toResponse();
     }
 
     const envStatus = validateEnvironment();
     const availableProviders = getAvailableProviders();
-    
+
     // Get available models for each provider
-    const modelsByProvider = chatModels.reduce((acc, model) => {
-      if (!acc[model.provider]) {
-        acc[model.provider] = [];
-      }
-      acc[model.provider].push({
-        id: model.id,
-        name: model.name,
-        description: model.description,
-        capabilities: model.capabilities,
-        tier: model.tier,
-      });
-      return acc;
-    }, {} as Record<string, any[]>);
+    const modelsByProvider = chatModels.reduce(
+      (acc, model) => {
+        if (!acc[model.provider]) {
+          acc[model.provider] = [];
+        }
+        acc[model.provider].push({
+          id: model.id,
+          name: model.name,
+          description: model.description,
+          capabilities: model.capabilities,
+          tier: model.tier,
+        });
+        return acc;
+      },
+      {} as Record<string, any[]>,
+    );
 
     // Filter models to only include available providers
     const availableModels = Object.fromEntries(
-      Object.entries(modelsByProvider).filter(([provider]) => 
-        availableProviders.includes(provider as any)
-      )
+      Object.entries(modelsByProvider).filter(([provider]) =>
+        availableProviders.includes(provider as any),
+      ),
     );
 
     return NextResponse.json({

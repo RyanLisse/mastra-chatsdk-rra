@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Loader2, MessageCircle, Sparkles, Zap } from 'lucide-react';
@@ -27,7 +27,7 @@ export function LoadingDots({ className, size = 'md' }: LoadingDotsProps) {
           className={cn(
             'bg-current rounded-full',
             sizeClasses[size],
-            delayClasses[index]
+            delayClasses[index],
           )}
           animate={{
             scale: [1, 1.5, 1],
@@ -51,25 +51,26 @@ interface ThinkingIndicatorProps {
   showIcon?: boolean;
 }
 
-export function ThinkingIndicator({ 
-  className, 
+export function ThinkingIndicator({
+  className,
   text = 'Thinking',
-  showIcon = true 
+  showIcon = true,
 }: ThinkingIndicatorProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className={cn(
-        'flex items-center gap-2 text-muted-foreground',
-        className
-      )}
+      className={cn('flex items-center gap-2 text-muted-foreground', className)}
     >
       {showIcon && (
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
+          transition={{
+            duration: 2,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: 'linear',
+          }}
         >
           <Sparkles size={16} className="text-primary" />
         </motion.div>
@@ -86,15 +87,19 @@ interface ProgressSpinnerProps {
   color?: string;
 }
 
-export function ProgressSpinner({ 
-  className, 
-  size = 16, 
-  color = 'currentColor' 
+export function ProgressSpinner({
+  className,
+  size = 16,
+  color = 'currentColor',
 }: ProgressSpinnerProps) {
   return (
     <motion.div
       animate={{ rotate: 360 }}
-      transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
+      transition={{
+        duration: 1,
+        repeat: Number.POSITIVE_INFINITY,
+        ease: 'linear',
+      }}
       className={className}
     >
       <Loader2 size={size} color={color} />
@@ -107,7 +112,10 @@ interface TypingIndicatorProps {
   isActive?: boolean;
 }
 
-export function TypingIndicator({ className, isActive = true }: TypingIndicatorProps) {
+export function TypingIndicator({
+  className,
+  isActive = true,
+}: TypingIndicatorProps) {
   if (!isActive) return null;
 
   return (
@@ -117,7 +125,7 @@ export function TypingIndicator({ className, isActive = true }: TypingIndicatorP
       exit={{ opacity: 0, scale: 0.8 }}
       className={cn(
         'flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 text-muted-foreground',
-        className
+        className,
       )}
     >
       <MessageCircle size={14} />
@@ -133,10 +141,10 @@ interface ProcessingIndicatorProps {
   progress?: number;
 }
 
-export function ProcessingIndicator({ 
-  className, 
+export function ProcessingIndicator({
+  className,
   label = 'Processing',
-  progress 
+  progress,
 }: ProcessingIndicatorProps) {
   return (
     <motion.div
@@ -145,23 +153,23 @@ export function ProcessingIndicator({
       exit={{ opacity: 0, y: -10 }}
       className={cn(
         'flex items-center gap-3 px-4 py-3 rounded-lg bg-muted/50 border',
-        className
+        className,
       )}
     >
       <motion.div
-        animate={{ 
+        animate={{
           scale: [1, 1.2, 1],
-          opacity: [0.7, 1, 0.7] 
+          opacity: [0.7, 1, 0.7],
         }}
-        transition={{ 
-          duration: 1.5, 
+        transition={{
+          duration: 1.5,
           repeat: Number.POSITIVE_INFINITY,
-          ease: 'easeInOut' 
+          ease: 'easeInOut',
         }}
       >
         <Zap size={18} className="text-primary" />
       </motion.div>
-      
+
       <div className="flex-1">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">{label}</span>
@@ -171,7 +179,7 @@ export function ProcessingIndicator({
             </span>
           )}
         </div>
-        
+
         {progress !== undefined && (
           <div className="mt-1 w-full bg-muted rounded-full h-1">
             <motion.div
@@ -193,10 +201,10 @@ interface LoadingOverlayProps {
   className?: string;
 }
 
-export function LoadingOverlay({ 
-  isVisible, 
-  message = 'Loading...', 
-  className 
+export function LoadingOverlay({
+  isVisible,
+  message = 'Loading...',
+  className,
 }: LoadingOverlayProps) {
   return (
     <AnimatePresence>
@@ -207,7 +215,7 @@ export function LoadingOverlay({
           exit={{ opacity: 0 }}
           className={cn(
             'fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center',
-            className
+            className,
           )}
         >
           <motion.div
@@ -231,11 +239,20 @@ interface MessageLoadingProps {
 }
 
 export function MessageLoading({ className, lines = 3 }: MessageLoadingProps) {
+  const keys = useMemo(
+    () =>
+      Array.from(
+        { length: lines },
+        (_, index) => `loading-line-${index}-${Date.now()}`,
+      ),
+    [lines],
+  );
+
   return (
     <div className={cn('space-y-2', className)}>
-      {Array.from({ length: lines }).map((_, index) => (
+      {Array.from({ length: lines }, (_, index) => (
         <motion.div
-          key={index}
+          key={keys[index]}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: index * 0.1 }}
@@ -243,7 +260,7 @@ export function MessageLoading({ className, lines = 3 }: MessageLoadingProps) {
             'h-4 bg-muted animate-pulse rounded',
             index === 0 && 'w-3/4',
             index === 1 && 'w-full',
-            index === 2 && 'w-1/2'
+            index === 2 && 'w-1/2',
           )}
         />
       ))}

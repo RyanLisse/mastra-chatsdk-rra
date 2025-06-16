@@ -4,16 +4,19 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  FileIcon, 
-  LoaderIcon, 
-  CheckCircleFillIcon, 
+import {
+  FileIcon,
+  LoaderIcon,
+  CheckCircleFillIcon,
   WarningIcon,
-  MoreHorizontalIcon
+  MoreHorizontalIcon,
 } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { ProgressBar } from './progress-bar';
-import type { ProcessingStage, ProcessingStatus } from '@/lib/rag/progress/types';
+import type {
+  ProcessingStage,
+  ProcessingStatus,
+} from '@/lib/rag/progress/types';
 
 export interface ProcessingState {
   documentId: string;
@@ -42,7 +45,7 @@ export function ProcessingCard({
   onCancel,
   onViewDetails,
   showActions = true,
-  className
+  className,
 }: ProcessingCardProps) {
   const {
     documentId,
@@ -53,7 +56,7 @@ export function ProcessingCard({
     error,
     startedAt,
     completedAt,
-    metadata
+    metadata,
   } = state;
 
   const getStatusIcon = () => {
@@ -98,16 +101,17 @@ export function ProcessingCard({
     if (!start) return null;
     const endTime = end || new Date();
     const duration = Math.round((endTime.getTime() - start.getTime()) / 1000);
-    
+
     if (duration < 60) return `${duration}s`;
-    if (duration < 3600) return `${Math.floor(duration / 60)}m ${duration % 60}s`;
+    if (duration < 3600)
+      return `${Math.floor(duration / 60)}m ${duration % 60}s`;
     return `${Math.floor(duration / 3600)}h ${Math.floor((duration % 3600) / 60)}m`;
   };
 
   const getFileSize = () => {
     const size = metadata?.fileSize as number;
     if (!size) return null;
-    
+
     if (size < 1024) return `${size} B`;
     if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
     return `${(size / (1024 * 1024)).toFixed(1)} MB`;
@@ -121,9 +125,7 @@ export function ProcessingCard({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex-shrink-0">
-              {getStatusIcon()}
-            </div>
+            <div className="flex-shrink-0">{getStatusIcon()}</div>
             <div className="min-w-0 flex-1">
               <CardTitle className="text-base truncate" title={filename}>
                 {filename}
@@ -145,7 +147,7 @@ export function ProcessingCard({
               </div>
             </div>
           </div>
-          
+
           {showActions && (
             <div className="flex items-center gap-1">
               {canRetry && (
@@ -183,7 +185,7 @@ export function ProcessingCard({
           )}
         </div>
       </CardHeader>
-      
+
       <CardContent className="pt-0">
         <div className="space-y-3">
           <ProgressBar
@@ -192,9 +194,9 @@ export function ProcessingCard({
             status={status}
             animated={status === 'processing'}
           />
-          
+
           {error && (
-            <div 
+            <div
               className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-md"
               role="alert"
               aria-live="polite"
@@ -208,7 +210,7 @@ export function ProcessingCard({
               </div>
             </div>
           )}
-          
+
           {status === 'completed' && (
             <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
               <span className="text-green-600">

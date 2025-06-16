@@ -12,14 +12,19 @@ config({
 });
 
 // Validate test database is configured
-if (!process.env.POSTGRES_URL || process.env.POSTGRES_URL.includes('your-test-postgres-url-here')) {
+if (
+  !process.env.POSTGRES_URL ||
+  process.env.POSTGRES_URL.includes('your-test-postgres-url-here')
+) {
   console.error('❌ Test database not configured!');
   console.error('Please set up your test database URL in .env.test');
   console.error('Run: bun run db:test:setup for setup instructions');
   console.error('');
   console.error('💡 Quick setup options:');
   console.error('1. Copy .env.test.example to .env.test and configure');
-  console.error('2. Use local PostgreSQL: postgresql://postgres:password@localhost:5432/mastra_chat_test');
+  console.error(
+    '2. Use local PostgreSQL: postgresql://postgres:password@localhost:5432/mastra_chat_test',
+  );
   console.error('3. Use Neon test branch: https://console.neon.tech/');
   process.exit(1);
 }

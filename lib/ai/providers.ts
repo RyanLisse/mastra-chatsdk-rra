@@ -1,7 +1,4 @@
-import {
-  customProvider,
-  type LanguageModel,
-} from 'ai';
+import { customProvider, type LanguageModel } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
@@ -13,12 +10,7 @@ import {
   reasoningModel,
   titleModel,
 } from './models.test';
-import {
-  createProviderClients,
-  getModelInfo,
-  getFallbackModel,
-  isProviderAvailable,
-} from './provider-config';
+import { getModelInfo, isProviderAvailable } from './provider-config';
 import { chatModels } from './models';
 import { logEnvironmentStatus } from './env-validation';
 
@@ -32,14 +24,14 @@ if (!isTestEnvironment && typeof window === 'undefined') {
  */
 function createLanguageModel(modelId: string): LanguageModel {
   const modelInfo = getModelInfo(modelId);
-  
+
   if (!modelInfo) {
     console.warn(`Model ${modelId} not found, falling back to default`);
     return openai('gpt-4o-mini');
   }
 
   const { provider, modelId: providerModelId } = modelInfo;
-  
+
   // Check if provider is available
   if (!isProviderAvailable(provider)) {
     console.warn(`Provider ${provider} not available, falling back to OpenAI`);
@@ -61,7 +53,10 @@ function createLanguageModel(modelId: string): LanguageModel {
         return openai('gpt-4o-mini');
     }
   } catch (error) {
-    console.error(`Failed to create model for ${provider}:${providerModelId}`, error);
+    console.error(
+      `Failed to create model for ${provider}:${providerModelId}`,
+      error,
+    );
     return openai('gpt-4o-mini');
   }
 }
@@ -71,16 +66,16 @@ function createLanguageModel(modelId: string): LanguageModel {
  */
 function createLanguageModels(): Record<string, LanguageModel> {
   const models: Record<string, LanguageModel> = {};
-  
+
   // Add all chat models
   for (const model of chatModels) {
     models[model.id] = createLanguageModel(model.id);
   }
-  
+
   // Add specific models for different use cases
   models['title-model'] = createLanguageModel('gpt-4o-mini');
   models['artifact-model'] = createLanguageModel('gpt-4o');
-  
+
   return models;
 }
 
@@ -92,9 +87,7 @@ export const myProvider = isTestEnvironment
         'title-model': titleModel,
         'artifact-model': artifactModel,
         // Add all other models for testing
-        ...Object.fromEntries(
-          chatModels.map(model => [model.id, chatModel])
-        ),
+        ...Object.fromEntries(chatModels.map((model) => [model.id, chatModel])),
       },
     })
   : customProvider({
@@ -111,7 +104,7 @@ export function getLanguageModel(modelId: string): LanguageModel {
   if (isTestEnvironment) {
     return chatModel;
   }
-  
+
   return createLanguageModel(modelId);
 }
 
@@ -123,6 +116,6 @@ export function isModelAvailable(modelId: string): boolean {
   if (!modelInfo) {
     return false;
   }
-  
+
   return isProviderAvailable(modelInfo.provider);
 }

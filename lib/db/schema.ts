@@ -10,8 +10,8 @@ import {
   foreignKey,
   boolean,
   serial,
+  vector,
 } from 'drizzle-orm/pg-core';
-import { vector } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('User', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
@@ -190,10 +190,22 @@ export const documentProcessing = pgTable('DocumentProcessing', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
   documentId: uuid('documentId').notNull().unique(), // Unique document processing record
   filename: text('filename').notNull(),
-  status: varchar('status', { enum: ['pending', 'processing', 'completed', 'failed'] })
+  status: varchar('status', {
+    enum: ['pending', 'processing', 'completed', 'failed'],
+  })
     .notNull()
     .default('pending'),
-  stage: varchar('stage', { enum: ['upload', 'parsing', 'chunking', 'embedding', 'storing', 'completed', 'error'] })
+  stage: varchar('stage', {
+    enum: [
+      'upload',
+      'parsing',
+      'chunking',
+      'embedding',
+      'storing',
+      'completed',
+      'error',
+    ],
+  })
     .notNull()
     .default('upload'),
   progress: serial('progress').default(0), // 0-100

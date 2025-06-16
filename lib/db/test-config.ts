@@ -30,21 +30,28 @@ export interface DatabaseTestSetup {
  */
 export function validateTestDatabaseConfig(): TestDatabaseConfig {
   const postgresUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
-  
+
   if (!postgresUrl) {
-    throw new Error('POSTGRES_URL or DATABASE_URL environment variable is required for testing');
+    throw new Error(
+      'POSTGRES_URL or DATABASE_URL environment variable is required for testing',
+    );
   }
 
-  if (postgresUrl.includes('your-test-postgres-url-here') || 
-      postgresUrl.includes('your-test-database-url-here')) {
-    throw new Error('Test database URL is not configured. Please set up a proper test database connection.');
+  if (
+    postgresUrl.includes('your-test-postgres-url-here') ||
+    postgresUrl.includes('your-test-database-url-here')
+  ) {
+    throw new Error(
+      'Test database URL is not configured. Please set up a proper test database connection.',
+    );
   }
 
   // Check if this is a Neon test branch URL
-  const isNeonTestBranch = postgresUrl.includes('neon.tech') && 
-                          (postgresUrl.includes('-test-') || 
-                           postgresUrl.includes('test.') ||
-                           postgresUrl.includes('/test'));
+  const isNeonTestBranch =
+    postgresUrl.includes('neon.tech') &&
+    (postgresUrl.includes('-test-') ||
+      postgresUrl.includes('test.') ||
+      postgresUrl.includes('/test'));
 
   // Extract branch name if available
   let branchName: string | undefined;
@@ -53,7 +60,7 @@ export function validateTestDatabaseConfig(): TestDatabaseConfig {
   if (isNeonTestBranch) {
     const url = new URL(postgresUrl);
     const hostParts = url.hostname.split('.');
-    
+
     // Neon URLs typically follow: branch-name-project-id.region.neon.tech
     if (hostParts.length >= 4 && hostParts[hostParts.length - 2] === 'neon') {
       const branchProject = hostParts[0];
@@ -66,15 +73,21 @@ export function validateTestDatabaseConfig(): TestDatabaseConfig {
   }
 
   // Ensure we're not accidentally using production database
-  if (!isNeonTestBranch && !postgresUrl.includes('test') && !postgresUrl.includes('localhost')) {
-    console.warn('⚠️  WARNING: Database URL does not appear to be a test database. Please ensure you are using a test database.');
+  if (
+    !isNeonTestBranch &&
+    !postgresUrl.includes('test') &&
+    !postgresUrl.includes('localhost')
+  ) {
+    console.warn(
+      '⚠️  WARNING: Database URL does not appear to be a test database. Please ensure you are using a test database.',
+    );
   }
 
   return {
     url: postgresUrl,
     isTestBranch: isNeonTestBranch,
     branchName,
-    projectId
+    projectId,
   };
 }
 
@@ -83,8 +96,10 @@ export function validateTestDatabaseConfig(): TestDatabaseConfig {
  */
 export async function createTestDatabase(): Promise<DatabaseTestSetup> {
   const config = validateTestDatabaseConfig();
-  
-  console.log(`🔧 Setting up test database${config.isTestBranch ? ` (Neon branch: ${config.branchName})` : ''}`);
+
+  console.log(
+    `🔧 Setting up test database${config.isTestBranch ? ` (Neon branch: ${config.branchName})` : ''}`,
+  );
 
   // Create connection with test-specific settings
   const connection = postgres(config.url, {
@@ -112,7 +127,7 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
 
   const reset = async () => {
     console.log('🔄 Resetting test database');
-    
+
     // Clean up test data while preserving schema
     await db.execute(sql`
       -- Clean up test data in reverse dependency order
@@ -173,13 +188,13 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
       -- Clean up chat sessions table if it exists
       DELETE FROM chat_sessions WHERE session_id LIKE 'test-%' OR session_id LIKE '%test%';
     `);
-    
+
     console.log('✅ Test database reset completed');
   };
 
   const seed = async () => {
     console.log('🌱 Seeding test database with RoboRail sample data');
-    
+
     // Create test users
     const testUsers = await db.execute(sql`
       INSERT INTO "User" (id, email, password) VALUES
@@ -324,7 +339,10 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
       await db.execute(sql`CREATE EXTENSION IF NOT EXISTS vector;`);
       console.log('✅ pgvector extension enabled');
     } catch (error) {
-      console.warn('⚠️  Could not enable pgvector extension (may require superuser privileges):', error);
+      console.warn(
+        '⚠️  Could not enable pgvector extension (may require superuser privileges):',
+        error,
+      );
     }
 
     console.log('✅ Test database seeded with RoboRail sample data');
@@ -335,7 +353,7 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
     connection,
     cleanup,
     reset,
-    seed
+    seed,
   };
 }
 
@@ -344,9 +362,9 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
  */
 export async function runTestMigrations(): Promise<void> {
   const config = validateTestDatabaseConfig();
-  
+
   console.log('⏳ Running test database migrations...');
-  
+
   const connection = postgres(config.url, { max: 1 });
   const db = drizzle(connection);
 
@@ -354,7 +372,7 @@ export async function runTestMigrations(): Promise<void> {
     const start = Date.now();
     await migrate(db, { migrationsFolder: './lib/db/migrations' });
     const end = Date.now();
-    
+
     console.log(`✅ Test migrations completed in ${end - start}ms`);
   } catch (error) {
     console.error('❌ Test migration failed:', error);
@@ -372,14 +390,14 @@ let globalTestDb: DatabaseTestSetup | null = null;
 export async function getGlobalTestDatabase(): Promise<DatabaseTestSetup> {
   if (!globalTestDb) {
     globalTestDb = await createTestDatabase();
-    
+
     // Ensure migrations are run
     await runTestMigrations();
-    
+
     // Seed with initial data
     await globalTestDb.seed();
   }
-  
+
   return globalTestDb;
 }
 

@@ -2,9 +2,21 @@
 
 import { useCallback, useRef, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { AudioPlayer, AudioRecorder, audioToBase64, isAudioSupported, checkMicrophonePermission } from '@/lib/audio-utils';
+import {
+  AudioPlayer,
+  AudioRecorder,
+  audioToBase64,
+  isAudioSupported,
+  checkMicrophonePermission,
+} from '@/lib/audio-utils';
 
-export type VoiceState = 'idle' | 'connecting' | 'listening' | 'speaking' | 'processing' | 'error';
+export type VoiceState =
+  | 'idle'
+  | 'connecting'
+  | 'listening'
+  | 'speaking'
+  | 'processing'
+  | 'error';
 
 export interface VoiceMessage {
   type: 'transcription' | 'audio' | 'error' | 'disconnect' | 'connected';
@@ -40,14 +52,17 @@ export interface UseVoiceAssistantReturn {
   permissionStatus: PermissionState | null;
 }
 
-export function useVoiceAssistant(options: VoiceAssistantOptions = {}): UseVoiceAssistantReturn {
+export function useVoiceAssistant(
+  options: VoiceAssistantOptions = {},
+): UseVoiceAssistantReturn {
   const [state, setState] = useState<VoiceState>('idle');
   const [isRecording, setIsRecording] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [voiceSessionId, setVoiceSessionId] = useState<string | null>(null);
   const [audioLevel, setAudioLevel] = useState(0);
-  const [permissionStatus, setPermissionStatus] = useState<PermissionState | null>(null);
+  const [permissionStatus, setPermissionStatus] =
+    useState<PermissionState | null>(null);
 
   const eventSourceRef = useRef<EventSource | null>(null);
   const audioPlayerRef = useRef<AudioPlayer | null>(null);
@@ -75,9 +90,11 @@ export function useVoiceAssistant(options: VoiceAssistantOptions = {}): UseVoice
 
       const permission = await checkMicrophonePermission();
       setPermissionStatus(permission);
-      
+
       if (permission === 'denied') {
-        setError('Microphone permission denied. Please enable microphone access in your browser settings.');
+        setError(
+          'Microphone permission denied. Please enable microphone access in your browser settings.',
+        );
         return false;
       }
 
@@ -116,7 +133,9 @@ export function useVoiceAssistant(options: VoiceAssistantOptions = {}): UseVoice
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to initialize voice session');
+        throw new Error(
+          errorData.message || 'Failed to initialize voice session',
+        );
       }
 
       const data = await response.json();
@@ -128,25 +147,27 @@ export function useVoiceAssistant(options: VoiceAssistantOptions = {}): UseVoice
       }
 
       // Establish SSE connection
-      const eventSource = new EventSource(`/api/voice?sessionId=${data.sessionId}`);
+      const eventSource = new EventSource(
+        `/api/voice?sessionId=${data.sessionId}`,
+      );
       eventSourceRef.current = eventSource;
 
       eventSource.onmessage = (event) => {
         try {
           const message: VoiceMessage = JSON.parse(event.data);
-          
+
           switch (message.type) {
             case 'connected':
               setIsConnected(true);
               setState('idle');
               break;
-            
+
             case 'transcription':
               if (message.text && message.role) {
                 onTranscription?.(message.text, message.role);
               }
               break;
-            
+
             case 'audio':
               if (message.audioLength) {
                 setState('speaking');
@@ -154,14 +175,17 @@ export function useVoiceAssistant(options: VoiceAssistantOptions = {}): UseVoice
                 // Note: In a real implementation, you'd receive base64 audio data
                 // and play it using audioPlayerRef.current.playAudioFromBase64()
                 // For now, we'll simulate the speaking state
-                setTimeout(() => {
-                  if (state !== 'listening' && state !== 'processing') {
-                    setState('idle');
-                  }
-                }, Math.max(1000, message.audioLength * 100)); // Estimate duration
+                setTimeout(
+                  () => {
+                    if (state !== 'listening' && state !== 'processing') {
+                      setState('idle');
+                    }
+                  },
+                  Math.max(1000, message.audioLength * 100),
+                ); // Estimate duration
               }
               break;
-            
+
             case 'error': {
               const errorMsg = message.error || 'Voice session error';
               setError(errorMsg);
@@ -169,7 +193,7 @@ export function useVoiceAssistant(options: VoiceAssistantOptions = {}): UseVoice
               onError?.(errorMsg);
               break;
             }
-            
+
             case 'disconnect':
               setIsConnected(false);
               setState('idle');
@@ -186,13 +210,25 @@ export function useVoiceAssistant(options: VoiceAssistantOptions = {}): UseVoice
         setState('error');
         setIsConnected(false);
       };
-
     } catch (err) {
       console.error('Error connecting to voice assistant:', err);
-      setError(err instanceof Error ? err.message : 'Failed to connect to voice assistant');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to connect to voice assistant',
+      );
       setState('error');
     }
-  }, [sessionId, model, speaker, onTranscription, onError, onAudioReceived, checkPermissions, state]);
+  }, [
+    sessionId,
+    model,
+    speaker,
+    onTranscription,
+    onError,
+    onAudioReceived,
+    checkPermissions,
+    state,
+  ]);
 
   // Disconnect voice session
   const disconnect = useCallback(async () => {
@@ -265,7 +301,7 @@ export function useVoiceAssistant(options: VoiceAssistantOptions = {}): UseVoice
 
       // Start recording
       await audioRecorderRef.current.startRecording();
-      
+
       // Set up audio level monitoring
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -273,7 +309,7 @@ export function useVoiceAssistant(options: VoiceAssistantOptions = {}): UseVoice
           noiseSuppression: true,
           autoGainControl: true,
           sampleRate: 16000,
-        }
+        },
       });
 
       audioContextRef.current = new AudioContext();
@@ -294,12 +330,15 @@ export function useVoiceAssistant(options: VoiceAssistantOptions = {}): UseVoice
 
       setIsRecording(true);
       setState('listening');
-
     } catch (err) {
       console.error('Error starting recording:', err);
-      setError(err instanceof Error ? err.message : 'Failed to start recording');
+      setError(
+        err instanceof Error ? err.message : 'Failed to start recording',
+      );
       setState('error');
-      toast.error('Failed to access microphone. Please check your browser permissions.');
+      toast.error(
+        'Failed to access microphone. Please check your browser permissions.',
+      );
     }
   }, [isConnected, voiceSessionId]);
 
@@ -308,7 +347,7 @@ export function useVoiceAssistant(options: VoiceAssistantOptions = {}): UseVoice
     try {
       if (audioRecorderRef.current && isRecording) {
         setState('processing');
-        
+
         // Stop recording and get audio data
         const audioBlob = await audioRecorderRef.current.stopRecording();
         const base64Audio = await audioToBase64(audioBlob);
@@ -352,32 +391,38 @@ export function useVoiceAssistant(options: VoiceAssistantOptions = {}): UseVoice
   }, [isRecording, voiceSessionId]);
 
   // Send text to voice assistant
-  const speak = useCallback(async (text: string) => {
-    try {
-      if (!isConnected || !voiceSessionId) {
-        throw new Error('Voice assistant not connected');
+  const speak = useCallback(
+    async (text: string) => {
+      try {
+        if (!isConnected || !voiceSessionId) {
+          throw new Error('Voice assistant not connected');
+        }
+
+        setState('processing');
+
+        await fetch('/api/voice', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sessionId: voiceSessionId,
+            action: 'speak',
+            text,
+          }),
+        });
+      } catch (err) {
+        console.error('Error sending text to voice assistant:', err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Failed to send text to voice assistant',
+        );
+        setState('error');
       }
-
-      setState('processing');
-
-      await fetch('/api/voice', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sessionId: voiceSessionId,
-          action: 'speak',
-          text,
-        }),
-      });
-
-    } catch (err) {
-      console.error('Error sending text to voice assistant:', err);
-      setError(err instanceof Error ? err.message : 'Failed to send text to voice assistant');
-      setState('error');
-    }
-  }, [isConnected, voiceSessionId]);
+    },
+    [isConnected, voiceSessionId],
+  );
 
   // Cleanup on unmount
   useEffect(() => {

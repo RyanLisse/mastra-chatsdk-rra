@@ -7,7 +7,10 @@ const textPartSchema = z.object({
 });
 
 // Generate valid model IDs from the models.ts file
-const validModelIds = chatModels.map(model => model.id) as [string, ...string[]];
+const validModelIds = chatModels.map((model) => model.id) as [
+  string,
+  ...string[],
+];
 
 export const postRequestBodySchema = z.object({
   id: z.string().uuid(),

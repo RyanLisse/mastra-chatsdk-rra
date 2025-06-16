@@ -15,18 +15,24 @@ export async function GET(request: Request) {
     if (!session?.user?.id) {
       const errorResponse: ErrorResponse = {
         error: 'Authentication required',
-        code: 'UNAUTHORIZED'
+        code: 'UNAUTHORIZED',
       };
       return NextResponse.json(errorResponse, { status: 401 });
     }
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(Number.parseInt(searchParams.get('limit') || '10'), 50);
+    const limit = Math.min(
+      Number.parseInt(searchParams.get('limit') || '10'),
+      50,
+    );
     const includeStats = searchParams.get('stats') === 'true';
 
     // Get user's documents
-    const documents = await ragDatabase.getRecentProcessingRecords(session.user.id, limit);
+    const documents = await ragDatabase.getRecentProcessingRecords(
+      session.user.id,
+      limit,
+    );
 
     // Get stats if requested
     let stats = undefined;
@@ -37,17 +43,16 @@ export async function GET(request: Request) {
     return NextResponse.json({
       documents,
       stats,
-      total: documents.length
+      total: documents.length,
     });
-
   } catch (error) {
     console.error('Documents endpoint error:', error);
-    
+
     const errorResponse: ErrorResponse = {
       error: error instanceof Error ? error.message : 'Internal server error',
-      code: 'INTERNAL_ERROR'
+      code: 'INTERNAL_ERROR',
     };
-    
+
     return NextResponse.json(errorResponse, { status: 500 });
   }
 }
@@ -62,46 +67,48 @@ export async function DELETE(request: Request) {
     if (!session?.user?.id) {
       const errorResponse: ErrorResponse = {
         error: 'Authentication required',
-        code: 'UNAUTHORIZED'
+        code: 'UNAUTHORIZED',
       };
       return NextResponse.json(errorResponse, { status: 401 });
     }
 
     // Parse request body
     const { documentId } = await request.json();
-    
+
     if (!documentId || typeof documentId !== 'string') {
       const errorResponse: ErrorResponse = {
         error: 'Document ID is required',
-        code: 'INVALID_REQUEST'
+        code: 'INVALID_REQUEST',
       };
       return NextResponse.json(errorResponse, { status: 400 });
     }
 
     // Delete document
-    const deleted = await ragDatabase.deleteDocument(documentId, session.user.id);
-    
+    const deleted = await ragDatabase.deleteDocument(
+      documentId,
+      session.user.id,
+    );
+
     if (!deleted) {
       const errorResponse: ErrorResponse = {
         error: 'Document not found or access denied',
-        code: 'NOT_FOUND'
+        code: 'NOT_FOUND',
       };
       return NextResponse.json(errorResponse, { status: 404 });
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Document deleted successfully'
+      message: 'Document deleted successfully',
     });
-
   } catch (error) {
     console.error('Document deletion error:', error);
-    
+
     const errorResponse: ErrorResponse = {
       error: error instanceof Error ? error.message : 'Internal server error',
-      code: 'INTERNAL_ERROR'
+      code: 'INTERNAL_ERROR',
     };
-    
+
     return NextResponse.json(errorResponse, { status: 500 });
   }
 }

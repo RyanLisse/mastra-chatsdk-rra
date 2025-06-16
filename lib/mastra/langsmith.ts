@@ -24,7 +24,9 @@ export function getLangSmithClient(): Client | null {
   const projectName = process.env.LANGSMITH_PROJECT;
 
   if (!apiKey || !projectName) {
-    console.warn('LangSmith not configured - tracing will be disabled. Set LANGSMITH_API_KEY and LANGSMITH_PROJECT to enable.');
+    console.warn(
+      'LangSmith not configured - tracing will be disabled. Set LANGSMITH_API_KEY and LANGSMITH_PROJECT to enable.',
+    );
     return null;
   }
 
@@ -32,7 +34,7 @@ export function getLangSmithClient(): Client | null {
     client = new Client({
       apiKey,
     });
-    
+
     console.log(`LangSmith tracing initialized for project: ${projectName}`);
     return client;
   } catch (error) {
@@ -51,10 +53,10 @@ export function getLangSmithClient(): Client | null {
 export async function traceLangSmith<T>(
   name: string,
   metadata: Record<string, any>,
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
 ): Promise<T> {
   const client = getLangSmithClient();
-  
+
   if (!client) {
     // If LangSmith is not configured, just execute the function
     return await fn();
@@ -74,19 +76,19 @@ export async function traceLangSmith<T>(
         metadata: {
           ...metadata,
           agent: 'RoboRail',
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       },
-      start_time: startTime
+      start_time: startTime,
     });
 
     try {
       const result = await fn();
-      
+
       // Create run end event with success
       await client.updateRun(runId, {
         outputs: { result },
-        end_time: Date.now()
+        end_time: Date.now(),
       });
 
       return result;
@@ -94,9 +96,9 @@ export async function traceLangSmith<T>(
       // Create run end event with error
       await client.updateRun(runId, {
         error: error instanceof Error ? error.message : String(error),
-        end_time: Date.now()
+        end_time: Date.now(),
       });
-      
+
       throw error;
     }
   } catch (tracingError) {
@@ -113,16 +115,16 @@ export async function traceAgentGeneration<T>(
   agentName: string,
   input: string,
   sessionId: string,
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
 ): Promise<T> {
   return traceLangSmith(
     `${agentName}_generation`,
     {
       inputs: { input, sessionId },
       agent: agentName,
-      operation: 'generation'
+      operation: 'generation',
     },
-    fn
+    fn,
   );
 }
 
@@ -131,16 +133,16 @@ export async function traceAgentGeneration<T>(
  */
 export async function traceRAGTool<T>(
   query: string,
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
 ): Promise<T> {
   return traceLangSmith(
     'rag_tool_execution',
     {
       inputs: { query },
       tool: 'RAG',
-      operation: 'document_retrieval'
+      operation: 'document_retrieval',
     },
-    fn
+    fn,
   );
 }
 
@@ -151,7 +153,7 @@ export async function traceVoiceAgent<T>(
   operation: string,
   sessionId: string,
   metadata: Record<string, any>,
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
 ): Promise<T> {
   return traceLangSmith(
     `voice_agent_${operation}`,
@@ -159,9 +161,9 @@ export async function traceVoiceAgent<T>(
       inputs: metadata,
       agent: 'RoboRailVoice',
       operation,
-      sessionId
+      sessionId,
     },
-    fn
+    fn,
   );
 }
 
@@ -172,15 +174,15 @@ export async function traceMemoryOperation<T>(
   operation: string,
   sessionId: string,
   metadata: Record<string, any>,
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
 ): Promise<T> {
   return traceLangSmith(
     `memory_${operation}`,
     {
       inputs: { sessionId, ...metadata },
       component: 'PostgresMemory',
-      operation
+      operation,
     },
-    fn
+    fn,
   );
 }

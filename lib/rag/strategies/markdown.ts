@@ -37,7 +37,7 @@ export class MarkdownStrategy {
       chunkByHeaders: true,
       chunkSize: 512,
       chunkOverlap: 50,
-      ...options
+      ...options,
     };
   }
 
@@ -48,12 +48,15 @@ export class MarkdownStrategy {
     try {
       // Handle RoboRail-specific format that doesn't use standard frontmatter
       const parsedContent = this.parseRoboRailFormat(content);
-      
+
       // Extract headers for structure analysis
       const headers = this.extractHeaders(parsedContent.content);
-      
+
       // Extract additional metadata from content
-      const metadata = this.extractContentMetadata(parsedContent.content, headers);
+      const metadata = this.extractContentMetadata(
+        parsedContent.content,
+        headers,
+      );
 
       return {
         content: parsedContent.content,
@@ -66,11 +69,14 @@ export class MarkdownStrategy {
           hasHeaders: headers.length > 0,
           wordCount: parsedContent.content.split(/\s+/).length,
           headerCount: headers.length,
-          maxHeaderLevel: headers.length > 0 ? Math.max(...headers.map(h => h.level)) : 0
-        }
+          maxHeaderLevel:
+            headers.length > 0 ? Math.max(...headers.map((h) => h.level)) : 0,
+        },
       };
     } catch (error) {
-      throw new Error(`Failed to parse markdown: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to parse markdown: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -78,14 +84,17 @@ export class MarkdownStrategy {
    * Parse RoboRail-specific document format
    * These documents have metadata at the top but not in YAML frontmatter format
    */
-  private parseRoboRailFormat(content: string): { content: string; frontmatter: any } {
+  private parseRoboRailFormat(content: string): {
+    content: string;
+    frontmatter: any;
+  } {
     try {
       // First try standard frontmatter parsing
       const standardParsed = matter(content);
       if (standardParsed.data && Object.keys(standardParsed.data).length > 0) {
         return {
           content: standardParsed.content,
-          frontmatter: standardParsed.data
+          frontmatter: standardParsed.data,
         };
       }
 
@@ -97,7 +106,7 @@ export class MarkdownStrategy {
       // Look for patterns like "logo: HGG", "version 0.0 | 2-5-2024", etc.
       for (let i = 0; i < Math.min(lines.length, 20); i++) {
         const line = lines[i].trim();
-        
+
         // Skip empty lines and comments
         if (!line || line.startsWith('<!--')) {
           continue;
@@ -107,7 +116,7 @@ export class MarkdownStrategy {
         if (line.includes(':') && !line.startsWith('#')) {
           const [key, ...valueParts] = line.split(':');
           const value = valueParts.join(':').trim();
-          
+
           if (key.toLowerCase().includes('logo')) {
             frontmatter.company = value;
           } else if (key.toLowerCase().includes('summary')) {
@@ -116,28 +125,28 @@ export class MarkdownStrategy {
             frontmatter[key.trim().toLowerCase()] = value;
           }
         }
-        
+
         // Look for version patterns
         else if (line.match(/version\s+[\d.]+/i)) {
           const versionMatch = line.match(/version\s+([\d.]+)/i);
           if (versionMatch) {
             frontmatter.version = versionMatch[1];
           }
-          
+
           // Look for date in same line
           const dateMatch = line.match(/(\d{1,2}-\d{1,2}-\d{4})/);
           if (dateMatch) {
             frontmatter.date = dateMatch[1];
           }
         }
-        
+
         // Look for title patterns (FAQ, manual names, etc.)
         else if (line.match(/^(\*\*)?FAQ/i) || line.match(/manual/i)) {
           if (!frontmatter.title) {
             frontmatter.title = line.replace(/^\*\*|\*\*$/g, '').trim();
           }
         }
-        
+
         // Stop when we hit the first header or significant content
         else if (line.startsWith('#') || line.length > 100) {
           contentStartIndex = i;
@@ -150,13 +159,13 @@ export class MarkdownStrategy {
 
       return {
         content: actualContent,
-        frontmatter
+        frontmatter,
       };
     } catch (error) {
       // Fallback to treating entire content as body with no frontmatter
       return {
         content: content,
-        frontmatter: {}
+        frontmatter: {},
       };
     }
   }
@@ -167,20 +176,20 @@ export class MarkdownStrategy {
   private extractHeaders(content: string): HeaderInfo[] {
     const headers: HeaderInfo[] = [];
     const lines = content.split('\n');
-    
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const headerMatch = line.match(/^(#{1,6})\s+(.+)$/);
-      
+
       if (headerMatch) {
         const level = headerMatch[1].length;
         const text = headerMatch[2].trim();
         const startIndex = content.indexOf(line);
-        
+
         headers.push({
           level,
           text,
-          startIndex
+          startIndex,
         });
       }
     }
@@ -206,13 +215,16 @@ export class MarkdownStrategy {
     // Analyze content structure
     const lines = content.split('\n');
     metadata.lineCount = lines.length;
-    
+
     // Look for common technical document patterns
     if (content.toLowerCase().includes('calibration')) {
       metadata.category = 'calibration';
     } else if (content.toLowerCase().includes('faq')) {
-      metadata.category = 'faq'; 
-    } else if (content.toLowerCase().includes('manual') || content.toLowerCase().includes('operator')) {
+      metadata.category = 'faq';
+    } else if (
+      content.toLowerCase().includes('manual') ||
+      content.toLowerCase().includes('operator')
+    ) {
       metadata.category = 'manual';
     } else if (content.toLowerCase().includes('measurement')) {
       metadata.category = 'measurement';
@@ -228,7 +240,7 @@ export class MarkdownStrategy {
       /chuck/gi,
       /alignment/gi,
       /sensor/gi,
-      /profiling/gi
+      /profiling/gi,
     ];
 
     for (const pattern of termPatterns) {
@@ -243,11 +255,13 @@ export class MarkdownStrategy {
     }
 
     // Analyze document complexity
-    const avgWordsPerLine = metadata.lineCount > 0 ? 
-      content.split(/\s+/).length / metadata.lineCount : 0;
-    
-    metadata.complexity = avgWordsPerLine > 15 ? 'high' : 
-                         avgWordsPerLine > 8 ? 'medium' : 'low';
+    const avgWordsPerLine =
+      metadata.lineCount > 0
+        ? content.split(/\s+/).length / metadata.lineCount
+        : 0;
+
+    metadata.complexity =
+      avgWordsPerLine > 15 ? 'high' : avgWordsPerLine > 8 ? 'medium' : 'low';
 
     return metadata;
   }
@@ -278,7 +292,7 @@ export class MarkdownStrategy {
     for (let i = 0; i < headers.length; i++) {
       const header = headers[i];
       const nextHeader = headers[i + 1];
-      
+
       // Extract section content
       const sectionStart = header.startIndex;
       const sectionEnd = nextHeader ? nextHeader.startIndex : content.length;
@@ -287,19 +301,21 @@ export class MarkdownStrategy {
       // If section is too large, split it further
       if (sectionContent.length > this.options.chunkSize * 1.5) {
         const subChunks = this.splitLargeSection(sectionContent, header);
-        chunks.push(...subChunks.map((chunk, subIndex) => ({
-          id: `header-${i}-${subIndex}`,
-          text: chunk,
-          metadata: {
-            ...metadata,
-            chunkType: 'header-based',
-            headerLevel: header.level,
-            headerText: header.text,
-            sectionIndex: i,
-            subChunkIndex: subIndex,
-            chunkLength: chunk.length
-          }
-        })));
+        chunks.push(
+          ...subChunks.map((chunk, subIndex) => ({
+            id: `header-${i}-${subIndex}`,
+            text: chunk,
+            metadata: {
+              ...metadata,
+              chunkType: 'header-based',
+              headerLevel: header.level,
+              headerText: header.text,
+              sectionIndex: i,
+              subChunkIndex: subIndex,
+              chunkLength: chunk.length,
+            },
+          })),
+        );
       } else {
         chunks.push({
           id: `header-${i}`,
@@ -310,8 +326,8 @@ export class MarkdownStrategy {
             headerLevel: header.level,
             headerText: header.text,
             sectionIndex: i,
-            chunkLength: sectionContent.length
-          }
+            chunkLength: sectionContent.length,
+          },
         });
       }
     }
@@ -336,14 +352,14 @@ export class MarkdownStrategy {
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
       const lineWithBreak = `${line}\n`;
-      
+
       // Check if adding this line would exceed chunk size
       if (currentSize + lineWithBreak.length > this.options.chunkSize) {
         // Only create chunk if it has substantial content
         if (currentChunk.trim().length > 50) {
           chunks.push(currentChunk.trim());
         }
-        
+
         // Start new chunk with context (header + overlap)
         const overlapLines = this.getOverlapLines(lines, i);
         currentChunk = `${headerLine}\n${overlapLines.join('\n')}\n${lineWithBreak}`;
@@ -369,12 +385,12 @@ export class MarkdownStrategy {
     const overlapWords = this.options.chunkOverlap;
     const overlapLines: string[] = [];
     let wordCount = 0;
-    
+
     // Go backwards to get context
     for (let i = currentIndex - 1; i >= 0 && wordCount < overlapWords; i--) {
       const line = lines[i];
       const wordsInLine = line.split(/\s+/).length;
-      
+
       if (wordCount + wordsInLine <= overlapWords) {
         overlapLines.unshift(line);
         wordCount += wordsInLine;
@@ -382,7 +398,7 @@ export class MarkdownStrategy {
         break;
       }
     }
-    
+
     return overlapLines;
   }
 
@@ -392,18 +408,20 @@ export class MarkdownStrategy {
   private chunkBySize(parseResult: MarkdownParseResult): DocumentChunk[] {
     const { content, metadata } = parseResult;
     const chunks: string[] = [];
-    
+
     if (content.length <= this.options.chunkSize) {
-      return [{
-        id: 'chunk-0',
-        text: content,
-        metadata: {
-          ...metadata,
-          chunkType: 'size-based',
-          chunkIndex: 0,
-          chunkLength: content.length
-        }
-      }];
+      return [
+        {
+          id: 'chunk-0',
+          text: content,
+          metadata: {
+            ...metadata,
+            chunkType: 'size-based',
+            chunkIndex: 0,
+            chunkLength: content.length,
+          },
+        },
+      ];
     }
 
     let start = 0;
@@ -413,32 +431,35 @@ export class MarkdownStrategy {
       const end = Math.min(start + this.options.chunkSize, content.length);
       let chunk = content.substring(start, end);
       let actualEnd = end;
-      
+
       // Try to break at sentence boundaries
       if (end < content.length && !chunk.match(/[.!?]\s*$/)) {
         const lastSentenceEnd = Math.max(
           chunk.lastIndexOf('.'),
           chunk.lastIndexOf('!'),
-          chunk.lastIndexOf('?')
+          chunk.lastIndexOf('?'),
         );
-        
+
         if (lastSentenceEnd > chunk.length * 0.5) {
           chunk = chunk.substring(0, lastSentenceEnd + 1);
           actualEnd = start + lastSentenceEnd + 1;
         }
       }
-      
+
       chunks.push(chunk.trim());
-      
+
       // Move start position accounting for overlap
-      const nextStart = Math.max(actualEnd - this.options.chunkOverlap, start + 1);
+      const nextStart = Math.max(
+        actualEnd - this.options.chunkOverlap,
+        start + 1,
+      );
       start = nextStart;
       if (start >= content.length) break;
       chunkIndex++;
     }
 
     return chunks
-      .filter(chunk => chunk.length > 0)
+      .filter((chunk) => chunk.length > 0)
       .map((chunk, index) => ({
         id: `chunk-${index}`,
         text: chunk,
@@ -446,8 +467,8 @@ export class MarkdownStrategy {
           ...metadata,
           chunkType: 'size-based',
           chunkIndex: index,
-          chunkLength: chunk.length
-        }
+          chunkLength: chunk.length,
+        },
       }));
   }
 }

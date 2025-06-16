@@ -1,10 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { ModelSelector } from './model-selector';
 import { ProviderSelector } from './provider-selector';
 import { ModelSettings } from './model-settings';
@@ -77,7 +82,9 @@ export function ModelSelectorDemo({
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-2xl font-bold">{Object.keys(stats.byProvider).length}</span>
+              <span className="text-2xl font-bold">
+                {Object.keys(stats.byProvider).length}
+              </span>
             </div>
             <p className="text-xs text-muted-foreground">Providers</p>
           </CardContent>
@@ -97,7 +104,9 @@ export function ModelSelectorDemo({
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Brain className="h-4 w-4 text-muted-foreground" />
-              <span className="text-2xl font-bold">{stats.capabilities.reasoning}</span>
+              <span className="text-2xl font-bold">
+                {stats.capabilities.reasoning}
+              </span>
             </div>
             <p className="text-xs text-muted-foreground">With Reasoning</p>
           </CardContent>
@@ -115,7 +124,10 @@ export function ModelSelectorDemo({
         <CardContent className="space-y-4">
           {/* Enhanced Model Selector */}
           <div>
-            <label className="text-sm font-medium mb-2 block">
+            <label
+              htmlFor="model-selector"
+              className="text-sm font-medium mb-2 block"
+            >
               Selected Model
             </label>
             <ModelSelector
@@ -129,12 +141,15 @@ export function ModelSelectorDemo({
             <div className="flex flex-wrap gap-2 mt-3">
               <Badge variant="outline">
                 {providerIcons[selectedModel.provider]}
-                <span className="ml-1">{providers[selectedModel.provider].name}</span>
+                <span className="ml-1">
+                  {providers[selectedModel.provider].name}
+                </span>
               </Badge>
               <Badge variant="outline">
-                {selectedModel.capabilities.contextWindow >= 1000000 
-                  ? `${(selectedModel.capabilities.contextWindow / 1000000).toFixed(1)}M` 
-                  : `${Math.round(selectedModel.capabilities.contextWindow / 1000)}K`} tokens
+                {selectedModel.capabilities.contextWindow >= 1000000
+                  ? `${(selectedModel.capabilities.contextWindow / 1000000).toFixed(1)}M`
+                  : `${Math.round(selectedModel.capabilities.contextWindow / 1000)}K`}{' '}
+                tokens
               </Badge>
               {selectedModel.capabilities.supportsVision && (
                 <Badge variant="secondary">Vision</Badge>
@@ -160,7 +175,10 @@ export function ModelSelectorDemo({
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-2 block">
+            <label
+              htmlFor="provider-selector"
+              className="text-sm font-medium mb-2 block"
+            >
               AI Provider
             </label>
             <ProviderSelector
@@ -172,14 +190,20 @@ export function ModelSelectorDemo({
 
           <div>
             <p className="text-sm text-muted-foreground mb-2">
-              Available models from {providers[selectedProvider].name}: {providerModels.length}
+              Available models from {providers[selectedProvider].name}:{' '}
+              {providerModels.length}
             </p>
             <div className="space-y-2 max-h-40 overflow-y-auto">
               {providerModels.slice(0, 5).map((model) => (
-                <div key={model.id} className="flex items-center justify-between p-2 bg-muted/30 rounded">
+                <div
+                  key={model.id}
+                  className="flex items-center justify-between p-2 bg-muted/30 rounded"
+                >
                   <div>
                     <span className="font-medium text-sm">{model.name}</span>
-                    <p className="text-xs text-muted-foreground">{model.description}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {model.description}
+                    </p>
                   </div>
                   <Badge variant="outline" className="text-xs">
                     {model.tier?.toUpperCase()}
@@ -237,9 +261,7 @@ export function ModelSelectorDemo({
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Provider Overview</CardTitle>
-          <CardDescription>
-            Model distribution across providers
-          </CardDescription>
+          <CardDescription>Model distribution across providers</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
@@ -247,7 +269,9 @@ export function ModelSelectorDemo({
               <div key={provider} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {providerIcons[provider as Provider]}
-                  <span className="font-medium">{providers[provider as Provider].name}</span>
+                  <span className="font-medium">
+                    {providers[provider as Provider].name}
+                  </span>
                 </div>
                 <Badge variant="outline">{count} models</Badge>
               </div>
@@ -270,7 +294,8 @@ export function ModelSelectorDemo({
               <span className="capitalize">{session.user.type} User</span>
             </Badge>
             <div className="text-sm text-muted-foreground">
-              {stats.byTier.free} free • {stats.byTier.premium} premium • {stats.byTier.pro} pro models
+              {stats.byTier.free} free • {stats.byTier.premium} premium •{' '}
+              {stats.byTier.pro} pro models
             </div>
           </div>
         </CardContent>

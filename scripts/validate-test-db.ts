@@ -1,7 +1,10 @@
 #!/usr/bin/env tsx
 
 import { config } from 'dotenv';
-import { validateTestDatabaseConfig, createTestDatabase } from '../lib/db/test-config';
+import {
+  validateTestDatabaseConfig,
+  createTestDatabase,
+} from '../lib/db/test-config';
 
 // Load test environment configuration
 config({
@@ -37,17 +40,18 @@ async function validateTestDatabase(): Promise<void> {
         details: {
           isTestBranch: dbConfig.isTestBranch,
           branchName: dbConfig.branchName,
-          projectId: dbConfig.projectId
-        }
+          projectId: dbConfig.projectId,
+        },
       });
 
       if (dbConfig.isTestBranch) {
         console.log('   ✅ Using Neon test branch');
         console.log(`   🌿 Branch: ${dbConfig.branchName || 'auto-detected'}`);
       } else {
-        console.log('   ⚠️  Not using Neon test branch - ensure this is a test database');
+        console.log(
+          '   ⚠️  Not using Neon test branch - ensure this is a test database',
+        );
       }
-
     } catch (error) {
       results.push({
         category: 'Configuration',
@@ -58,7 +62,11 @@ async function validateTestDatabase(): Promise<void> {
     }
 
     // Check environment variables
-    const requiredEnvVars = ['POSTGRES_URL', 'OPENAI_API_KEY', 'COHERE_API_KEY'];
+    const requiredEnvVars = [
+      'POSTGRES_URL',
+      'OPENAI_API_KEY',
+      'COHERE_API_KEY',
+    ];
     const optionalEnvVars = ['BLOB_READ_WRITE_TOKEN', 'LANGSMITH_API_KEY'];
 
     for (const envVar of requiredEnvVars) {
@@ -67,14 +75,14 @@ async function validateTestDatabase(): Promise<void> {
           category: 'Environment',
           test: `${envVar} Configuration`,
           status: 'PASS',
-          message: `${envVar} is configured`
+          message: `${envVar} is configured`,
         });
       } else {
         results.push({
           category: 'Environment',
           test: `${envVar} Configuration`,
           status: 'FAIL',
-          message: `${envVar} is not configured or contains placeholder`
+          message: `${envVar} is not configured or contains placeholder`,
         });
       }
     }
@@ -85,14 +93,14 @@ async function validateTestDatabase(): Promise<void> {
           category: 'Environment',
           test: `${envVar} Configuration`,
           status: 'PASS',
-          message: `${envVar} is configured`
+          message: `${envVar} is configured`,
         });
       } else {
         results.push({
           category: 'Environment',
           test: `${envVar} Configuration`,
           status: 'WARN',
-          message: `${envVar} is not configured (optional)`
+          message: `${envVar} is not configured (optional)`,
         });
       }
     }
@@ -107,7 +115,7 @@ async function validateTestDatabase(): Promise<void> {
         category: 'Connection',
         test: 'Database Connection',
         status: 'PASS',
-        message: 'Successfully connected to test database'
+        message: 'Successfully connected to test database',
       });
       console.log('   ✅ Database connection established');
     } catch (error) {
@@ -115,9 +123,11 @@ async function validateTestDatabase(): Promise<void> {
         category: 'Connection',
         test: 'Database Connection',
         status: 'FAIL',
-        message: `Failed to connect: ${error instanceof Error ? error.message : String(error)}`
+        message: `Failed to connect: ${error instanceof Error ? error.message : String(error)}`,
       });
-      console.log(`   ❌ Connection failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.log(
+        `   ❌ Connection failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
 
     if (testDb) {
@@ -134,13 +144,25 @@ async function validateTestDatabase(): Promise<void> {
         `;
 
         const expectedTables = [
-          'User', 'Chat', 'Message_v2', 'Vote_v2', 'Document', 
-          'DocumentChunk', 'DocumentProcessing', 'Suggestion', 'Stream'
+          'User',
+          'Chat',
+          'Message_v2',
+          'Vote_v2',
+          'Document',
+          'DocumentChunk',
+          'DocumentProcessing',
+          'Suggestion',
+          'Stream',
         ];
 
         const foundTables = tables.map((t: any) => t.table_name);
-        const missingTables = expectedTables.filter((t: string) => !foundTables.includes(t));
-        const extraTables = foundTables.filter((t: string) => !expectedTables.includes(t) && !t.startsWith('drizzle'));
+        const missingTables = expectedTables.filter(
+          (t: string) => !foundTables.includes(t),
+        );
+        const extraTables = foundTables.filter(
+          (t: string) =>
+            !expectedTables.includes(t) && !t.startsWith('drizzle'),
+        );
 
         if (missingTables.length === 0) {
           results.push({
@@ -148,7 +170,7 @@ async function validateTestDatabase(): Promise<void> {
             test: 'Required Tables',
             status: 'PASS',
             message: 'All required tables are present',
-            details: { foundTables: foundTables.length }
+            details: { foundTables: foundTables.length },
           });
           console.log(`   ✅ Found ${foundTables.length} tables`);
         } else {
@@ -157,7 +179,7 @@ async function validateTestDatabase(): Promise<void> {
             test: 'Required Tables',
             status: 'FAIL',
             message: `Missing tables: ${missingTables.join(', ')}`,
-            details: { missingTables, foundTables }
+            details: { missingTables, foundTables },
           });
           console.log(`   ❌ Missing tables: ${missingTables.join(', ')}`);
         }
@@ -165,13 +187,12 @@ async function validateTestDatabase(): Promise<void> {
         if (extraTables.length > 0) {
           console.log(`   ℹ️  Extra tables: ${extraTables.join(', ')}`);
         }
-
       } catch (error) {
         results.push({
           category: 'Schema',
           test: 'Schema Inspection',
           status: 'FAIL',
-          message: `Failed to inspect schema: ${error instanceof Error ? error.message : String(error)}`
+          message: `Failed to inspect schema: ${error instanceof Error ? error.message : String(error)}`,
         });
       }
 
@@ -189,7 +210,7 @@ async function validateTestDatabase(): Promise<void> {
             category: 'Extensions',
             test: 'pgvector Extension',
             status: 'PASS',
-            message: 'pgvector extension is installed and available'
+            message: 'pgvector extension is installed and available',
           });
           console.log('   ✅ pgvector extension is available');
 
@@ -202,7 +223,7 @@ async function validateTestDatabase(): Promise<void> {
               category: 'Extensions',
               test: 'Vector Operations',
               status: 'PASS',
-              message: 'Vector operations are working correctly'
+              message: 'Vector operations are working correctly',
             });
             console.log('   ✅ Vector operations working');
           } catch (error) {
@@ -210,7 +231,7 @@ async function validateTestDatabase(): Promise<void> {
               category: 'Extensions',
               test: 'Vector Operations',
               status: 'FAIL',
-              message: `Vector operations failed: ${error instanceof Error ? error.message : String(error)}`
+              message: `Vector operations failed: ${error instanceof Error ? error.message : String(error)}`,
             });
           }
         } else {
@@ -218,7 +239,7 @@ async function validateTestDatabase(): Promise<void> {
             category: 'Extensions',
             test: 'pgvector Extension',
             status: 'WARN',
-            message: 'pgvector extension not found - RAG features may not work'
+            message: 'pgvector extension not found - RAG features may not work',
           });
           console.log('   ⚠️  pgvector extension not found');
         }
@@ -227,7 +248,7 @@ async function validateTestDatabase(): Promise<void> {
           category: 'Extensions',
           test: 'Extension Check',
           status: 'FAIL',
-          message: `Failed to check extensions: ${error instanceof Error ? error.message : String(error)}`
+          message: `Failed to check extensions: ${error instanceof Error ? error.message : String(error)}`,
         });
       }
 
@@ -238,7 +259,7 @@ async function validateTestDatabase(): Promise<void> {
       try {
         // Test basic CRUD operations
         const testUserId = `test-validation-${Date.now()}`;
-        
+
         // Create
         await testDb.connection`
           INSERT INTO "User" (id, email, password) 
@@ -265,7 +286,7 @@ async function validateTestDatabase(): Promise<void> {
             category: 'Operations',
             test: 'CRUD Operations',
             status: 'PASS',
-            message: 'All CRUD operations working correctly'
+            message: 'All CRUD operations working correctly',
           });
           console.log('   ✅ CRUD operations working');
         } else {
@@ -273,16 +294,15 @@ async function validateTestDatabase(): Promise<void> {
             category: 'Operations',
             test: 'CRUD Operations',
             status: 'FAIL',
-            message: 'CRUD operations failed validation'
+            message: 'CRUD operations failed validation',
           });
         }
-
       } catch (error) {
         results.push({
           category: 'Operations',
           test: 'CRUD Operations',
           status: 'FAIL',
-          message: `CRUD operations failed: ${error instanceof Error ? error.message : String(error)}`
+          message: `CRUD operations failed: ${error instanceof Error ? error.message : String(error)}`,
         });
       }
 
@@ -300,34 +320,39 @@ async function validateTestDatabase(): Promise<void> {
         `;
 
         const counts = sampleDataCounts[0];
-        
-        if (counts.sample_users > 0 && counts.sample_chats > 0 && counts.sample_messages > 0) {
+
+        if (
+          counts.sample_users > 0 &&
+          counts.sample_chats > 0 &&
+          counts.sample_messages > 0
+        ) {
           results.push({
             category: 'Sample Data',
             test: 'Sample Data Presence',
             status: 'PASS',
             message: 'Sample data is properly seeded',
-            details: counts
+            details: counts,
           });
           console.log('   ✅ Sample data is available');
-          console.log(`      Users: ${counts.sample_users}, Chats: ${counts.sample_chats}, Messages: ${counts.sample_messages}, Chunks: ${counts.sample_chunks}`);
+          console.log(
+            `      Users: ${counts.sample_users}, Chats: ${counts.sample_chats}, Messages: ${counts.sample_messages}, Chunks: ${counts.sample_chunks}`,
+          );
         } else {
           results.push({
             category: 'Sample Data',
             test: 'Sample Data Presence',
             status: 'WARN',
             message: 'Sample data appears to be missing or incomplete',
-            details: counts
+            details: counts,
           });
           console.log('   ⚠️  Sample data may be missing');
         }
-
       } catch (error) {
         results.push({
           category: 'Sample Data',
           test: 'Sample Data Check',
           status: 'FAIL',
-          message: `Failed to check sample data: ${error instanceof Error ? error.message : String(error)}`
+          message: `Failed to check sample data: ${error instanceof Error ? error.message : String(error)}`,
         });
       }
 
@@ -339,9 +364,9 @@ async function validateTestDatabase(): Promise<void> {
     console.log('\n📊 Validation Results Summary');
     console.log('=============================');
 
-    const passCount = results.filter(r => r.status === 'PASS').length;
-    const failCount = results.filter(r => r.status === 'FAIL').length;
-    const warnCount = results.filter(r => r.status === 'WARN').length;
+    const passCount = results.filter((r) => r.status === 'PASS').length;
+    const failCount = results.filter((r) => r.status === 'FAIL').length;
+    const warnCount = results.filter((r) => r.status === 'WARN').length;
 
     console.log(`✅ PASSED: ${passCount}`);
     console.log(`❌ FAILED: ${failCount}`);
@@ -350,39 +375,48 @@ async function validateTestDatabase(): Promise<void> {
 
     if (failCount > 0) {
       console.log('\n❌ Failed Tests:');
-      results.filter(r => r.status === 'FAIL').forEach(result => {
-        console.log(`   - ${result.category}: ${result.test}`);
-        console.log(`     ${result.message}`);
-      });
+      results
+        .filter((r) => r.status === 'FAIL')
+        .forEach((result) => {
+          console.log(`   - ${result.category}: ${result.test}`);
+          console.log(`     ${result.message}`);
+        });
     }
 
     if (warnCount > 0) {
       console.log('\n⚠️  Warnings:');
-      results.filter(r => r.status === 'WARN').forEach(result => {
-        console.log(`   - ${result.category}: ${result.test}`);
-        console.log(`     ${result.message}`);
-      });
+      results
+        .filter((r) => r.status === 'WARN')
+        .forEach((result) => {
+          console.log(`   - ${result.category}: ${result.test}`);
+          console.log(`     ${result.message}`);
+        });
     }
 
     console.log('\n🎯 Recommendations:');
-    
+
     if (failCount === 0) {
-      console.log('   🎉 Your test database is properly configured and ready for testing!');
+      console.log(
+        '   🎉 Your test database is properly configured and ready for testing!',
+      );
       console.log('   ✅ You can now run comprehensive E2E tests');
       console.log('   🚀 Execute: bun run test:e2e');
     } else {
-      console.log('   🔧 Please address the failed tests above before running tests');
+      console.log(
+        '   🔧 Please address the failed tests above before running tests',
+      );
       console.log('   📖 Check the .env.test configuration guide');
       console.log('   🛠️  Run: bun run db:test:setup to fix common issues');
     }
 
     if (warnCount > 0) {
-      console.log('   💡 Consider addressing warnings for optimal test experience');
+      console.log(
+        '   💡 Consider addressing warnings for optimal test experience',
+      );
     }
 
     // Exit with appropriate code
     process.exit(failCount > 0 ? 1 : 0);
-
   } catch (error) {
     console.error('❌ Validation failed with error:', error);
     process.exit(1);

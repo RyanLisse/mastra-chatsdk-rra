@@ -1,8 +1,5 @@
 import { db } from '@vercel/postgres';
-import type { 
-  DocumentChunk, 
-  DocumentProcessing 
-} from '@/lib/db/schema';
+import type { DocumentChunk, DocumentProcessing } from '@/lib/db/schema';
 import { drizzle } from 'drizzle-orm/vercel-postgres';
 import type { ProcessingStatus, ProcessingStage } from './progress/types';
 
@@ -32,7 +29,6 @@ export interface UpdateProcessingStatusParams {
  * Database operations for RAG document processing
  */
 export class RAGDatabase {
-  
   /**
    * Create a new document processing record
    */
@@ -40,10 +36,10 @@ export class RAGDatabase {
     documentId: string,
     filename: string,
     userId: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): Promise<DocumentProcessing> {
     const client = await db.connect();
-    
+
     try {
       const result = await client.sql`
         INSERT INTO "DocumentProcessing" (
@@ -58,7 +54,7 @@ export class RAGDatabase {
         VALUES (${documentId}, ${filename}, ${userId}, ${JSON.stringify(metadata || {})}, 'pending', 'upload', 0)
         RETURNING *
       `;
-      
+
       return result.rows[0] as DocumentProcessing;
     } finally {
       client.release();
@@ -68,9 +64,11 @@ export class RAGDatabase {
   /**
    * Update document processing status
    */
-  async updateProcessingStatus(params: UpdateProcessingStatusParams): Promise<DocumentProcessing | null> {
+  async updateProcessingStatus(
+    params: UpdateProcessingStatusParams,
+  ): Promise<DocumentProcessing | null> {
     const client = await db.connect();
-    
+
     try {
       const result = await client.sql`
         UPDATE "DocumentProcessing"
@@ -89,8 +87,8 @@ export class RAGDatabase {
         WHERE "documentId" = ${params.documentId}
         RETURNING *
       `;
-      
-      return result.rows[0] as DocumentProcessing || null;
+
+      return (result.rows[0] as DocumentProcessing) || null;
     } finally {
       client.release();
     }
@@ -99,17 +97,19 @@ export class RAGDatabase {
   /**
    * Get document processing status
    */
-  async getProcessingStatus(documentId: string): Promise<DocumentProcessing | null> {
+  async getProcessingStatus(
+    documentId: string,
+  ): Promise<DocumentProcessing | null> {
     const client = await db.connect();
-    
+
     try {
       const result = await client.sql`
         SELECT * FROM "DocumentProcessing"
         WHERE "documentId" = ${documentId}
         LIMIT 1
       `;
-      
-      return result.rows[0] as DocumentProcessing || null;
+
+      return (result.rows[0] as DocumentProcessing) || null;
     } finally {
       client.release();
     }
@@ -120,10 +120,10 @@ export class RAGDatabase {
    */
   async storeChunks(chunks: StoreChunkParams[]): Promise<void> {
     const client = await db.connect();
-    
+
     try {
       await client.sql`BEGIN`;
-      
+
       for (const chunk of chunks) {
         // Store chunk content as JSON with text and metadata
         const chunkContent = JSON.stringify({
@@ -133,10 +133,10 @@ export class RAGDatabase {
             documentId: chunk.documentId,
             filename: chunk.filename,
             chunkIndex: chunk.chunkIndex,
-            storedAt: new Date().toISOString()
-          }
+            storedAt: new Date().toISOString(),
+          },
         });
-        
+
         await client.sql`
           INSERT INTO "DocumentChunk" (
             "content", 
@@ -156,9 +156,8 @@ export class RAGDatabase {
           )
         `;
       }
-      
+
       await client.sql`COMMIT`;
-      
     } catch (error) {
       await client.sql`ROLLBACK`;
       throw error;
@@ -172,14 +171,14 @@ export class RAGDatabase {
    */
   async getDocumentChunks(documentId: string): Promise<DocumentChunk[]> {
     const client = await db.connect();
-    
+
     try {
       const result = await client.sql`
         SELECT * FROM "DocumentChunk"
         WHERE "documentId" = ${documentId}
         ORDER BY "chunkIndex" ASC
       `;
-      
+
       return result.rows as DocumentChunk[];
     } finally {
       client.release();
@@ -189,9 +188,12 @@ export class RAGDatabase {
   /**
    * Get recent processing records (for monitoring)
    */
-  async getRecentProcessingRecords(userId: string, limit = 10): Promise<DocumentProcessing[]> {
+  async getRecentProcessingRecords(
+    userId: string,
+    limit = 10,
+  ): Promise<DocumentProcessing[]> {
     const client = await db.connect();
-    
+
     try {
       const result = await client.sql`
         SELECT * FROM "DocumentProcessing"
@@ -199,7 +201,7 @@ export class RAGDatabase {
         ORDER BY "createdAt" DESC
         LIMIT ${limit}
       `;
-      
+
       return result.rows as DocumentProcessing[];
     } finally {
       client.release();
@@ -211,24 +213,24 @@ export class RAGDatabase {
    */
   async deleteDocument(documentId: string, userId: string): Promise<boolean> {
     const client = await db.connect();
-    
+
     try {
       await client.sql`BEGIN`;
-      
+
       // Delete chunks first
       await client.sql`
         DELETE FROM "DocumentChunk"
         WHERE "documentId" = ${documentId}
       `;
-      
+
       // Delete processing record
       const result = await client.sql`
         DELETE FROM "DocumentProcessing"
         WHERE "documentId" = ${documentId} AND "userId" = ${userId}
       `;
-      
+
       await client.sql`COMMIT`;
-      
+
       return (result.rowCount ?? 0) > 0;
     } catch (error) {
       await client.sql`ROLLBACK`;
@@ -241,16 +243,19 @@ export class RAGDatabase {
   /**
    * Search documents by text similarity (for RAG queries)
    */
-  async searchDocuments(queryEmbedding: number[], limit = 5): Promise<DocumentChunk[]> {
+  async searchDocuments(
+    queryEmbedding: number[],
+    limit = 5,
+  ): Promise<DocumentChunk[]> {
     const client = await db.connect();
-    
+
     try {
       const result = await client.sql`
         SELECT * FROM "DocumentChunk"
         ORDER BY "embedding" <=> ${JSON.stringify(queryEmbedding)}
         LIMIT ${limit}
       `;
-      
+
       return result.rows as DocumentChunk[];
     } finally {
       client.release();
@@ -268,7 +273,7 @@ export class RAGDatabase {
     failed: number;
   }> {
     const client = await db.connect();
-    
+
     try {
       const result = await client.sql`
         SELECT 
@@ -279,14 +284,14 @@ export class RAGDatabase {
           COUNT(*) FILTER (WHERE status = 'failed') as failed
         FROM "DocumentProcessing"
       `;
-      
+
       const stats = result.rows[0];
       return {
         total: Number(stats.total),
         pending: Number(stats.pending),
         processing: Number(stats.processing),
         completed: Number(stats.completed),
-        failed: Number(stats.failed)
+        failed: Number(stats.failed),
       };
     } finally {
       client.release();

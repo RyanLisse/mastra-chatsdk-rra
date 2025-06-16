@@ -8,10 +8,7 @@ import { DocumentUploadZone, type UploadFile } from './document-upload-zone';
 import { FileQueue, type QueueItem } from './file-queue';
 import { ErrorList, type ErrorInfo } from './error-display';
 import { useDocumentProgress } from '@/hooks/use-document-progress';
-import { 
-  InfoIcon,
-  FileIcon
-} from '@/components/icons';
+import { InfoIcon, FileIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 interface UploadStats {
@@ -31,7 +28,7 @@ export function DocumentUploadPage() {
     successfulUploads: 0,
     failedUploads: 0,
     totalSizeBytes: 0,
-    avgProcessingTime: 0
+    avgProcessingTime: 0,
   });
 
   const {
@@ -42,7 +39,7 @@ export function DocumentUploadPage() {
     stopTracking,
     clearProgress,
     clearAllProgress,
-    retryConnection
+    retryConnection,
   } = useDocumentProgress({
     onError: (error) => {
       addError({
@@ -50,96 +47,105 @@ export function DocumentUploadPage() {
         message: 'Lost connection to progress tracking',
         details: error,
         timestamp: new Date(),
-        retryable: true
+        retryable: true,
       });
     },
     onComplete: (documentId, state) => {
       updateQueueItemProcessingState(documentId, state);
       toast({
         type: 'success',
-        description: `Successfully processed: ${state.filename}`
+        description: `Successfully processed: ${state.filename}`,
       });
-    }
+    },
   });
 
   // Handle files selected from upload zone
   const handleFilesSelected = useCallback((files: UploadFile[]) => {
-    const newQueueItems: QueueItem[] = files.map(file => ({
+    const newQueueItems: QueueItem[] = files.map((file) => ({
       ...file,
-      uploadedAt: new Date()
+      uploadedAt: new Date(),
     }));
     setQueueItems(newQueueItems);
   }, []);
 
   // Add error to error list
   const addError = useCallback((error: ErrorInfo) => {
-    setErrors(prev => [error, ...prev].slice(0, 10)); // Keep only last 10 errors
+    setErrors((prev) => [error, ...prev].slice(0, 10)); // Keep only last 10 errors
   }, []);
 
   // Update queue item with processing state
-  const updateQueueItemProcessingState = useCallback((documentId: string, state: any) => {
-    setQueueItems(prev => 
-      prev.map(item => 
-        item.processingState?.documentId === documentId 
-          ? { ...item, processingState: state }
-          : item
-      )
-    );
-  }, []);
+  const updateQueueItemProcessingState = useCallback(
+    (documentId: string, state: any) => {
+      setQueueItems((prev) =>
+        prev.map((item) =>
+          item.processingState?.documentId === documentId
+            ? { ...item, processingState: state }
+            : item,
+        ),
+      );
+    },
+    [],
+  );
 
   // Upload a single file
-  const uploadFile = useCallback(async (item: QueueItem): Promise<string | null> => {
-    try {
-      const formData = new FormData();
-      formData.append('file', item.file);
-      formData.append('metadata', JSON.stringify({
-        source: 'user_upload',
-        uploadedAt: item.uploadedAt?.toISOString()
-      }));
+  const uploadFile = useCallback(
+    async (item: QueueItem): Promise<string | null> => {
+      try {
+        const formData = new FormData();
+        formData.append('file', item.file);
+        formData.append(
+          'metadata',
+          JSON.stringify({
+            source: 'user_upload',
+            uploadedAt: item.uploadedAt?.toISOString(),
+          }),
+        );
 
-      const response = await fetch('/api/documents/upload', {
-        method: 'POST',
-        body: formData
-      });
+        const response = await fetch('/api/documents/upload', {
+          method: 'POST',
+          body: formData,
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP ${response.status}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+
+        const result = await response.json();
+        return result.documentId;
+      } catch (error) {
+        addError({
+          type: 'upload_error',
+          message: 'Failed to upload file',
+          details: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date(),
+          filename: item.file.name,
+          retryable: true,
+        });
+        return null;
       }
-
-      const result = await response.json();
-      return result.documentId;
-    } catch (error) {
-      addError({
-        type: 'upload_error',
-        message: 'Failed to upload file',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date(),
-        filename: item.file.name,
-        retryable: true
-      });
-      return null;
-    }
-  }, [addError]);
+    },
+    [addError],
+  );
 
   // Start processing all valid files
   const startProcessing = useCallback(async () => {
-    const validItems = queueItems.filter(item => !item.error);
+    const validItems = queueItems.filter((item) => !item.error);
     if (validItems.length === 0) {
       toast({
         type: 'error',
-        description: 'No valid files to process'
+        description: 'No valid files to process',
       });
       return;
     }
 
     setIsProcessing(true);
-    
+
     try {
       for (const item of validItems) {
         if (!item.processingState || item.processingState.status === 'failed') {
           const documentId = await uploadFile(item);
-          
+
           if (documentId) {
             // Update queue item with processing state
             const initialProcessingState = {
@@ -148,15 +154,15 @@ export function DocumentUploadPage() {
               stage: 'upload' as const,
               progress: 0,
               status: 'processing' as const,
-              startedAt: new Date()
+              startedAt: new Date(),
             };
 
-            setQueueItems(prev => 
-              prev.map(queueItem => 
-                queueItem.id === item.id 
+            setQueueItems((prev) =>
+              prev.map((queueItem) =>
+                queueItem.id === item.id
                   ? { ...queueItem, processingState: initialProcessingState }
-                  : queueItem
-              )
+                  : queueItem,
+              ),
             );
 
             // Start progress tracking
@@ -175,55 +181,62 @@ export function DocumentUploadPage() {
     // Note: Individual uploads will continue, but we won't start new ones
     toast({
       type: 'success',
-      description: 'Processing stopped. Files currently uploading will continue.'
+      description:
+        'Processing stopped. Files currently uploading will continue.',
     });
   }, []);
 
   // Retry a specific item
-  const retryItem = useCallback(async (item: QueueItem) => {
-    if (item.processingState) {
-      const documentId = await uploadFile(item);
-      if (documentId) {
-        // Restart tracking
-        retryConnection(item.processingState.documentId);
-        startTracking(documentId, item.file.name);
+  const retryItem = useCallback(
+    async (item: QueueItem) => {
+      if (item.processingState) {
+        const documentId = await uploadFile(item);
+        if (documentId) {
+          // Restart tracking
+          retryConnection(item.processingState.documentId);
+          startTracking(documentId, item.file.name);
+        }
       }
-    }
-  }, [uploadFile, retryConnection, startTracking]);
+    },
+    [uploadFile, retryConnection, startTracking],
+  );
 
   // Remove item from queue
-  const removeItem = useCallback((itemId: string) => {
-    setQueueItems(prev => {
-      const item = prev.find(i => i.id === itemId);
-      if (item?.processingState) {
-        stopTracking(item.processingState.documentId);
-      }
-      return prev.filter(i => i.id !== itemId);
-    });
-  }, [stopTracking]);
+  const removeItem = useCallback(
+    (itemId: string) => {
+      setQueueItems((prev) => {
+        const item = prev.find((i) => i.id === itemId);
+        if (item?.processingState) {
+          stopTracking(item.processingState.documentId);
+        }
+        return prev.filter((i) => i.id !== itemId);
+      });
+    },
+    [stopTracking],
+  );
 
   // Clear completed items
   const clearCompleted = useCallback(() => {
-    setQueueItems(prev => {
-      const completedItems = prev.filter(item => 
-        item.processingState?.status === 'completed'
+    setQueueItems((prev) => {
+      const completedItems = prev.filter(
+        (item) => item.processingState?.status === 'completed',
       );
-      
-      completedItems.forEach(item => {
+
+      completedItems.forEach((item) => {
         if (item.processingState) {
           clearProgress(item.processingState.documentId);
         }
       });
-      
-      return prev.filter(item => 
-        item.processingState?.status !== 'completed'
+
+      return prev.filter(
+        (item) => item.processingState?.status !== 'completed',
       );
     });
   }, [clearProgress]);
 
   // Clear all items
   const clearAll = useCallback(() => {
-    queueItems.forEach(item => {
+    queueItems.forEach((item) => {
       if (item.processingState) {
         stopTracking(item.processingState.documentId);
       }
@@ -233,14 +246,17 @@ export function DocumentUploadPage() {
   }, [queueItems, stopTracking, clearAllProgress]);
 
   // Handle errors
-  const retryError = useCallback((error: ErrorInfo) => {
-    if (error.type === 'connection_error' && error.documentId) {
-      retryConnection(error.documentId);
-    }
-  }, [retryConnection]);
+  const retryError = useCallback(
+    (error: ErrorInfo) => {
+      if (error.type === 'connection_error' && error.documentId) {
+        retryConnection(error.documentId);
+      }
+    },
+    [retryConnection],
+  );
 
   const dismissError = useCallback((index: number) => {
-    setErrors(prev => prev.filter((_, i) => i !== index));
+    setErrors((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
   const clearAllErrors = useCallback(() => {
@@ -249,14 +265,14 @@ export function DocumentUploadPage() {
 
   // Update upload stats
   useEffect(() => {
-    const successful = queueItems.filter(item => 
-      item.processingState?.status === 'completed'
+    const successful = queueItems.filter(
+      (item) => item.processingState?.status === 'completed',
     ).length;
-    
-    const failed = queueItems.filter(item => 
-      item.processingState?.status === 'failed' || item.error
+
+    const failed = queueItems.filter(
+      (item) => item.processingState?.status === 'failed' || item.error,
     ).length;
-    
+
     const totalSize = queueItems.reduce((sum, item) => sum + item.file.size, 0);
 
     setUploadStats({
@@ -264,7 +280,7 @@ export function DocumentUploadPage() {
       successfulUploads: successful,
       failedUploads: failed,
       totalSizeBytes: totalSize,
-      avgProcessingTime: 0 // Could calculate this from processing states
+      avgProcessingTime: 0, // Could calculate this from processing states
     });
   }, [queueItems]);
 
@@ -276,7 +292,7 @@ export function DocumentUploadPage() {
         message: 'Progress tracking error',
         details: progressError,
         timestamp: new Date(),
-        retryable: true
+        retryable: true,
       });
     }
   }, [progressError, addError]);
@@ -292,15 +308,19 @@ export function DocumentUploadPage() {
   return (
     <div className="space-y-6">
       {/* Connection Status */}
-      {queueItems.some(item => item.processingState) && (
+      {queueItems.some((item) => item.processingState) && (
         <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
           <CardContent className="flex items-center gap-3 p-4">
-            <div className={cn(
-              'w-2 h-2 rounded-full',
-              isConnected ? 'bg-green-500' : 'bg-red-500'
-            )} />
+            <div
+              className={cn(
+                'w-2 h-2 rounded-full',
+                isConnected ? 'bg-green-500' : 'bg-red-500',
+              )}
+            />
             <span className="text-sm">
-              {isConnected ? 'Connected to progress tracking' : 'Disconnected from progress tracking'}
+              {isConnected
+                ? 'Connected to progress tracking'
+                : 'Disconnected from progress tracking'}
             </span>
             {!isConnected && (
               <Button
@@ -398,19 +418,23 @@ export function DocumentUploadPage() {
         <CardContent>
           <div className="space-y-2 text-sm">
             <p>
-              <strong>1.</strong> Drag and drop or select Markdown (.md) or JSON (.json) files
+              <strong>1.</strong> Drag and drop or select Markdown (.md) or JSON
+              (.json) files
             </p>
             <p>
-              <strong>2.</strong> Review the file queue and remove any invalid files
+              <strong>2.</strong> Review the file queue and remove any invalid
+              files
             </p>
             <p>
-              <strong>3.</strong> Click &ldquo;Start Processing&rdquo; to upload and process your documents
+              <strong>3.</strong> Click &ldquo;Start Processing&rdquo; to upload
+              and process your documents
             </p>
             <p>
               <strong>4.</strong> Monitor progress and wait for completion
             </p>
             <p>
-              <strong>5.</strong> Processed documents will be available for chat queries
+              <strong>5.</strong> Processed documents will be available for chat
+              queries
             </p>
           </div>
         </CardContent>

@@ -20,17 +20,17 @@ async function testRoboRailProcessing() {
     const processor = new DocumentProcessor({
       chunkSize: 512,
       chunkOverlap: 50,
-      userId: 'test-user' // For testing purposes
+      userId: 'test-user', // For testing purposes
     });
 
     // Get all files in data directory
     const files = await fs.readdir(DATA_DIR);
-    const dataFiles = files.filter(file => 
-      file.endsWith('.md') || file.endsWith('.json')
+    const dataFiles = files.filter(
+      (file) => file.endsWith('.md') || file.endsWith('.json'),
     );
 
     console.log(`Found ${dataFiles.length} data files to process:\n`);
-    dataFiles.forEach(file => console.log(`  - ${file}`));
+    dataFiles.forEach((file) => console.log(`  - ${file}`));
     console.log();
 
     // Process each file
@@ -45,8 +45,10 @@ async function testRoboRailProcessing() {
         console.log(`   Content length: ${content.length} characters`);
 
         // Detect file type
-        const mockFile = new File([content], filename, { 
-          type: filename.endsWith('.json') ? 'application/json' : 'text/markdown' 
+        const mockFile = new File([content], filename, {
+          type: filename.endsWith('.json')
+            ? 'application/json'
+            : 'text/markdown',
         });
         const fileType = detectFileType(mockFile);
         console.log(`   Detected type: ${fileType}`);
@@ -56,7 +58,12 @@ async function testRoboRailProcessing() {
 
         // Process the document
         const startTime = Date.now();
-        const result = await processor.process(content, filename, fileType, documentId);
+        const result = await processor.process(
+          content,
+          filename,
+          fileType,
+          documentId,
+        );
         const processingTime = Date.now() - startTime;
 
         // Display results
@@ -65,22 +72,31 @@ async function testRoboRailProcessing() {
         console.log(`      - Status: ${result.status}`);
         console.log(`      - Chunks: ${result.chunkCount}`);
         console.log(`      - Embeddings: ${result.embeddingCount}`);
-        
+
         if (result.metadata) {
-          console.log(`      - Metadata keys: ${Object.keys(result.metadata).join(', ')}`);
-          
+          console.log(
+            `      - Metadata keys: ${Object.keys(result.metadata).join(', ')}`,
+          );
+
           // Show specific metadata based on type
           if (fileType === 'markdown') {
             const md = result.metadata as any;
             if (md?.title) console.log(`      - Title: ${md.title}`);
             if (md?.category) console.log(`      - Category: ${md.category}`);
-            if (md?.headerCount) console.log(`      - Headers: ${md.headerCount}`);
-            if (md?.technicalTerms) console.log(`      - Technical terms: ${md.technicalTerms.join(', ')}`);
+            if (md?.headerCount)
+              console.log(`      - Headers: ${md.headerCount}`);
+            if (md?.technicalTerms)
+              console.log(
+                `      - Technical terms: ${md.technicalTerms.join(', ')}`,
+              );
           } else if (fileType === 'json') {
             const json = result.metadata as any;
-            if (json?.jsonType) console.log(`      - JSON type: ${json.jsonType}`);
-            if (json?.questionCount) console.log(`      - Questions: ${json.questionCount}`);
-            if (json?.categories) console.log(`      - Categories: ${json.categories.join(', ')}`);
+            if (json?.jsonType)
+              console.log(`      - JSON type: ${json.jsonType}`);
+            if (json?.questionCount)
+              console.log(`      - Questions: ${json.questionCount}`);
+            if (json?.categories)
+              console.log(`      - Categories: ${json.categories.join(', ')}`);
           }
         }
 
@@ -91,7 +107,9 @@ async function testRoboRailProcessing() {
             console.log(`      Chunk ${i + 1}:`);
             console.log(`        - ID: ${chunk.id}`);
             console.log(`        - Length: ${chunk.text.length} chars`);
-            console.log(`        - Preview: ${chunk.text.substring(0, 100)}...`);
+            console.log(
+              `        - Preview: ${chunk.text.substring(0, 100)}...`,
+            );
             if (chunk.metadata.chunkType) {
               console.log(`        - Type: ${chunk.metadata.chunkType}`);
             }
@@ -99,15 +117,18 @@ async function testRoboRailProcessing() {
               console.log(`        - Header: ${chunk.metadata.headerText}`);
             }
           });
-          
+
           if (result.chunks.length > 3) {
-            console.log(`      ... and ${result.chunks.length - 3} more chunks`);
+            console.log(
+              `      ... and ${result.chunks.length - 3} more chunks`,
+            );
           }
         }
-
       } catch (error) {
         console.log(`   ❌ Error processing ${filename}:`);
-        console.log(`      ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.log(
+          `      ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
       }
 
       console.log();
@@ -118,7 +139,6 @@ async function testRoboRailProcessing() {
     console.log('─'.repeat(60));
     console.log(`Total files processed: ${dataFiles.length}`);
     console.log('✅ Advanced document processing pipeline test completed!');
-
   } catch (error) {
     console.error('❌ Test failed:', error);
     process.exit(1);

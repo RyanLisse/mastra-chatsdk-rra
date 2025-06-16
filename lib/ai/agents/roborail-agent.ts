@@ -6,7 +6,10 @@ import { PostgresMemory } from '../../mastra/memory';
 import { ragTool } from '../tools/rag';
 import type { Message } from 'ai';
 import { generateUUID } from '../../utils';
-import { traceAgentGeneration, traceMemoryOperation } from '../../mastra/langsmith';
+import {
+  traceAgentGeneration,
+  traceMemoryOperation,
+} from '../../mastra/langsmith';
 
 export interface RoboRailAgentConfig {
   sessionId?: string;
@@ -48,39 +51,42 @@ export class RoboRailAgent {
             'get_history',
             this.sessionId,
             {},
-            () => PostgresMemory.getHistory({ sessionId: this.sessionId })
+            () => PostgresMemory.getHistory({ sessionId: this.sessionId }),
           );
-          
+
           // Add the new user message to history
           const newUserMessage: Message = {
             id: generateUUID(),
             role: 'user',
-            content: userInput
+            content: userInput,
           };
-          
+
           // Store the new user message
           await traceMemoryOperation(
             'add_message',
             this.sessionId,
             { message: newUserMessage },
-            () => PostgresMemory.addMessage({ 
-              sessionId: this.sessionId, 
-              message: newUserMessage 
-            })
+            () =>
+              PostgresMemory.addMessage({
+                sessionId: this.sessionId,
+                message: newUserMessage,
+              }),
           );
-          
+
           // Return all messages including the new one
           return [...history, newUserMessage];
         } catch (error) {
           console.error('Error managing conversation history:', error);
           // Fallback to just the current message if history fails
-          return [{
-            id: generateUUID(),
-            role: 'user',
-            content: userInput
-          }];
+          return [
+            {
+              id: generateUUID(),
+              role: 'user',
+              content: userInput,
+            },
+          ];
         }
-      }
+      },
     );
   }
 
@@ -96,43 +102,46 @@ export class RoboRailAgent {
         try {
           // Get messages with conversation history
           const messages = await this.getMessagesWithHistory(input);
-          
+
           // Generate response using AI SDK with context
           const result = await generateText({
             model: myProvider.languageModel(this.selectedChatModel),
             system: roboRailPrompt,
             messages,
             tools: {
-              ragTool
-            }
+              ragTool,
+            },
           });
 
           // Store the assistant's response in memory
           const assistantMessage: Message = {
             id: generateUUID(),
             role: 'assistant',
-            content: result.text
+            content: result.text,
           };
 
           await traceMemoryOperation(
             'add_assistant_message',
             this.sessionId,
             { message: assistantMessage },
-            () => PostgresMemory.addMessage({
-              sessionId: this.sessionId,
-              message: assistantMessage
-            })
+            () =>
+              PostgresMemory.addMessage({
+                sessionId: this.sessionId,
+                message: assistantMessage,
+              }),
           );
 
           return {
             text: result.text,
-            content: result.text
+            content: result.text,
           };
         } catch (error) {
           console.error('Error generating response:', error);
-          throw new Error(`Failed to generate response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          throw new Error(
+            `Failed to generate response: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          );
         }
-      }
+      },
     );
   }
 
@@ -148,14 +157,14 @@ export class RoboRailAgent {
         try {
           // Get messages with conversation history
           const messages = await this.getMessagesWithHistory(input);
-          
+
           // Generate streaming response using AI SDK with context
           const result = streamText({
             model: myProvider.languageModel(this.selectedChatModel),
             system: roboRailPrompt,
             messages,
             tools: {
-              ragTool
+              ragTool,
             },
             onFinish: async ({ text }) => {
               // Store the assistant's response in memory when streaming finishes
@@ -163,30 +172,33 @@ export class RoboRailAgent {
                 const assistantMessage: Message = {
                   id: generateUUID(),
                   role: 'assistant',
-                  content: text
+                  content: text,
                 };
 
                 await traceMemoryOperation(
                   'add_streaming_assistant_message',
                   this.sessionId,
                   { message: assistantMessage },
-                  () => PostgresMemory.addMessage({
-                    sessionId: this.sessionId,
-                    message: assistantMessage
-                  })
+                  () =>
+                    PostgresMemory.addMessage({
+                      sessionId: this.sessionId,
+                      message: assistantMessage,
+                    }),
                 );
               } catch (error) {
                 console.error('Failed to store assistant message:', error);
               }
-            }
+            },
           });
 
           return result;
         } catch (error) {
           console.error('Error generating streaming response:', error);
-          throw new Error(`Failed to generate streaming response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          throw new Error(
+            `Failed to generate streaming response: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          );
         }
-      }
+      },
     );
   }
 
@@ -225,6 +237,8 @@ export class RoboRailAgent {
 /**
  * Factory function to create a new RoboRail agent instance
  */
-export function createRoboRailAgent(config: RoboRailAgentConfig = {}): RoboRailAgent {
+export function createRoboRailAgent(
+  config: RoboRailAgentConfig = {},
+): RoboRailAgent {
   return new RoboRailAgent(config);
 }

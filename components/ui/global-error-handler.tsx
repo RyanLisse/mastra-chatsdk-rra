@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  type ReactNode,
+} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/components/toast';
 import { Button } from './button';
@@ -29,7 +35,9 @@ interface GlobalErrorContextType {
   isOnline: boolean;
 }
 
-const GlobalErrorContext = createContext<GlobalErrorContextType | undefined>(undefined);
+const GlobalErrorContext = createContext<GlobalErrorContextType | undefined>(
+  undefined,
+);
 
 export function useGlobalError() {
   const context = useContext(GlobalErrorContext);
@@ -45,7 +53,9 @@ interface GlobalErrorProviderProps {
 
 export function GlobalErrorProvider({ children }: GlobalErrorProviderProps) {
   const [errors, setErrors] = useState<GlobalError[]>([]);
-  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== 'undefined' ? navigator.onLine : true,
+  );
 
   // Monitor online/offline status
   React.useEffect(() => {
@@ -61,49 +71,55 @@ export function GlobalErrorProvider({ children }: GlobalErrorProviderProps) {
     };
   }, []);
 
-  const addError = useCallback((errorData: Omit<GlobalError, 'id' | 'timestamp'>) => {
-    const error: GlobalError = {
-      ...errorData,
-      id: Math.random().toString(36).substr(2, 9),
-      timestamp: new Date(),
-    };
+  const addError = useCallback(
+    (errorData: Omit<GlobalError, 'id' | 'timestamp'>) => {
+      const error: GlobalError = {
+        ...errorData,
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: new Date(),
+      };
 
-    setErrors(prev => [error, ...prev.slice(0, 4)]); // Keep max 5 errors
+      setErrors((prev) => [error, ...prev.slice(0, 4)]); // Keep max 5 errors
 
-    // Also show as toast for immediate feedback
-    toast({
-      type: 'error',
-      description: error.title,
-    });
-  }, []);
+      // Also show as toast for immediate feedback
+      toast({
+        type: 'error',
+        description: error.title,
+      });
+    },
+    [],
+  );
 
   const removeError = useCallback((id: string) => {
-    setErrors(prev => prev.filter(error => error.id !== id));
+    setErrors((prev) => prev.filter((error) => error.id !== id));
   }, []);
 
   const clearAllErrors = useCallback(() => {
     setErrors([]);
   }, []);
 
-  const retryError = useCallback(async (id: string) => {
-    const error = errors.find(e => e.id === id);
-    if (!error?.retryAction) return;
+  const retryError = useCallback(
+    async (id: string) => {
+      const error = errors.find((e) => e.id === id);
+      if (!error?.retryAction) return;
 
-    try {
-      await error.retryAction();
-      removeError(id);
-      toast({
-        type: 'success',
-        description: 'Action completed successfully',
-      });
-    } catch (retryError) {
-      console.error('Error during retry:', retryError);
-      toast({
-        type: 'error',
-        description: 'Retry failed. Please try again.',
-      });
-    }
-  }, [errors, removeError]);
+      try {
+        await error.retryAction();
+        removeError(id);
+        toast({
+          type: 'success',
+          description: 'Action completed successfully',
+        });
+      } catch (retryError) {
+        console.error('Error during retry:', retryError);
+        toast({
+          type: 'error',
+          description: 'Retry failed. Please try again.',
+        });
+      }
+    },
+    [errors, removeError],
+  );
 
   return (
     <GlobalErrorContext.Provider
@@ -140,7 +156,7 @@ function GlobalErrorDisplay() {
           />
         ))}
       </AnimatePresence>
-      
+
       {errors.length > 3 && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -235,7 +251,7 @@ function ErrorCard({ error, onDismiss, onRetry }: ErrorCardProps) {
             <div className="flex-shrink-0 mt-0.5">
               {getErrorIcon(error.type)}
             </div>
-            
+
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
@@ -246,12 +262,14 @@ function ErrorCard({ error, onDismiss, onRetry }: ErrorCardProps) {
                     {error.message}
                   </p>
                   {error.details && (
-                    <p className={cn('text-xs mt-1', colors.text, 'opacity-75')}>
+                    <p
+                      className={cn('text-xs mt-1', colors.text, 'opacity-75')}
+                    >
                       {error.details}
                     </p>
                   )}
                 </div>
-                
+
                 {error.dismissible && (
                   <Button
                     variant="ghost"
@@ -263,7 +281,7 @@ function ErrorCard({ error, onDismiss, onRetry }: ErrorCardProps) {
                   </Button>
                 )}
               </div>
-              
+
               {error.retryable && (
                 <div className="flex items-center gap-2 mt-3">
                   <Button
@@ -320,13 +338,15 @@ function NetworkStatusIndicator({ isOnline }: NetworkStatusIndicatorProps) {
             <CardContent className="p-3">
               <div className="flex items-center gap-2 text-yellow-800">
                 <WifiOff size={16} />
-                <span className="text-sm font-medium">No internet connection</span>
+                <span className="text-sm font-medium">
+                  No internet connection
+                </span>
               </div>
             </CardContent>
           </Card>
         </motion.div>
       )}
-      
+
       {isOnline && showOffline && (
         <motion.div
           initial={{ opacity: 0, y: -50 }}
@@ -349,7 +369,10 @@ function NetworkStatusIndicator({ isOnline }: NetworkStatusIndicatorProps) {
 }
 
 // Utility functions for common error scenarios
-export const createChatError = (message: string, retryAction?: () => Promise<void>): Omit<GlobalError, 'id' | 'timestamp'> => ({
+export const createChatError = (
+  message: string,
+  retryAction?: () => Promise<void>,
+): Omit<GlobalError, 'id' | 'timestamp'> => ({
   type: 'api',
   title: 'Chat Error',
   message,
@@ -358,16 +381,21 @@ export const createChatError = (message: string, retryAction?: () => Promise<voi
   dismissible: true,
 });
 
-export const createNetworkError = (retryAction?: () => Promise<void>): Omit<GlobalError, 'id' | 'timestamp'> => ({
+export const createNetworkError = (
+  retryAction?: () => Promise<void>,
+): Omit<GlobalError, 'id' | 'timestamp'> => ({
   type: 'network',
   title: 'Connection Error',
-  message: 'Unable to connect to the server. Please check your internet connection.',
+  message:
+    'Unable to connect to the server. Please check your internet connection.',
   retryable: !!retryAction,
   retryAction,
   dismissible: true,
 });
 
-export const createTimeoutError = (retryAction?: () => Promise<void>): Omit<GlobalError, 'id' | 'timestamp'> => ({
+export const createTimeoutError = (
+  retryAction?: () => Promise<void>,
+): Omit<GlobalError, 'id' | 'timestamp'> => ({
   type: 'timeout',
   title: 'Request Timeout',
   message: 'The request took too long to complete. Please try again.',

@@ -3,20 +3,20 @@ import { z } from 'zod';
 // Progress stages for document processing
 export const ProcessingStage = z.enum([
   'upload',
-  'parsing', 
+  'parsing',
   'chunking',
   'embedding',
   'storing',
   'completed',
-  'error'
+  'error',
 ]);
 
 // Processing status
 export const ProcessingStatus = z.enum([
   'pending',
-  'processing', 
+  'processing',
   'completed',
-  'failed'
+  'failed',
 ]);
 
 // Progress state schema
@@ -29,7 +29,7 @@ export const ProgressStateSchema = z.object({
   error: z.string().optional(),
   metadata: z.record(z.unknown()).optional(),
   createdAt: z.date(),
-  updatedAt: z.date()
+  updatedAt: z.date(),
 });
 
 // Progress update schema
@@ -38,7 +38,7 @@ export const ProgressUpdateSchema = z.object({
   progress: z.number().min(0).max(100),
   status: ProcessingStatus,
   error: z.string().optional(),
-  metadata: z.record(z.unknown()).optional()
+  metadata: z.record(z.unknown()).optional(),
 });
 
 // Export types

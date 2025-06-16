@@ -16,7 +16,7 @@ async function setupDatabase() {
     await client.sql`DROP TABLE IF EXISTS "DocumentEmbedding" CASCADE`;
     await client.sql`DROP TABLE IF EXISTS "DocumentChunk" CASCADE`;
     await client.sql`DROP TABLE IF EXISTS "chat_sessions" CASCADE`;
-    
+
     // Create the DocumentChunk table for RAG system
     // The embedding dimension (1024) must match the OpenAI text-embedding-ada-002 model's output
     await client.sql`
@@ -47,10 +47,12 @@ async function setupDatabase() {
   }
 }
 
-setupDatabase().then(() => {
-  console.log('Database setup complete.');
-  process.exit(0);
-}).catch((error) => {
-  console.error('Setup failed:', error);
-  process.exit(1);
-});
+setupDatabase()
+  .then(() => {
+    console.log('Database setup complete.');
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('Setup failed:', error);
+    process.exit(1);
+  });

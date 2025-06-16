@@ -1,7 +1,17 @@
 // tests/mastra/agent-memory-integration.test.ts
-import { expect, test, describe, beforeAll, afterEach, beforeEach } from "bun:test";
+import {
+  expect,
+  test,
+  describe,
+  beforeAll,
+  afterEach,
+  beforeEach,
+} from 'bun:test';
 import { config } from 'dotenv';
-import { createRoboRailAgent, type RoboRailAgent } from '../../lib/ai/agents/roborail-agent';
+import {
+  createRoboRailAgent,
+  type RoboRailAgent,
+} from '../../lib/ai/agents/roborail-agent';
 import { PostgresMemory } from '../../lib/mastra/memory';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
@@ -11,7 +21,10 @@ import { randomUUID } from 'node:crypto';
 // Load environment variables for testing
 // Try .env.local first, fallback to .env
 config({ path: '.env.local' });
-if (!process.env.POSTGRES_URL || process.env.POSTGRES_URL.includes('your-test-postgres-url-here')) {
+if (
+  !process.env.POSTGRES_URL ||
+  process.env.POSTGRES_URL.includes('your-test-postgres-url-here')
+) {
   config({ path: '.env' });
 }
 
@@ -21,9 +34,11 @@ function getDatabase() {
     throw new Error('POSTGRES_URL environment variable is not set');
   }
   if (process.env.POSTGRES_URL.includes('your-test-postgres-url-here')) {
-    throw new Error('POSTGRES_URL is still set to placeholder value. Please configure your database connection.');
+    throw new Error(
+      'POSTGRES_URL is still set to placeholder value. Please configure your database connection.',
+    );
   }
-  
+
   const client = postgres(process.env.POSTGRES_URL);
   return drizzle(client);
 }
@@ -56,15 +71,15 @@ describe('RoboRail Agent Memory Integration', () => {
     // Generate fresh test session IDs and agents for each test
     testSessionId = `test-session-${randomUUID()}`;
     testSessionId2 = `test-session-${randomUUID()}`;
-    
+
     agent = createRoboRailAgent({
       sessionId: testSessionId,
-      selectedChatModel: 'chat-model'
+      selectedChatModel: 'chat-model',
     });
-    
+
     agent2 = createRoboRailAgent({
       sessionId: testSessionId2,
-      selectedChatModel: 'chat-model'
+      selectedChatModel: 'chat-model',
     });
   });
 
@@ -100,10 +115,10 @@ describe('RoboRail Agent Memory Integration', () => {
     test('should maintain context across multiple questions about RoboRail', async () => {
       // This test uses mocked responses since we're testing integration with memory
       // In a real scenario, you'd have actual AI responses
-      
+
       // First question
-      const firstQuestion = "How do I start the RoboRail machine?";
-      
+      const firstQuestion = 'How do I start the RoboRail machine?';
+
       // Simulate agent call (in real usage, this would make an actual AI call)
       try {
         await agent.generate(firstQuestion);
@@ -115,10 +130,14 @@ describe('RoboRail Agent Memory Integration', () => {
       // Check that the user message was added to memory
       const historyAfterFirst = await agent.getHistory();
       expect(historyAfterFirst.length).toBeGreaterThan(0);
-      
+
       // The user message should be in history
-      const userMessages = historyAfterFirst.filter(msg => msg.role === 'user');
-      expect(userMessages.some(msg => msg.content === firstQuestion)).toBe(true);
+      const userMessages = historyAfterFirst.filter(
+        (msg) => msg.role === 'user',
+      );
+      expect(userMessages.some((msg) => msg.content === firstQuestion)).toBe(
+        true,
+      );
     });
 
     test('should handle follow-up questions with context', async () => {
@@ -128,8 +147,8 @@ describe('RoboRail Agent Memory Integration', () => {
         message: {
           id: randomUUID(),
           role: 'user',
-          content: 'How do I start the RoboRail machine?'
-        }
+          content: 'How do I start the RoboRail machine?',
+        },
       });
 
       await PostgresMemory.addMessage({
@@ -137,8 +156,9 @@ describe('RoboRail Agent Memory Integration', () => {
         message: {
           id: randomUUID(),
           role: 'assistant',
-          content: 'To start the RoboRail machine, first ensure all safety protocols are followed...'
-        }
+          content:
+            'To start the RoboRail machine, first ensure all safety protocols are followed...',
+        },
       });
 
       // Now check if agent can retrieve this history
@@ -151,7 +171,7 @@ describe('RoboRail Agent Memory Integration', () => {
 
       // Test follow-up question
       const followUpQuestion = "What's the second step?";
-      
+
       try {
         await agent.generate(followUpQuestion);
       } catch (error) {
@@ -173,8 +193,8 @@ describe('RoboRail Agent Memory Integration', () => {
         message: {
           id: randomUUID(),
           role: 'user',
-          content: 'Question for session 1'
-        }
+          content: 'Question for session 1',
+        },
       });
 
       // Add messages to second session
@@ -183,8 +203,8 @@ describe('RoboRail Agent Memory Integration', () => {
         message: {
           id: randomUUID(),
           role: 'user',
-          content: 'Question for session 2'
-        }
+          content: 'Question for session 2',
+        },
       });
 
       // Verify separation
@@ -204,8 +224,8 @@ describe('RoboRail Agent Memory Integration', () => {
         message: {
           id: randomUUID(),
           role: 'user',
-          content: 'Confidential question about machine settings'
-        }
+          content: 'Confidential question about machine settings',
+        },
       });
 
       await PostgresMemory.addMessage({
@@ -213,8 +233,8 @@ describe('RoboRail Agent Memory Integration', () => {
         message: {
           id: randomUUID(),
           role: 'assistant',
-          content: 'Here are the confidential machine settings...'
-        }
+          content: 'Here are the confidential machine settings...',
+        },
       });
 
       // Check that second agent can't access first agent's conversation
@@ -224,7 +244,9 @@ describe('RoboRail Agent Memory Integration', () => {
       // Verify first agent still has its conversation
       const agent1History = await agent.getHistory();
       expect(agent1History).toHaveLength(2);
-      expect(agent1History.some(msg => msg.content.includes('Confidential'))).toBe(true);
+      expect(
+        agent1History.some((msg) => msg.content.includes('Confidential')),
+      ).toBe(true);
     });
   });
 
@@ -236,8 +258,8 @@ describe('RoboRail Agent Memory Integration', () => {
         message: {
           id: randomUUID(),
           role: 'user',
-          content: 'Test message 1'
-        }
+          content: 'Test message 1',
+        },
       });
 
       await PostgresMemory.addMessage({
@@ -245,8 +267,8 @@ describe('RoboRail Agent Memory Integration', () => {
         message: {
           id: randomUUID(),
           role: 'assistant',
-          content: 'Test response 1'
-        }
+          content: 'Test response 1',
+        },
       });
 
       // Verify messages exist
@@ -283,34 +305,41 @@ describe('RoboRail Agent Memory Integration', () => {
         {
           id: randomUUID(),
           role: 'user' as const,
-          content: 'What safety equipment do I need for RoboRail operation?'
+          content: 'What safety equipment do I need for RoboRail operation?',
         },
         {
           id: randomUUID(),
           role: 'assistant' as const,
-          content: 'For RoboRail operation, you need: safety glasses, steel-toed boots, hard hat, and high-visibility vest.'
+          content:
+            'For RoboRail operation, you need: safety glasses, steel-toed boots, hard hat, and high-visibility vest.',
         },
         {
           id: randomUUID(),
           role: 'user' as const,
-          content: 'What about emergency procedures?'
-        }
+          content: 'What about emergency procedures?',
+        },
       ];
 
       // Add messages to memory
       for (const message of safetyMessages) {
         await PostgresMemory.addMessage({
           sessionId: testSessionId,
-          message
+          message,
         });
       }
 
       // Verify the conversation is stored correctly
       const history = await agent.getHistory();
       expect(history).toHaveLength(3);
-      expect(history.some(msg => msg.content.includes('safety equipment'))).toBe(true);
-      expect(history.some(msg => msg.content.includes('steel-toed boots'))).toBe(true);
-      expect(history.some(msg => msg.content.includes('emergency procedures'))).toBe(true);
+      expect(
+        history.some((msg) => msg.content.includes('safety equipment')),
+      ).toBe(true);
+      expect(
+        history.some((msg) => msg.content.includes('steel-toed boots')),
+      ).toBe(true);
+      expect(
+        history.some((msg) => msg.content.includes('emergency procedures')),
+      ).toBe(true);
     });
 
     test('should handle troubleshooting sequences with context', async () => {
@@ -319,37 +348,39 @@ describe('RoboRail Agent Memory Integration', () => {
         {
           id: randomUUID(),
           role: 'user' as const,
-          content: 'The RoboRail machine is making unusual noises'
+          content: 'The RoboRail machine is making unusual noises',
         },
         {
           id: randomUUID(),
           role: 'assistant' as const,
-          content: 'Let me help you troubleshoot. First, can you describe the type of noise?'
+          content:
+            'Let me help you troubleshoot. First, can you describe the type of noise?',
         },
         {
           id: randomUUID(),
           role: 'user' as const,
-          content: 'It sounds like a grinding noise from the motor area'
+          content: 'It sounds like a grinding noise from the motor area',
         },
         {
           id: randomUUID(),
           role: 'assistant' as const,
-          content: 'A grinding noise from the motor suggests possible bearing issues. Check the motor bearings for wear.'
-        }
+          content:
+            'A grinding noise from the motor suggests possible bearing issues. Check the motor bearings for wear.',
+        },
       ];
 
       // Add messages to memory
       for (const message of troubleshootingMessages) {
         await PostgresMemory.addMessage({
           sessionId: testSessionId,
-          message
+          message,
         });
       }
 
       // Verify the troubleshooting sequence is preserved
       const history = await agent.getHistory();
       expect(history).toHaveLength(4);
-      
+
       // Check conversation flow is maintained
       expect(history[0].content).toContain('unusual noises');
       expect(history[1].content).toContain('troubleshoot');
@@ -363,37 +394,40 @@ describe('RoboRail Agent Memory Integration', () => {
         {
           id: randomUUID(),
           role: 'user' as const,
-          content: 'How do I perform routine maintenance on the RoboRail?'
+          content: 'How do I perform routine maintenance on the RoboRail?',
         },
         {
           id: randomUUID(),
           role: 'assistant' as const,
-          content: 'Routine maintenance involves several steps: 1) Check oil levels, 2) Inspect belts, 3) Clean filters. Would you like details on any specific step?'
+          content:
+            'Routine maintenance involves several steps: 1) Check oil levels, 2) Inspect belts, 3) Clean filters. Would you like details on any specific step?',
         },
         {
           id: randomUUID(),
           role: 'user' as const,
-          content: 'Tell me more about step 2'
-        }
+          content: 'Tell me more about step 2',
+        },
       ];
 
       // Add messages to memory
       for (const message of procedureMessages) {
         await PostgresMemory.addMessage({
           sessionId: testSessionId,
-          message
+          message,
         });
       }
 
       // Verify the procedure context is maintained
       const history = await agent.getHistory();
       expect(history).toHaveLength(3);
-      
+
       // The agent should have context about which step the user is asking about
       expect(history[2].content).toContain('step 2');
-      
+
       // Previous context should be available for the agent to reference
-      const maintenanceMessage = history.find(msg => msg.content.includes('routine maintenance'));
+      const maintenanceMessage = history.find((msg) =>
+        msg.content.includes('routine maintenance'),
+      );
       expect(maintenanceMessage).toBeDefined();
       expect(maintenanceMessage?.content).toContain('Check oil levels');
       expect(maintenanceMessage?.content).toContain('Inspect belts');

@@ -24,7 +24,11 @@ function chunkText(text: string, chunkSize = 250, overlap = 50): string[] {
 export async function ingestDocuments() {
   const client = await db.connect();
   try {
-    const docPath = path.join(process.cwd(), 'knowledge-base', 'robo-manual.md');
+    const docPath = path.join(
+      process.cwd(),
+      'knowledge-base',
+      'robo-manual.md',
+    );
     const document = await fs.readFile(docPath, 'utf-8');
     const chunks = chunkText(document);
 
@@ -33,16 +37,18 @@ export async function ingestDocuments() {
     // Process chunks one by one to avoid memory issues
     for (let i = 0; i < chunks.length; i++) {
       console.log(`Processing chunk ${i + 1}/${chunks.length}`);
-      
+
       const { embedding } = await embed({
         model: embeddingModel,
         value: chunks[i],
       });
 
       console.log(`Embedding dimensions: ${embedding?.length || 'undefined'}`);
-      
+
       if (!embedding || embedding.length !== 1024) {
-        console.error(`Invalid embedding dimensions: expected 1024, got ${embedding?.length || 'undefined'}`);
+        console.error(
+          `Invalid embedding dimensions: expected 1024, got ${embedding?.length || 'undefined'}`,
+        );
         continue;
       }
 

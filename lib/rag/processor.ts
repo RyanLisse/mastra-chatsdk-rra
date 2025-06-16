@@ -1,10 +1,10 @@
 import { createCohere } from '@ai-sdk/cohere';
 import { embed } from 'ai';
-import { 
-  type DocumentChunk, 
-  type ProcessingResult, 
+import {
+  type DocumentChunk,
+  type ProcessingResult,
   type SupportedFileType,
-  ProcessingResultSchema
+  ProcessingResultSchema,
 } from './validation';
 import { progressTracker, type ProgressUpdate } from './progress';
 import { ragDatabase, type StoreChunkParams } from './database';
@@ -12,14 +12,14 @@ import { MarkdownStrategy } from './strategies/markdown';
 import { JSONStrategy } from './strategies/json';
 
 // Initialize embedding model
-const cohere = createCohere({ 
-  apiKey: process.env.COHERE_API_KEY || '' 
+const cohere = createCohere({
+  apiKey: process.env.COHERE_API_KEY || '',
 });
 const embeddingModel = cohere.embedding('embed-english-v3.0');
 
 export interface ProcessorConfig {
   chunkSize?: number;
-  chunkOverlap?: number;  
+  chunkOverlap?: number;
   maxEmbeddingRetries?: number;
   batchSize?: number;
   userId?: string; // Required for database operations
@@ -36,7 +36,7 @@ export class DocumentProcessor {
       chunkOverlap: 50,
       maxEmbeddingRetries: 3,
       batchSize: 10,
-      ...config
+      ...config,
     };
 
     // Initialize processing strategies
@@ -45,7 +45,7 @@ export class DocumentProcessor {
       chunkOverlap: this.config.chunkOverlap,
       preserveHeaders: true,
       chunkByHeaders: true,
-      extractMetadata: true
+      extractMetadata: true,
     });
 
     this.jsonStrategy = new JSONStrategy({
@@ -54,7 +54,7 @@ export class DocumentProcessor {
       preserveStructure: true,
       groupRelatedItems: true,
       extractMetadata: true,
-      maxDepth: 5
+      maxDepth: 5,
     });
   }
 
@@ -65,19 +65,19 @@ export class DocumentProcessor {
     content: string,
     filename: string,
     type: SupportedFileType,
-    documentId: string
+    documentId: string,
   ): Promise<ProcessingResult> {
     try {
       // Initialize progress tracking
       progressTracker.initialize(documentId, filename);
-      
+
       // Create processing record in database if userId is provided
       if (this.config.userId) {
         await ragDatabase.createProcessingRecord(
           documentId,
           filename,
           this.config.userId,
-          { type, fileSize: content.length }
+          { type, fileSize: content.length },
         );
       }
 
@@ -85,33 +85,33 @@ export class DocumentProcessor {
       await this.updateProgress(documentId, {
         stage: 'parsing',
         progress: 25,
-        status: 'processing'
+        status: 'processing',
       });
 
       const { chunks, metadata } = await this.parseDocument(content, type);
 
       await this.updateProgress(documentId, {
-        stage: 'chunking', 
+        stage: 'chunking',
         progress: 50,
-        status: 'processing'
+        status: 'processing',
       });
 
       // Stage 2: Generate embeddings (75%)
       await this.updateProgress(documentId, {
         stage: 'embedding',
         progress: 75,
-        status: 'processing'
+        status: 'processing',
       });
 
       const embeddings = await this.generateEmbeddings(
-        chunks.map(c => c.text)
+        chunks.map((c) => c.text),
       );
 
       // Stage 3: Store in database (90%)
       await this.updateProgress(documentId, {
         stage: 'storing',
         progress: 90,
-        status: 'processing'
+        status: 'processing',
       });
 
       await this.storeChunks(chunks, embeddings, documentId, filename);
@@ -120,7 +120,7 @@ export class DocumentProcessor {
       await this.updateProgress(documentId, {
         stage: 'completed',
         progress: 100,
-        status: 'completed'
+        status: 'completed',
       });
 
       const result: ProcessingResult = {
@@ -128,24 +128,23 @@ export class DocumentProcessor {
         filename,
         chunks: chunks.map((chunk, i) => ({
           ...chunk,
-          embedding: embeddings[i]
+          embedding: embeddings[i],
         })),
         status: 'completed',
         metadata,
         processedAt: new Date(),
         chunkCount: chunks.length,
-        embeddingCount: embeddings.length
+        embeddingCount: embeddings.length,
       };
 
       return ProcessingResultSchema.parse(result);
-
     } catch (error) {
       // Handle processing errors
       await this.updateProgress(documentId, {
         stage: 'error',
         progress: 0,
         status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
 
       throw error;
@@ -156,8 +155,8 @@ export class DocumentProcessor {
    * Parse document based on type using advanced strategies
    */
   private async parseDocument(
-    content: string, 
-    type: SupportedFileType
+    content: string,
+    type: SupportedFileType,
   ): Promise<{ chunks: DocumentChunk[]; metadata: any }> {
     switch (type) {
       case 'markdown':
@@ -172,49 +171,58 @@ export class DocumentProcessor {
   /**
    * Parse markdown with advanced frontmatter support and header-aware chunking
    */
-  private parseMarkdown(content: string): { chunks: DocumentChunk[]; metadata: any } {
+  private parseMarkdown(content: string): {
+    chunks: DocumentChunk[];
+    metadata: any;
+  } {
     try {
       const parseResult = this.markdownStrategy.parse(content);
       const chunks = this.markdownStrategy.chunk(parseResult);
-      
+
       return {
         chunks,
-        metadata: parseResult.metadata
+        metadata: parseResult.metadata,
       };
     } catch (error) {
-      throw new Error(`Failed to parse markdown: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to parse markdown: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
   /**
    * Parse JSON document with structure-aware chunking
    */
-  private parseJSON(content: string): { chunks: DocumentChunk[]; metadata: any } {
+  private parseJSON(content: string): {
+    chunks: DocumentChunk[];
+    metadata: any;
+  } {
     try {
       const parseResult = this.jsonStrategy.parse(content);
       const chunks = this.jsonStrategy.chunk(parseResult);
-      
+
       return {
         chunks,
-        metadata: parseResult.metadata
+        metadata: parseResult.metadata,
       };
     } catch (error) {
-      throw new Error(`Failed to parse JSON: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to parse JSON: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
-
 
   /**
    * Generate embeddings with retry logic
    */
   private async generateEmbeddings(texts: string[]): Promise<number[][]> {
     const embeddings: number[][] = [];
-    
-    for (let i = 0; i < texts.length; i += this.config.batchSize!) {
-      const batch = texts.slice(i, i + this.config.batchSize!);
+
+    for (let i = 0; i < texts.length; i += this.config.batchSize || 10) {
+      const batch = texts.slice(i, i + (this.config.batchSize || 10));
       let retries = 0;
-      
-      while (retries < this.config.maxEmbeddingRetries!) {
+
+      while (retries < (this.config.maxEmbeddingRetries || 3)) {
         try {
           const batchEmbeddings = await Promise.all(
             batch.map(async (text) => {
@@ -223,24 +231,27 @@ export class DocumentProcessor {
                 value: text,
               });
               return result.embedding;
-            })
+            }),
           );
-          
+
           embeddings.push(...batchEmbeddings);
           break;
-          
         } catch (error) {
           retries++;
-          if (retries >= this.config.maxEmbeddingRetries!) {
-            throw new Error(`Failed to generate embeddings after ${retries} retries: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          if (retries >= (this.config.maxEmbeddingRetries || 3)) {
+            throw new Error(
+              `Failed to generate embeddings after ${retries} retries: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            );
           }
-          
+
           // Exponential backoff
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, retries) * 1000));
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.pow(2, retries) * 1000),
+          );
         }
       }
     }
-    
+
     return embeddings;
   }
 
@@ -251,7 +262,7 @@ export class DocumentProcessor {
     chunks: DocumentChunk[],
     embeddings: number[][],
     documentId: string,
-    filename?: string
+    filename?: string,
   ): Promise<void> {
     if (chunks.length !== embeddings.length) {
       throw new Error('Chunks and embeddings arrays must have the same length');
@@ -264,7 +275,7 @@ export class DocumentProcessor {
       chunkIndex: index,
       text: chunk.text,
       embedding: embeddings[index],
-      metadata: chunk.metadata
+      metadata: chunk.metadata,
     }));
 
     // Store using the database layer
@@ -274,18 +285,26 @@ export class DocumentProcessor {
   /**
    * Update progress with error handling
    */
-  private async updateProgress(documentId: string, update: ProgressUpdate): Promise<void> {
+  private async updateProgress(
+    documentId: string,
+    update: ProgressUpdate,
+  ): Promise<void> {
     try {
       await progressTracker.update(documentId, update);
-      
+
       // Also update database if userId is provided
-      if (this.config.userId && update.stage && update.status && typeof update.progress === 'number') {
+      if (
+        this.config.userId &&
+        update.stage &&
+        update.status &&
+        typeof update.progress === 'number'
+      ) {
         await ragDatabase.updateProcessingStatus({
           documentId,
-          status: update.status,  
+          status: update.status,
           stage: update.stage,
           progress: update.progress,
-          errorMessage: update.error
+          errorMessage: update.error,
         });
       }
     } catch (error) {

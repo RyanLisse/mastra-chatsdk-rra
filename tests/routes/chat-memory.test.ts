@@ -1,13 +1,19 @@
 // tests/routes/chat-memory.test.ts
-import { expect, test, describe, beforeAll, afterEach } from "bun:test";
+import { expect, test, describe, beforeAll, afterEach } from 'bun:test';
 import { config } from 'dotenv';
 import { randomUUID } from 'node:crypto';
 
 // Load environment variables for testing
 config({ path: '.env.test' });
-if (!process.env.POSTGRES_URL || process.env.POSTGRES_URL.includes('your-test-postgres-url-here')) {
+if (
+  !process.env.POSTGRES_URL ||
+  process.env.POSTGRES_URL.includes('your-test-postgres-url-here')
+) {
   config({ path: '.env.local' });
-  if (!process.env.POSTGRES_URL || process.env.POSTGRES_URL.includes('your-test-postgres-url-here')) {
+  if (
+    !process.env.POSTGRES_URL ||
+    process.env.POSTGRES_URL.includes('your-test-postgres-url-here')
+  ) {
     config({ path: '.env' });
   }
 }
@@ -17,7 +23,10 @@ describe('Chat API Route with Memory Integration', () => {
 
   beforeAll(() => {
     // Skip tests if database is not configured
-    if (!process.env.POSTGRES_URL || process.env.POSTGRES_URL.includes('your-test-postgres-url-here')) {
+    if (
+      !process.env.POSTGRES_URL ||
+      process.env.POSTGRES_URL.includes('your-test-postgres-url-here')
+    ) {
       console.log('Skipping chat memory tests - database not configured');
       return;
     }
@@ -37,16 +46,23 @@ describe('Chat API Route with Memory Integration', () => {
           createdAt: new Date(),
           role: 'user' as const,
           content: 'How do I start the RoboRail machine?',
-          parts: [{ text: 'How do I start the RoboRail machine?', type: 'text' as const }]
+          parts: [
+            {
+              text: 'How do I start the RoboRail machine?',
+              type: 'text' as const,
+            },
+          ],
         },
         selectedChatModel: 'chat-model' as const,
         selectedVisibilityType: 'private' as const,
-        sessionId: testSessionId
+        sessionId: testSessionId,
       };
 
       // Test that the schema validates this request
       expect(validRequest.sessionId).toBe(testSessionId);
-      expect(validRequest.message.content).toBe('How do I start the RoboRail machine?');
+      expect(validRequest.message.content).toBe(
+        'How do I start the RoboRail machine?',
+      );
     });
 
     test('should accept request without sessionId parameter', () => {
@@ -57,23 +73,30 @@ describe('Chat API Route with Memory Integration', () => {
           createdAt: new Date(),
           role: 'user' as const,
           content: 'What safety procedures should I follow?',
-          parts: [{ text: 'What safety procedures should I follow?', type: 'text' as const }]
+          parts: [
+            {
+              text: 'What safety procedures should I follow?',
+              type: 'text' as const,
+            },
+          ],
         },
         selectedChatModel: 'chat-model' as const,
-        selectedVisibilityType: 'public' as const
+        selectedVisibilityType: 'public' as const,
         // sessionId is optional and not included
       };
 
       // Test that the schema validates this request without sessionId
-      expect(validRequestWithoutSession.sessionId).toBeUndefined();
-      expect(validRequestWithoutSession.message.content).toBe('What safety procedures should I follow?');
+      expect((validRequestWithoutSession as any).sessionId).toBeUndefined();
+      expect(validRequestWithoutSession.message.content).toBe(
+        'What safety procedures should I follow?',
+      );
     });
   });
 
   describe('Memory vs Non-Memory Routing Logic', () => {
     test('should use memory path when sessionId is provided', () => {
       const requestWithSession = {
-        sessionId: testSessionId
+        sessionId: testSessionId,
       };
 
       // When sessionId is provided, useMemory should be true
@@ -87,14 +110,14 @@ describe('Chat API Route with Memory Integration', () => {
       };
 
       // When sessionId is not provided, useMemory should be false
-      const useMemory = requestWithoutSession.sessionId !== undefined;
+      const useMemory = (requestWithoutSession as any).sessionId !== undefined;
       expect(useMemory).toBe(false);
     });
 
     test('should generate fallback sessionId from chatId when sessionId not provided', () => {
       const chatId = randomUUID();
       const sessionId = undefined;
-      
+
       const effectiveSessionId = sessionId || `chat-${chatId}`;
       expect(effectiveSessionId).toBe(`chat-${chatId}`);
     });
@@ -102,7 +125,7 @@ describe('Chat API Route with Memory Integration', () => {
     test('should use provided sessionId when available', () => {
       const chatId = randomUUID();
       const sessionId = testSessionId;
-      
+
       const effectiveSessionId = sessionId || `chat-${chatId}`;
       expect(effectiveSessionId).toBe(testSessionId);
     });
@@ -111,8 +134,8 @@ describe('Chat API Route with Memory Integration', () => {
   describe('Error Handling', () => {
     test('should handle invalid sessionId format gracefully', () => {
       const invalidSessionIds = ['', '   ', 'invalid-chars-@#$%'];
-      
-      invalidSessionIds.forEach(invalidSessionId => {
+
+      invalidSessionIds.forEach((invalidSessionId) => {
         // The API should not crash with invalid session IDs
         // It should either sanitize them or handle the error gracefully
         expect(typeof invalidSessionId).toBe('string');
@@ -122,7 +145,7 @@ describe('Chat API Route with Memory Integration', () => {
     test('should handle missing required fields in message', () => {
       const incompleteMessage = {
         // Missing required fields
-        content: 'Test message'
+        content: 'Test message',
       };
 
       // The schema validation should catch this
@@ -136,19 +159,21 @@ describe('Chat API Route with Memory Integration', () => {
       const troubleshootingFlow = [
         {
           sessionId: testSessionId,
-          userMessage: 'The RoboRail machine won\'t start',
-          expectedContext: 'Initial problem'
+          userMessage: "The RoboRail machine won't start",
+          expectedContext: 'Initial problem',
         },
         {
           sessionId: testSessionId,
-          userMessage: 'I checked the power and it\'s connected',
-          expectedContext: 'Should remember previous issue about machine not starting'
+          userMessage: "I checked the power and it's connected",
+          expectedContext:
+            'Should remember previous issue about machine not starting',
         },
         {
           sessionId: testSessionId,
           userMessage: 'What should I check next?',
-          expectedContext: 'Should remember both the problem and what was already checked'
-        }
+          expectedContext:
+            'Should remember both the problem and what was already checked',
+        },
       ];
 
       // Test that each message in the flow maintains the same sessionId
@@ -156,7 +181,7 @@ describe('Chat API Route with Memory Integration', () => {
         expect(step.sessionId).toBe(testSessionId);
         expect(step.userMessage).toBeDefined();
         expect(step.expectedContext).toBeDefined();
-        
+
         // Each step should build on the previous context
         if (index > 0) {
           expect(step.expectedContext).toContain('remember');
@@ -169,25 +194,27 @@ describe('Chat API Route with Memory Integration', () => {
         {
           sessionId: testSessionId,
           userMessage: 'What safety equipment do I need?',
-          expectedResponse: 'Should provide safety equipment list'
+          expectedResponse: 'Should provide safety equipment list',
         },
         {
           sessionId: testSessionId,
           userMessage: 'What about emergency procedures?',
-          expectedResponse: 'Should remember context is about safety'
+          expectedResponse: 'Should remember context is about safety',
         },
         {
           sessionId: testSessionId,
           userMessage: 'Where is the emergency stop button?',
-          expectedResponse: 'Should provide specific location information'
-        }
+          expectedResponse: 'Should provide specific location information',
+        },
       ];
 
       // Test that safety conversation maintains context
-      safetyFlow.forEach(step => {
+      safetyFlow.forEach((step) => {
         expect(step.sessionId).toBe(testSessionId);
-        expect(step.userMessage.includes('safety equipment') || 
-               step.userMessage.includes('emergency')).toBe(true);
+        expect(
+          step.userMessage.includes('safety equipment') ||
+            step.userMessage.includes('emergency'),
+        ).toBe(true);
       });
     });
 
@@ -196,20 +223,20 @@ describe('Chat API Route with Memory Integration', () => {
         {
           sessionId: testSessionId,
           userMessage: 'How do I perform routine maintenance?',
-          step: 1
+          step: 1,
         },
         {
           sessionId: testSessionId,
           userMessage: 'Tell me more about step 2',
           step: 2,
-          requiresContext: true
+          requiresContext: true,
         },
         {
           sessionId: testSessionId,
           userMessage: 'What tools do I need for that step?',
           step: 3,
-          requiresContext: true
-        }
+          requiresContext: true,
+        },
       ];
 
       // Test that maintenance conversation builds context
@@ -226,39 +253,42 @@ describe('Chat API Route with Memory Integration', () => {
     test('should keep different user sessions completely separate', () => {
       const session1 = `user1-${randomUUID()}`;
       const session2 = `user2-${randomUUID()}`;
-      
+
       const user1Conversation = [
         { sessionId: session1, message: 'User 1 confidential question' },
-        { sessionId: session1, message: 'User 1 follow-up' }
+        { sessionId: session1, message: 'User 1 follow-up' },
       ];
-      
+
       const user2Conversation = [
         { sessionId: session2, message: 'User 2 different question' },
-        { sessionId: session2, message: 'User 2 follow-up' }
+        { sessionId: session2, message: 'User 2 follow-up' },
       ];
 
       // Verify sessions are different
       expect(session1).not.toBe(session2);
-      
+
       // Verify conversations are isolated
-      user1Conversation.forEach(msg => {
+      user1Conversation.forEach((msg) => {
         expect(msg.sessionId).toBe(session1);
         expect(msg.message).toContain('User 1');
       });
-      
-      user2Conversation.forEach(msg => {
+
+      user2Conversation.forEach((msg) => {
         expect(msg.sessionId).toBe(session2);
         expect(msg.message).toContain('User 2');
       });
     });
 
     test('should handle concurrent sessions without interference', () => {
-      const sessions = Array.from({ length: 5 }, () => `concurrent-${randomUUID()}`);
-      
+      const sessions = Array.from(
+        { length: 5 },
+        () => `concurrent-${randomUUID()}`,
+      );
+
       // Each session should be unique
       const uniqueSessions = new Set(sessions);
       expect(uniqueSessions.size).toBe(sessions.length);
-      
+
       // Each session should handle messages independently
       sessions.forEach((sessionId, index) => {
         const message = `Message for session ${index}`;

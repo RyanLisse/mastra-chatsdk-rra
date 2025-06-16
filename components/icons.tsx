@@ -56,7 +56,6 @@ export const AttachmentIcon = () => {
   );
 };
 
-
 export const GitIcon = () => {
   return (
     <svg

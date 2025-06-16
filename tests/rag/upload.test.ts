@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { validateFile, detectFileType, validateJSON } from '@/lib/rag/validation';
+import {
+  validateFile,
+  detectFileType,
+  validateJSON,
+} from '@/lib/rag/validation';
 import { progressStore } from '@/lib/rag/progress';
 
 describe('RAG Document Upload System', () => {
@@ -17,7 +21,7 @@ describe('RAG Document Upload System', () => {
     it('should validate markdown files correctly', () => {
       const mockFile = new File(['# Test Content'], 'test.md', {
         type: 'text/markdown',
-        lastModified: Date.now()
+        lastModified: Date.now(),
       });
 
       const result = validateFile(mockFile);
@@ -25,10 +29,14 @@ describe('RAG Document Upload System', () => {
     });
 
     it('should validate JSON files correctly', () => {
-      const mockFile = new File(['{"title": "Test", "content": "Hello"}'], 'test.json', {
-        type: 'application/json',
-        lastModified: Date.now()
-      });
+      const mockFile = new File(
+        ['{"title": "Test", "content": "Hello"}'],
+        'test.json',
+        {
+          type: 'application/json',
+          lastModified: Date.now(),
+        },
+      );
 
       const result = validateFile(mockFile);
       expect(result.success).toBe(true);
@@ -39,7 +47,7 @@ describe('RAG Document Upload System', () => {
       const largeContent = 'a'.repeat(51 * 1024 * 1024);
       const mockFile = new File([largeContent], 'large.md', {
         type: 'text/markdown',
-        lastModified: Date.now()
+        lastModified: Date.now(),
       });
 
       const result = validateFile(mockFile);
@@ -50,7 +58,7 @@ describe('RAG Document Upload System', () => {
     it('should reject unsupported file types', () => {
       const mockFile = new File(['test content'], 'test.txt', {
         type: 'text/plain',
-        lastModified: Date.now()
+        lastModified: Date.now(),
       });
 
       const result = validateFile(mockFile);
@@ -62,7 +70,7 @@ describe('RAG Document Upload System', () => {
   describe('File Type Detection', () => {
     it('should detect markdown files', () => {
       const markdownFile = new File(['# Test'], 'document.md', {
-        type: 'text/markdown'
+        type: 'text/markdown',
       });
 
       const type = detectFileType(markdownFile);
@@ -71,7 +79,7 @@ describe('RAG Document Upload System', () => {
 
     it('should detect JSON files', () => {
       const jsonFile = new File(['{}'], 'data.json', {
-        type: 'application/json'
+        type: 'application/json',
       });
 
       const type = detectFileType(jsonFile);
@@ -80,7 +88,7 @@ describe('RAG Document Upload System', () => {
 
     it('should default to markdown for plain text files with .md extension', () => {
       const file = new File(['# Test'], 'document.md', {
-        type: 'text/plain' // Sometimes .md files are detected as plain text
+        type: 'text/plain', // Sometimes .md files are detected as plain text
       });
 
       const type = detectFileType(file);
@@ -93,7 +101,7 @@ describe('RAG Document Upload System', () => {
       const validJson = JSON.stringify({
         title: 'Test Document',
         content: 'This is test content',
-        metadata: { author: 'Test Author' }
+        metadata: { author: 'Test Author' },
       });
 
       const result = validateJSON(validJson);
@@ -104,7 +112,7 @@ describe('RAG Document Upload System', () => {
     it('should handle JSON with array content', () => {
       const jsonWithArray = JSON.stringify({
         title: 'List Document',
-        content: ['Item 1', 'Item 2', 'Item 3']
+        content: ['Item 1', 'Item 2', 'Item 3'],
       });
 
       const result = validateJSON(jsonWithArray);
@@ -142,7 +150,7 @@ describe('RAG Document Upload System', () => {
       const updatedState = progressStore.update(documentId, {
         stage: 'parsing',
         progress: 25,
-        status: 'processing'
+        status: 'processing',
       });
 
       expect(updatedState?.stage).toBe('parsing');
@@ -152,11 +160,11 @@ describe('RAG Document Upload System', () => {
 
     it('should check if document exists in store', () => {
       const documentId = 'test-doc-123';
-      
+
       expect(progressStore.exists(documentId)).toBe(false);
-      
+
       progressStore.initialize(documentId, 'test.md');
-      
+
       expect(progressStore.exists(documentId)).toBe(true);
     });
 
@@ -165,9 +173,9 @@ describe('RAG Document Upload System', () => {
       progressStore.initialize(documentId, 'test.md');
 
       expect(progressStore.exists(documentId)).toBe(true);
-      
+
       const removed = progressStore.remove(documentId);
-      
+
       expect(removed).toBe(true);
       expect(progressStore.exists(documentId)).toBe(false);
     });
@@ -175,22 +183,31 @@ describe('RAG Document Upload System', () => {
 });
 
 // Integration test helpers for manual testing
-export const testHelpers = {
-  createMockMarkdownFile: (content = '# Test Document\n\nThis is test content.', filename = 'test.md') => {
+const testHelpers = {
+  createMockMarkdownFile: (
+    content = '# Test Document\n\nThis is test content.',
+    filename = 'test.md',
+  ) => {
     return new File([content], filename, {
       type: 'text/markdown',
-      lastModified: Date.now()
+      lastModified: Date.now(),
     });
   },
 
-  createMockJSONFile: (data = { title: 'Test', content: 'Test content' }, filename = 'test.json') => {
+  createMockJSONFile: (
+    data = { title: 'Test', content: 'Test content' },
+    filename = 'test.json',
+  ) => {
     return new File([JSON.stringify(data, null, 2)], filename, {
       type: 'application/json',
-      lastModified: Date.now()
+      lastModified: Date.now(),
     });
   },
 
-  createMockMarkdownWithFrontmatter: (title = 'Test Document', tags = ['test']) => {
+  createMockMarkdownWithFrontmatter: (
+    title = 'Test Document',
+    tags = ['test'],
+  ) => {
     const content = `---
 title: ${title}
 tags: ${JSON.stringify(tags)}
@@ -211,7 +228,7 @@ More content here.`;
 
     return new File([content], 'test-with-frontmatter.md', {
       type: 'text/markdown',
-      lastModified: Date.now()
+      lastModified: Date.now(),
     });
-  }
+  },
 };

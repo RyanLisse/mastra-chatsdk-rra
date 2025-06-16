@@ -5,7 +5,11 @@ import { ragTool } from '../tools/rag';
 import { roboRailPrompt } from '../prompts';
 import type { Message } from 'ai';
 import { generateUUID } from '../../utils';
-import { traceVoiceAgent, traceMemoryOperation, traceRAGTool } from '../../mastra/langsmith';
+import {
+  traceVoiceAgent,
+  traceMemoryOperation,
+  traceRAGTool,
+} from '../../mastra/langsmith';
 
 export interface RoboRailVoiceAgentConfig {
   sessionId?: string;
@@ -25,12 +29,12 @@ export class RoboRailVoiceAgent {
 
   constructor(config: RoboRailVoiceAgentConfig = {}) {
     this.sessionId = config.sessionId || this.generateSessionId();
-    
+
     // Initialize OpenAI Realtime Voice with configuration
     this.voice = new OpenAIRealtimeVoice({
       apiKey: config.apiKey || process.env.OPENAI_API_KEY,
       model: config.model || 'gpt-4o-mini-realtime-preview-2024-12-17',
-      speaker: config.speaker || 'alloy'
+      speaker: config.speaker || 'alloy',
     });
 
     this.setupEventHandlers();
@@ -60,17 +64,18 @@ export class RoboRailVoiceAgent {
               const userMessage: Message = {
                 id: generateUUID(),
                 role: 'user',
-                content: text.trim()
+                content: text.trim(),
               };
 
               await traceMemoryOperation(
                 'add_voice_user_message',
                 this.sessionId,
                 { message: userMessage },
-                () => PostgresMemory.addMessage({
-                  sessionId: this.sessionId,
-                  message: userMessage
-                })
+                () =>
+                  PostgresMemory.addMessage({
+                    sessionId: this.sessionId,
+                    message: userMessage,
+                  }),
               );
 
               // Generate contextual response using conversation history
@@ -78,7 +83,7 @@ export class RoboRailVoiceAgent {
             } catch (error) {
               console.error('Error handling user speech:', error);
             }
-          }
+          },
         );
       }
     });
@@ -116,12 +121,16 @@ export class RoboRailVoiceAgent {
 
     try {
       await this.voice.connect();
-      
+
       // Set up the voice assistant with RoboRail context
-      await this.voice.speak(`Hello! I'm your RoboRail assistant. I can help you with RoboRail operations, maintenance, and troubleshooting. What would you like to know?`);
+      await this.voice.speak(
+        `Hello! I'm your RoboRail assistant. I can help you with RoboRail operations, maintenance, and troubleshooting. What would you like to know?`,
+      );
     } catch (error) {
       console.error('Failed to connect voice agent:', error);
-      throw new Error(`Failed to connect RoboRail Voice Agent: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to connect RoboRail Voice Agent: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -155,46 +164,60 @@ export class RoboRailVoiceAgent {
             'get_voice_history',
             this.sessionId,
             {},
-            () => PostgresMemory.getHistory({ sessionId: this.sessionId })
+            () => PostgresMemory.getHistory({ sessionId: this.sessionId }),
           );
-          
+
           // Prepare context for response generation
-          const contextMessages = history.map(msg => ({
+          const contextMessages = history.map((msg) => ({
             role: msg.role,
-            content: msg.content
+            content: msg.content,
           }));
 
           // Use RAG tool to get relevant RoboRail documentation
           let ragContext = '';
           try {
-            ragContext = await traceRAGTool(
-              userInput,
-              async () => {
-                const ragResult = await ragTool.execute(
-                  { query: userInput }, 
-                  { 
-                    toolCallId: generateUUID(), 
-                    messages: contextMessages.map(msg => ({ role: msg.role as 'user' | 'assistant', content: msg.content })) 
-                  }
-                );
-                if (ragResult && typeof ragResult === 'object' && 'context' in ragResult) {
-                  return ragResult.context as string;
-                }
-                return '';
+            ragContext = await traceRAGTool(userInput, async () => {
+              const ragResult = await ragTool.execute(
+                { query: userInput },
+                {
+                  toolCallId: generateUUID(),
+                  messages: contextMessages.map((msg) => ({
+                    role: msg.role as 'user' | 'assistant',
+                    content: msg.content,
+                  })),
+                },
+              );
+              if (
+                ragResult &&
+                typeof ragResult === 'object' &&
+                'context' in ragResult
+              ) {
+                return ragResult.context as string;
               }
-            );
+              return '';
+            });
           } catch (ragError) {
-            console.warn('RAG tool failed, continuing without additional context:', ragError);
+            console.warn(
+              'RAG tool failed, continuing without additional context:',
+              ragError,
+            );
           }
 
           // Create enhanced prompt with RoboRail context and conversation history
           const enhancedPrompt = `${roboRailPrompt}
 
 Recent conversation context:
-${contextMessages.slice(-6).map(msg => `${msg.role}: ${msg.content}`).join('\n')}
+${contextMessages
+  .slice(-6)
+  .map((msg) => `${msg.role}: ${msg.content}`)
+  .join('\n')}
 
-${ragContext ? `Relevant RoboRail documentation:
-${ragContext}` : ''}
+${
+  ragContext
+    ? `Relevant RoboRail documentation:
+${ragContext}`
+    : ''
+}
 
 Current user question: ${userInput}
 
@@ -207,16 +230,20 @@ Please provide a helpful, concise response focusing on RoboRail operations. Keep
           // and stored in memory when the voice generation completes
         } catch (error) {
           console.error('Error generating voice response:', error);
-          await this.voice.speak("I'm sorry, I encountered an error processing your request. Please try again.");
+          await this.voice.speak(
+            "I'm sorry, I encountered an error processing your request. Please try again.",
+          );
         }
-      }
+      },
     );
   }
 
   /**
    * Send audio stream to the voice service for processing
    */
-  async sendAudio(audioData: NodeJS.ReadableStream | Int16Array): Promise<void> {
+  async sendAudio(
+    audioData: NodeJS.ReadableStream | Int16Array,
+  ): Promise<void> {
     if (!this.isConnected) {
       throw new Error('Voice agent is not connected');
     }
@@ -225,7 +252,9 @@ Please provide a helpful, concise response focusing on RoboRail operations. Keep
       await this.voice.send(audioData);
     } catch (error) {
       console.error('Error sending audio:', error);
-      throw new Error(`Failed to send audio: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to send audio: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -241,7 +270,9 @@ Please provide a helpful, concise response focusing on RoboRail operations. Keep
       await this.voice.listen(audioStream);
     } catch (error) {
       console.error('Error listening to audio:', error);
-      throw new Error(`Failed to listen to audio: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to listen to audio: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -255,21 +286,23 @@ Please provide a helpful, concise response focusing on RoboRail operations. Keep
 
     try {
       await this.voice.speak(text);
-      
+
       // Store the assistant's message in memory
       const assistantMessage: Message = {
         id: generateUUID(),
         role: 'assistant',
-        content: text
+        content: text,
       };
 
       await PostgresMemory.addMessage({
         sessionId: this.sessionId,
-        message: assistantMessage
+        message: assistantMessage,
       });
     } catch (error) {
       console.error('Error speaking text:', error);
-      throw new Error(`Failed to speak: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to speak: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -322,6 +355,8 @@ Please provide a helpful, concise response focusing on RoboRail operations. Keep
 /**
  * Factory function to create a new RoboRail Voice agent instance
  */
-export function createRoboRailVoiceAgent(config: RoboRailVoiceAgentConfig = {}): RoboRailVoiceAgent {
+export function createRoboRailVoiceAgent(
+  config: RoboRailVoiceAgentConfig = {},
+): RoboRailVoiceAgent {
   return new RoboRailVoiceAgent(config);
 }

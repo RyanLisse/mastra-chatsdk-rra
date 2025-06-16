@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { nanoid } from 'nanoid';
 import { auth } from '@/app/(auth)/auth';
-import { 
+import {
   DocumentUploadSchema,
   validateFile,
   detectFileType,
   UploadResponseSchema,
   type UploadResponse,
-  type ErrorResponse
+  type ErrorResponse,
 } from '@/lib/rag/validation';
 import { DocumentProcessor } from '@/lib/rag/processor';
 import { progressTracker } from '@/lib/rag/progress';
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     if (!session) {
       const errorResponse: ErrorResponse = {
         error: 'Authentication required',
-        code: 'UNAUTHORIZED'
+        code: 'UNAUTHORIZED',
       };
       return NextResponse.json(errorResponse, { status: 401 });
     }
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     if (!request.body) {
       const errorResponse: ErrorResponse = {
         error: 'Request body is empty',
-        code: 'EMPTY_BODY'
+        code: 'EMPTY_BODY',
       };
       return NextResponse.json(errorResponse, { status: 400 });
     }
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     if (!file) {
       const errorResponse: ErrorResponse = {
         error: 'No file uploaded',
-        code: 'NO_FILE'
+        code: 'NO_FILE',
       };
       return NextResponse.json(errorResponse, { status: 400 });
     }
@@ -53,8 +53,8 @@ export async function POST(request: Request) {
     const fileValidation = validateFile(file);
     if (!fileValidation.success) {
       const errorResponse: ErrorResponse = {
-        error: fileValidation.error!,
-        code: 'INVALID_FILE'
+        error: fileValidation.error || 'File validation failed',
+        code: 'INVALID_FILE',
       };
       return NextResponse.json(errorResponse, { status: 400 });
     }
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       } catch (error) {
         const errorResponse: ErrorResponse = {
           error: 'Invalid metadata JSON',
-          code: 'INVALID_METADATA'
+          code: 'INVALID_METADATA',
         };
         return NextResponse.json(errorResponse, { status: 400 });
       }
@@ -80,18 +80,18 @@ export async function POST(request: Request) {
     const uploadValidation = DocumentUploadSchema.safeParse({
       file,
       type: fileType,
-      metadata
+      metadata,
     });
 
     if (!uploadValidation.success) {
       const errorMessage = uploadValidation.error.errors
         .map((error) => error.message)
         .join(', ');
-      
+
       const errorResponse: ErrorResponse = {
         error: errorMessage,
         code: 'VALIDATION_ERROR',
-        details: { errors: uploadValidation.error.errors }
+        details: { errors: uploadValidation.error.errors },
       };
       return NextResponse.json(errorResponse, { status: 400 });
     }
@@ -108,21 +108,25 @@ export async function POST(request: Request) {
       chunkOverlap: 50,
       maxEmbeddingRetries: 3,
       batchSize: 5,
-      userId: session.user?.id
+      userId: session.user?.id,
     });
 
     // Start processing in background (don't await)
-    processor.process(content, file.name, fileType, documentId).catch((error) => {
-      console.error(`Processing failed for document ${documentId}:`, error);
-      
-      // Update progress to failed state
-      progressTracker.update(documentId, {
-        stage: 'error',
-        progress: 0,
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Processing failed'
-      }).catch(console.error);
-    });
+    processor
+      .process(content, file.name, fileType, documentId)
+      .catch((error) => {
+        console.error(`Processing failed for document ${documentId}:`, error);
+
+        // Update progress to failed state
+        progressTracker
+          .update(documentId, {
+            stage: 'error',
+            progress: 0,
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Processing failed',
+          })
+          .catch(console.error);
+      });
 
     // Return immediate response with document ID
     const response: UploadResponse = {
@@ -130,21 +134,20 @@ export async function POST(request: Request) {
       filename: file.name,
       type: fileType,
       status: 'processing',
-      message: 'Document upload received and processing started'
+      message: 'Document upload received and processing started',
     };
 
-    return NextResponse.json(UploadResponseSchema.parse(response), { 
-      status: 202 // Accepted - processing in background
+    return NextResponse.json(UploadResponseSchema.parse(response), {
+      status: 202, // Accepted - processing in background
     });
-
   } catch (error) {
     console.error('Upload endpoint error:', error);
-    
+
     const errorResponse: ErrorResponse = {
       error: error instanceof Error ? error.message : 'Internal server error',
-      code: 'INTERNAL_ERROR'
+      code: 'INTERNAL_ERROR',
     };
-    
+
     return NextResponse.json(errorResponse, { status: 500 });
   }
 }

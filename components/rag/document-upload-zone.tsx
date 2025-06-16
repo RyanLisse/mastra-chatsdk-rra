@@ -28,76 +28,92 @@ export function DocumentUploadZone({
   onFilesSelected,
   disabled = false,
   maxFiles = 10,
-  className
+  className,
 }: DocumentUploadZoneProps) {
   const [selectedFiles, setSelectedFiles] = useState<UploadFile[]>([]);
 
-  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
-    const newFiles: UploadFile[] = [];
+  const onDrop = useCallback(
+    (acceptedFiles: File[], rejectedFiles: any[]) => {
+      const newFiles: UploadFile[] = [];
 
-    // Process accepted files
-    acceptedFiles.forEach((file) => {
-      const validation = validateFile(file);
-      const fileType = detectFileType(file);
-      
-      const uploadFile: UploadFile = {
-        id: `${file.name}-${Date.now()}-${Math.random()}`,
-        file,
-        type: fileType,
-        error: validation.success ? undefined : validation.error
-      };
+      // Process accepted files
+      acceptedFiles.forEach((file) => {
+        const validation = validateFile(file);
+        const fileType = detectFileType(file);
 
-      // Generate preview for small files
-      if (file.size < 1024 * 100) { // 100KB limit for preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const content = e.target?.result as string;
-          uploadFile.preview = content.slice(0, 200) + (content.length > 200 ? '...' : '');
+        const uploadFile: UploadFile = {
+          id: `${file.name}-${Date.now()}-${Math.random()}`,
+          file,
+          type: fileType,
+          error: validation.success ? undefined : validation.error,
         };
-        reader.readAsText(file);
-      }
 
-      newFiles.push(uploadFile);
-    });
+        // Generate preview for small files
+        if (file.size < 1024 * 100) {
+          // 100KB limit for preview
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const content = e.target?.result as string;
+            uploadFile.preview =
+              content.slice(0, 200) + (content.length > 200 ? '...' : '');
+          };
+          reader.readAsText(file);
+        }
 
-    // Process rejected files
-    rejectedFiles.forEach((rejected) => {
-      const uploadFile: UploadFile = {
-        id: `${rejected.file.name}-${Date.now()}-${Math.random()}`,
-        file: rejected.file,
-        type: 'markdown', // default
-        error: rejected.errors?.map((e: any) => e.message).join(', ') || 'File rejected'
-      };
-      newFiles.push(uploadFile);
-    });
+        newFiles.push(uploadFile);
+      });
 
-    const updatedFiles = [...selectedFiles, ...newFiles].slice(0, maxFiles);
-    setSelectedFiles(updatedFiles);
-    onFilesSelected(updatedFiles);
-  }, [selectedFiles, onFilesSelected, maxFiles]);
+      // Process rejected files
+      rejectedFiles.forEach((rejected) => {
+        const uploadFile: UploadFile = {
+          id: `${rejected.file.name}-${Date.now()}-${Math.random()}`,
+          file: rejected.file,
+          type: 'markdown', // default
+          error:
+            rejected.errors?.map((e: any) => e.message).join(', ') ||
+            'File rejected',
+        };
+        newFiles.push(uploadFile);
+      });
 
-  const removeFile = useCallback((fileId: string) => {
-    const updatedFiles = selectedFiles.filter(f => f.id !== fileId);
-    setSelectedFiles(updatedFiles);
-    onFilesSelected(updatedFiles);
-  }, [selectedFiles, onFilesSelected]);
+      const updatedFiles = [...selectedFiles, ...newFiles].slice(0, maxFiles);
+      setSelectedFiles(updatedFiles);
+      onFilesSelected(updatedFiles);
+    },
+    [selectedFiles, onFilesSelected, maxFiles],
+  );
+
+  const removeFile = useCallback(
+    (fileId: string) => {
+      const updatedFiles = selectedFiles.filter((f) => f.id !== fileId);
+      setSelectedFiles(updatedFiles);
+      onFilesSelected(updatedFiles);
+    },
+    [selectedFiles, onFilesSelected],
+  );
 
   const clearAll = useCallback(() => {
     setSelectedFiles([]);
     onFilesSelected([]);
   }, [onFilesSelected]);
 
-  const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
+  const {
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    isDragAccept,
+    isDragReject,
+  } = useDropzone({
     onDrop,
     accept: {
       'text/markdown': ['.md', '.markdown'],
       'text/plain': ['.md', '.markdown'], // Some systems detect .md as plain text
-      'application/json': ['.json']
+      'application/json': ['.json'],
     },
     maxSize: 50 * 1024 * 1024, // 50MB
     maxFiles,
     disabled,
-    multiple: true
+    multiple: true,
   });
 
   const dropzoneClassName = cn(
@@ -109,7 +125,7 @@ export function DocumentUploadZone({
       'border-muted-foreground/25': !isDragActive,
       'cursor-not-allowed opacity-50': disabled,
     },
-    className
+    className,
   );
 
   return (
@@ -121,22 +137,28 @@ export function DocumentUploadZone({
             className={dropzoneClassName}
             role="button"
             tabIndex={0}
-            aria-label={isDragActive ? 'Drop files here' : 'Click to select files or drag and drop'}
+            aria-label={
+              isDragActive
+                ? 'Drop files here'
+                : 'Click to select files or drag and drop'
+            }
           >
             <input {...getInputProps()} aria-describedby="upload-description" />
-            
+
             <div className="flex flex-col items-center gap-4">
               <div className="p-4 rounded-full bg-muted">
                 <UploadIcon size={24} />
               </div>
-              
+
               {isDragActive ? (
                 <div>
                   <p className="text-lg font-medium">
                     {isDragAccept ? 'Drop files here' : 'Unsupported file type'}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {isDragAccept ? 'Release to upload' : 'Only .md and .json files are supported'}
+                    {isDragAccept
+                      ? 'Release to upload'
+                      : 'Only .md and .json files are supported'}
                   </p>
                 </div>
               ) : (
@@ -144,12 +166,16 @@ export function DocumentUploadZone({
                   <p className="text-lg font-medium">
                     Drag & drop files here, or click to select
                   </p>
-                  <p className="text-sm text-muted-foreground" id="upload-description">
-                    Supports Markdown (.md) and JSON (.json) files up to 50MB each
+                  <p
+                    className="text-sm text-muted-foreground"
+                    id="upload-description"
+                  >
+                    Supports Markdown (.md) and JSON (.json) files up to 50MB
+                    each
                   </p>
                 </div>
               )}
-              
+
               <Button variant="outline" disabled={disabled} type="button">
                 Select Files
               </Button>
@@ -174,7 +200,7 @@ export function DocumentUploadZone({
                 Clear All
               </Button>
             </div>
-            
+
             <div className="space-y-3">
               {selectedFiles.map((uploadFile) => (
                 <FilePreviewCard
@@ -198,9 +224,13 @@ interface FilePreviewCardProps {
   disabled?: boolean;
 }
 
-function FilePreviewCard({ uploadFile, onRemove, disabled }: FilePreviewCardProps) {
+function FilePreviewCard({
+  uploadFile,
+  onRemove,
+  disabled,
+}: FilePreviewCardProps) {
   const { file, type, preview, error } = uploadFile;
-  
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -213,13 +243,13 @@ function FilePreviewCard({ uploadFile, onRemove, disabled }: FilePreviewCardProp
     <div
       className={cn(
         'flex items-start gap-3 p-3 border rounded-lg',
-        error ? 'border-destructive bg-destructive/5' : 'border-border'
+        error ? 'border-destructive bg-destructive/5' : 'border-border',
       )}
     >
       <div className="flex-shrink-0 p-2 rounded bg-muted">
         <FileIcon size={16} />
       </div>
-      
+
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <h4 className="font-medium text-sm truncate">{file.name}</h4>
@@ -227,24 +257,24 @@ function FilePreviewCard({ uploadFile, onRemove, disabled }: FilePreviewCardProp
             {type.toUpperCase()}
           </span>
         </div>
-        
+
         <p className="text-xs text-muted-foreground mb-2">
           {formatFileSize(file.size)} • {file.type || 'Unknown type'}
         </p>
-        
+
         {error && (
           <p className="text-xs text-destructive mb-2" role="alert">
             {error}
           </p>
         )}
-        
+
         {preview && !error && (
           <div className="text-xs text-muted-foreground bg-muted/50 rounded p-2 font-mono">
             {preview}
           </div>
         )}
       </div>
-      
+
       <Button
         variant="ghost"
         size="sm"

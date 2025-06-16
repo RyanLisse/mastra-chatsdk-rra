@@ -4,19 +4,19 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  WarningIcon, 
-  InfoIcon, 
+import {
+  WarningIcon,
+  InfoIcon,
   CrossIcon,
-  ArrowUpIcon
+  ArrowUpIcon,
 } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
-export type ErrorType = 
-  | 'upload_error' 
-  | 'validation_error' 
-  | 'processing_error' 
-  | 'connection_error' 
+export type ErrorType =
+  | 'upload_error'
+  | 'validation_error'
+  | 'processing_error'
+  | 'connection_error'
   | 'auth_error'
   | 'server_error'
   | 'file_size_error'
@@ -43,12 +43,15 @@ interface ErrorDisplayProps {
   className?: string;
 }
 
-const errorTypeConfig: Record<ErrorType, {
-  title: string;
-  color: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
-  defaultSuggestions: string[];
-}> = {
+const errorTypeConfig: Record<
+  ErrorType,
+  {
+    title: string;
+    color: string;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+    defaultSuggestions: string[];
+  }
+> = {
   upload_error: {
     title: 'Upload Failed',
     color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
@@ -56,8 +59,8 @@ const errorTypeConfig: Record<ErrorType, {
     defaultSuggestions: [
       'Check your internet connection',
       'Try uploading a smaller file',
-      'Refresh the page and try again'
-    ]
+      'Refresh the page and try again',
+    ],
   },
   validation_error: {
     title: 'File Validation Error',
@@ -66,8 +69,8 @@ const errorTypeConfig: Record<ErrorType, {
     defaultSuggestions: [
       'Ensure file is in Markdown (.md) or JSON (.json) format',
       'Check file size is under 50MB',
-      'Verify file is not corrupted'
-    ]
+      'Verify file is not corrupted',
+    ],
   },
   processing_error: {
     title: 'Processing Failed',
@@ -76,18 +79,19 @@ const errorTypeConfig: Record<ErrorType, {
     defaultSuggestions: [
       'Try uploading the file again',
       'Check if the file content is valid',
-      'Contact support if the issue persists'
-    ]
+      'Contact support if the issue persists',
+    ],
   },
   connection_error: {
     title: 'Connection Error',
-    color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+    color:
+      'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
     icon: WarningIcon,
     defaultSuggestions: [
       'Check your internet connection',
       'Refresh the page to reconnect',
-      'Try again in a few moments'
-    ]
+      'Try again in a few moments',
+    ],
   },
   auth_error: {
     title: 'Authentication Error',
@@ -96,8 +100,8 @@ const errorTypeConfig: Record<ErrorType, {
     defaultSuggestions: [
       'Please log in again',
       'Check if your session has expired',
-      'Clear browser cache and try again'
-    ]
+      'Clear browser cache and try again',
+    ],
   },
   server_error: {
     title: 'Server Error',
@@ -106,8 +110,8 @@ const errorTypeConfig: Record<ErrorType, {
     defaultSuggestions: [
       'Try again in a few moments',
       'Check service status',
-      'Contact support if the issue continues'
-    ]
+      'Contact support if the issue continues',
+    ],
   },
   file_size_error: {
     title: 'File Too Large',
@@ -116,8 +120,8 @@ const errorTypeConfig: Record<ErrorType, {
     defaultSuggestions: [
       'File must be smaller than 50MB',
       'Try compressing the file',
-      'Split large documents into smaller files'
-    ]
+      'Split large documents into smaller files',
+    ],
   },
   file_type_error: {
     title: 'Unsupported File Type',
@@ -126,9 +130,9 @@ const errorTypeConfig: Record<ErrorType, {
     defaultSuggestions: [
       'Only Markdown (.md) and JSON (.json) files are supported',
       'Convert your file to a supported format',
-      'Rename file with correct extension if needed'
-    ]
-  }
+      'Rename file with correct extension if needed',
+    ],
+  },
 };
 
 export function ErrorDisplay({
@@ -137,7 +141,7 @@ export function ErrorDisplay({
   onDismiss,
   onReportIssue,
   compact = false,
-  className
+  className,
 }: ErrorDisplayProps) {
   const config = errorTypeConfig[error.type];
   const IconComponent = config.icon;
@@ -147,7 +151,7 @@ export function ErrorDisplay({
     return date.toLocaleTimeString(undefined, {
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
     });
   };
 
@@ -155,25 +159,23 @@ export function ErrorDisplay({
 
   if (compact) {
     return (
-      <div 
+      <div
         className={cn(
           'flex items-center gap-2 p-3 border rounded-md',
           'border-destructive/20 bg-destructive/5',
-          className
+          className,
         )}
         role="alert"
         aria-live="polite"
       >
         <IconComponent size={16} className="text-destructive flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-destructive">
-            {config.title}
-          </p>
+          <p className="text-sm font-medium text-destructive">{config.title}</p>
           <p className="text-xs text-destructive/80 truncate">
             {error.message}
           </p>
         </div>
-        
+
         <div className="flex items-center gap-1">
           {canRetry && (
             <Button
@@ -228,7 +230,7 @@ export function ErrorDisplay({
               </div>
             </div>
           </div>
-          
+
           {onDismiss && (
             <Button
               variant="ghost"
@@ -251,9 +253,7 @@ export function ErrorDisplay({
               {error.message}
             </p>
             {error.details && (
-              <p className="text-sm text-muted-foreground">
-                {error.details}
-              </p>
+              <p className="text-sm text-muted-foreground">{error.details}</p>
             )}
             {error.filename && (
               <p className="text-xs text-muted-foreground mt-1">
@@ -270,8 +270,8 @@ export function ErrorDisplay({
               </p>
               <ul className="space-y-1">
                 {suggestions.map((suggestion, index) => (
-                  <li 
-                    key={index}
+                  <li
+                    key={`suggestion-${index}-${suggestion.slice(0, 20)}`}
                     className="text-sm text-muted-foreground flex items-start gap-2"
                   >
                     <span className="text-muted-foreground mt-1">•</span>
@@ -285,18 +285,14 @@ export function ErrorDisplay({
           {/* Actions */}
           <div className="flex items-center gap-2 pt-2">
             {canRetry && (
-              <Button
-                onClick={onRetry}
-                size="sm"
-                className="h-8"
-              >
+              <Button onClick={onRetry} size="sm" className="h-8">
                 <span className="mr-1">
                   <ArrowUpIcon size={14} />
                 </span>
                 Try Again
               </Button>
             )}
-            
+
             {onReportIssue && (
               <Button
                 variant="outline"
@@ -329,7 +325,7 @@ export function ErrorList({
   onDismissError,
   onClearAllErrors,
   maxVisible = 5,
-  className
+  className,
 }: ErrorListProps) {
   if (errors.length === 0) return null;
 
@@ -353,7 +349,7 @@ export function ErrorList({
           </Button>
         )}
       </div>
-      
+
       <div className="space-y-2">
         {visibleErrors.map((error, index) => (
           <ErrorDisplay
@@ -365,7 +361,7 @@ export function ErrorList({
           />
         ))}
       </div>
-      
+
       {hiddenCount > 0 && (
         <p className="text-xs text-muted-foreground text-center py-2">
           and {hiddenCount} more error{hiddenCount > 1 ? 's' : ''}...

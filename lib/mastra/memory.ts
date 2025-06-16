@@ -8,7 +8,10 @@ import type { Message } from 'ai';
 // Load environment variables for tests and local development
 // Try .env.local first, fallback to .env
 config({ path: '.env.local' });
-if (!process.env.POSTGRES_URL || process.env.POSTGRES_URL.includes('your-test-postgres-url-here')) {
+if (
+  !process.env.POSTGRES_URL ||
+  process.env.POSTGRES_URL.includes('your-test-postgres-url-here')
+) {
   config({ path: '.env' });
 }
 
@@ -18,9 +21,11 @@ function getDatabase() {
     throw new Error('POSTGRES_URL environment variable is not set');
   }
   if (process.env.POSTGRES_URL.includes('your-test-postgres-url-here')) {
-    throw new Error('POSTGRES_URL is still set to placeholder value. Please configure your database connection.');
+    throw new Error(
+      'POSTGRES_URL is still set to placeholder value. Please configure your database connection.',
+    );
   }
-  
+
   const client = postgres(process.env.POSTGRES_URL);
   return drizzle(client);
 }
@@ -37,6 +42,7 @@ interface AddMessageConfig extends MemoryConfig {
  * PostgreSQL-based memory provider for storing chat sessions
  * Implements persistent storage for multi-turn conversations
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: This class provides a clean API interface for memory operations
 export class PostgresMemory {
   /**
    * Retrieves conversation history for a given session
@@ -51,8 +57,8 @@ export class PostgresMemory {
         WHERE session_id = ${sessionId}
         ORDER BY created_at ASC
       `);
-      
-      return result.map(row => row.message as Message);
+
+      return result.map((row) => row.message as Message);
     } catch (error) {
       console.error('Error retrieving chat history:', error);
       throw new Error(`Failed to retrieve history for session ${sessionId}`);
@@ -64,9 +70,17 @@ export class PostgresMemory {
    * @param sessionId - Unique identifier for the chat session
    * @param message - Message object to store (must include id, role, content)
    */
-  static async addMessage({ sessionId, message }: AddMessageConfig): Promise<void> {
+  static async addMessage({
+    sessionId,
+    message,
+  }: AddMessageConfig): Promise<void> {
     // Validate message structure first, before try-catch
-    if (!message.id || !message.role || message.content === undefined || message.content === null) {
+    if (
+      !message.id ||
+      !message.role ||
+      message.content === undefined ||
+      message.content === null
+    ) {
       throw new Error('Message must have id, role, and content properties');
     }
 

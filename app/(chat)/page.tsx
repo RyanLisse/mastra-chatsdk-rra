@@ -15,7 +15,9 @@ export default async function Page() {
   if (!session) {
     // During tests, create a mock session to avoid redirect loops
     if (isTestEnvironment) {
-      console.log('Test environment: creating mock session instead of redirecting to guest auth');
+      console.log(
+        'Test environment: creating mock session instead of redirecting to guest auth',
+      );
       const mockSession = {
         user: {
           id: 'test-user-id',

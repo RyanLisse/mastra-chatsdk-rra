@@ -1,5 +1,5 @@
-import { type Provider } from './models';
-import { getProviderEnvironment, isProviderAvailable } from './provider-config';
+import type { Provider } from './models';
+import { getProviderEnvironment } from './provider-config';
 
 export interface EnvironmentStatus {
   isValid: boolean;
@@ -13,27 +13,37 @@ export interface EnvironmentStatus {
 /**
  * Validate API key format for a provider
  */
-function validateApiKeyFormat(provider: Provider, apiKey: string): { isValid: boolean; reason?: string } {
+function validateApiKeyFormat(
+  provider: Provider,
+  apiKey: string,
+): { isValid: boolean; reason?: string } {
   if (!apiKey) {
     return { isValid: false, reason: 'API key is empty' };
   }
 
-  const validations: Record<Provider, { pattern: RegExp; description: string }> = {
+  const validations: Record<
+    Provider,
+    { pattern: RegExp; description: string }
+  > = {
     openai: {
       pattern: /^sk-[a-zA-Z0-9\-_]{20,}$/,
-      description: 'Should start with "sk-" followed by alphanumeric characters'
+      description:
+        'Should start with "sk-" followed by alphanumeric characters',
     },
     anthropic: {
       pattern: /^sk-ant-[a-zA-Z0-9\-_]{20,}$/,
-      description: 'Should start with "sk-ant-" followed by alphanumeric characters'
+      description:
+        'Should start with "sk-ant-" followed by alphanumeric characters',
     },
     google: {
       pattern: /^AIza[a-zA-Z0-9\-_]{35,}$/,
-      description: 'Should start with "AIza" followed by alphanumeric characters'
+      description:
+        'Should start with "AIza" followed by alphanumeric characters',
     },
     groq: {
       pattern: /^gsk_[a-zA-Z0-9\-_]{20,}$/,
-      description: 'Should start with "gsk_" followed by alphanumeric characters'
+      description:
+        'Should start with "gsk_" followed by alphanumeric characters',
     },
   };
 
@@ -43,9 +53,9 @@ function validateApiKeyFormat(provider: Provider, apiKey: string): { isValid: bo
   }
 
   if (!validation.pattern.test(apiKey)) {
-    return { 
-      isValid: false, 
-      reason: `Invalid format. ${validation.description}` 
+    return {
+      isValid: false,
+      reason: `Invalid format. ${validation.description}`,
     };
   }
 
@@ -67,31 +77,42 @@ export function validateEnvironment(): EnvironmentStatus {
   // Check each provider
   for (const provider of allProviders) {
     const apiKey = getApiKey(env, provider);
-    
+
     if (!apiKey) {
       missingProviders.push(provider);
       const envVarName = getEnvVarName(provider);
-      warnings.push(`${provider.toUpperCase()} API key not found. Set ${envVarName} to enable ${provider} models.`);
+      warnings.push(
+        `${provider.toUpperCase()} API key not found. Set ${envVarName} to enable ${provider} models.`,
+      );
     } else {
       // Validate API key format
       const validation = validateApiKeyFormat(provider, apiKey);
       if (validation.isValid) {
         availableProviders.push(provider);
       } else {
-        invalidKeys.push({ provider, reason: validation.reason || 'Invalid format' });
-        errors.push(`${provider.toUpperCase()} API key is invalid: ${validation.reason}`);
+        invalidKeys.push({
+          provider,
+          reason: validation.reason || 'Invalid format',
+        });
+        errors.push(
+          `${provider.toUpperCase()} API key is invalid: ${validation.reason}`,
+        );
       }
     }
   }
 
   // Check if at least one provider is available
   if (availableProviders.length === 0) {
-    errors.push('No valid AI providers are configured. Please set at least one valid API key.');
+    errors.push(
+      'No valid AI providers are configured. Please set at least one valid API key.',
+    );
   }
 
   // Special warnings for missing providers
   if (!availableProviders.includes('openai')) {
-    warnings.push('OpenAI is the default fallback provider. Consider setting OPENAI_API_KEY for better reliability.');
+    warnings.push(
+      'OpenAI is the default fallback provider. Consider setting OPENAI_API_KEY for better reliability.',
+    );
   }
 
   return {
@@ -132,7 +153,7 @@ function getEnvVarName(provider: Provider): string {
     google: 'GOOGLE_API_KEY',
     groq: 'GROQ_API_KEY',
   };
-  
+
   return envVarMap[provider];
 }
 
@@ -141,31 +162,33 @@ function getEnvVarName(provider: Provider): string {
  */
 export function logEnvironmentStatus(): void {
   const status = validateEnvironment();
-  
+
   console.log('\n🤖 AI Provider Environment Status:');
-  console.log(`✅ Available Providers: ${status.availableProviders.join(', ') || 'None'}`);
-  
+  console.log(
+    `✅ Available Providers: ${status.availableProviders.join(', ') || 'None'}`,
+  );
+
   if (status.missingProviders.length > 0) {
     console.log(`⚠️  Missing Providers: ${status.missingProviders.join(', ')}`);
   }
-  
+
   if (status.invalidKeys.length > 0) {
     console.log('\n🔑 Invalid API Keys:');
-    status.invalidKeys.forEach(({ provider, reason }) => 
-      console.log(`   ${provider.toUpperCase()}: ${reason}`)
+    status.invalidKeys.forEach(({ provider, reason }) =>
+      console.log(`   ${provider.toUpperCase()}: ${reason}`),
     );
   }
-  
+
   if (status.warnings.length > 0) {
     console.log('\n⚠️  Warnings:');
-    status.warnings.forEach(warning => console.log(`   ${warning}`));
+    status.warnings.forEach((warning) => console.log(`   ${warning}`));
   }
-  
+
   if (status.errors.length > 0) {
     console.log('\n❌ Errors:');
-    status.errors.forEach(error => console.log(`   ${error}`));
+    status.errors.forEach((error) => console.log(`   ${error}`));
   }
-  
+
   console.log(''); // Empty line for spacing
 }
 
@@ -174,27 +197,47 @@ export function logEnvironmentStatus(): void {
  */
 export function getEnvironmentSetupInstructions(): string {
   const status = validateEnvironment();
-  
+
   if (status.isValid && status.availableProviders.length === 4) {
     return 'All AI providers are configured correctly! 🎉';
   }
-  
-  let instructions = 'To enable all AI providers, set these environment variables:\n\n';
-  
+
+  let instructions =
+    'To enable all AI providers, set these environment variables:\n\n';
+
   const envVars = [
-    { name: 'OPENAI_API_KEY', provider: 'openai', description: 'OpenAI GPT models (o3, o4, GPT-4)' },
-    { name: 'ANTHROPIC_API_KEY', provider: 'anthropic', description: 'Claude models (Claude 4, 3.5)' },
-    { name: 'GOOGLE_API_KEY', provider: 'google', description: 'Gemini models (2.5 Pro, 2.0 Flash)' },
-    { name: 'GROQ_API_KEY', provider: 'groq', description: 'LLaMA models with high-speed inference' },
+    {
+      name: 'OPENAI_API_KEY',
+      provider: 'openai',
+      description: 'OpenAI GPT models (o3, o4, GPT-4)',
+    },
+    {
+      name: 'ANTHROPIC_API_KEY',
+      provider: 'anthropic',
+      description: 'Claude models (Claude 4, 3.5)',
+    },
+    {
+      name: 'GOOGLE_API_KEY',
+      provider: 'google',
+      description: 'Gemini models (2.5 Pro, 2.0 Flash)',
+    },
+    {
+      name: 'GROQ_API_KEY',
+      provider: 'groq',
+      description: 'LLaMA models with high-speed inference',
+    },
   ];
-  
+
   for (const envVar of envVars) {
-    const isConfigured = status.availableProviders.includes(envVar.provider as Provider);
+    const isConfigured = status.availableProviders.includes(
+      envVar.provider as Provider,
+    );
     const status_icon = isConfigured ? '✅' : '❌';
     instructions += `${status_icon} ${envVar.name}="your-key-here"  # ${envVar.description}\n`;
   }
-  
-  instructions += '\nAdd these to your .env.local file or deployment environment.\n';
-  
+
+  instructions +=
+    '\nAdd these to your .env.local file or deployment environment.\n';
+
   return instructions;
 }

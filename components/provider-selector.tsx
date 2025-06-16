@@ -11,12 +11,7 @@ import {
 import { providers, type Provider } from '@/lib/ai/models';
 import { cn } from '@/lib/utils';
 import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
-import { 
-  Brain, 
-  Sparkles,
-  Star,
-  Zap,
-} from 'lucide-react';
+import { Brain, Sparkles, Star, Zap } from 'lucide-react';
 
 const providerIcons: Record<Provider, React.ReactNode> = {
   openai: <Sparkles className="h-4 w-4" />,
@@ -98,17 +93,21 @@ export function ProviderSelector({
                       {providerIcons[provider]}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium mb-1">{providerData.name}</div>
+                      <div className="font-medium mb-1">
+                        {providerData.name}
+                      </div>
                       <p className="text-xs text-muted-foreground line-clamp-2">
                         {providerData.description}
                       </p>
                     </div>
                   </div>
 
-                  <div className={cn(
-                    "text-foreground dark:text-foreground transition-opacity flex-shrink-0 mt-1",
-                    isSelected ? "opacity-100" : "opacity-0"
-                  )}>
+                  <div
+                    className={cn(
+                      'text-foreground dark:text-foreground transition-opacity flex-shrink-0 mt-1',
+                      isSelected ? 'opacity-100' : 'opacity-0',
+                    )}
+                  >
                     <CheckCircleFillIcon />
                   </div>
                 </div>
@@ -123,16 +122,25 @@ export function ProviderSelector({
 
 // Utility function to get provider statistics
 export function getProviderStats(provider: Provider, availableModels: any[]) {
-  const providerModels = availableModels.filter(model => model.provider === provider);
-  
+  const providerModels = availableModels.filter(
+    (model) => model.provider === provider,
+  );
+
   return {
     totalModels: providerModels.length,
-    freeModels: providerModels.filter(model => model.tier === 'free').length,
-    premiumModels: providerModels.filter(model => model.tier === 'premium').length,
-    proModels: providerModels.filter(model => model.tier === 'pro').length,
-    hasVision: providerModels.some(model => model.capabilities.supportsVision),
-    hasReasoning: providerModels.some(model => model.capabilities.supportsReeasoning),
-    hasTools: providerModels.some(model => model.capabilities.supportsTools),
-    maxContextWindow: Math.max(...providerModels.map(model => model.capabilities.contextWindow)),
+    freeModels: providerModels.filter((model) => model.tier === 'free').length,
+    premiumModels: providerModels.filter((model) => model.tier === 'premium')
+      .length,
+    proModels: providerModels.filter((model) => model.tier === 'pro').length,
+    hasVision: providerModels.some(
+      (model) => model.capabilities.supportsVision,
+    ),
+    hasReasoning: providerModels.some(
+      (model) => model.capabilities.supportsReeasoning,
+    ),
+    hasTools: providerModels.some((model) => model.capabilities.supportsTools),
+    maxContextWindow: Math.max(
+      ...providerModels.map((model) => model.capabilities.contextWindow),
+    ),
   };
 }

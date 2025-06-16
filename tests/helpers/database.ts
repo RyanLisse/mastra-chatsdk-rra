@@ -2,7 +2,10 @@ import { config } from 'dotenv';
 import type postgres from 'postgres';
 import { sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { getGlobalTestDatabase, type DatabaseTestSetup } from '../../lib/db/test-config';
+import {
+  getGlobalTestDatabase,
+  type DatabaseTestSetup,
+} from '../../lib/db/test-config';
 import * as schema from '../../lib/db/schema';
 
 // Load test environment
@@ -32,7 +35,9 @@ export class DatabaseTestHelper {
    */
   getDb(): PostgresJsDatabase {
     if (!this.testDb) {
-      throw new Error('Test database not initialized. Call getInstance() first.');
+      throw new Error(
+        'Test database not initialized. Call getInstance() first.',
+      );
     }
     return this.testDb.db;
   }
@@ -42,7 +47,9 @@ export class DatabaseTestHelper {
    */
   getConnection(): postgres.Sql {
     if (!this.testDb) {
-      throw new Error('Test database not initialized. Call getInstance() first.');
+      throw new Error(
+        'Test database not initialized. Call getInstance() first.',
+      );
     }
     return this.testDb.connection;
   }
@@ -81,23 +88,23 @@ export class DatabaseTestHelper {
   /**
    * Create a test user with specific attributes
    */
-  async createTestUser(overrides: Partial<{
-    id: string;
-    email: string;
-    password: string;
-  }> = {}): Promise<schema.User> {
+  async createTestUser(
+    overrides: Partial<{
+      id: string;
+      email: string;
+      password: string;
+    }> = {},
+  ): Promise<schema.User> {
     const db = this.getDb();
-    
+
     const userData = {
       id: `test-user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       email: `test-${Date.now()}@test.playwright.com`,
       password: 'test-password-hash',
-      ...overrides
+      ...overrides,
     };
 
-    const result = await db.insert(schema.user)
-      .values(userData)
-      .returning();
+    const result = await db.insert(schema.user).values(userData).returning();
 
     return result[0];
   }
@@ -105,25 +112,26 @@ export class DatabaseTestHelper {
   /**
    * Create a test chat for a user
    */
-  async createTestChat(userId: string, overrides: Partial<{
-    id: string;
-    title: string;
-    visibility: 'public' | 'private';
-  }> = {}): Promise<schema.Chat> {
+  async createTestChat(
+    userId: string,
+    overrides: Partial<{
+      id: string;
+      title: string;
+      visibility: 'public' | 'private';
+    }> = {},
+  ): Promise<schema.Chat> {
     const db = this.getDb();
-    
+
     const chatData = {
       id: `test-chat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       createdAt: new Date(),
       title: `Test Chat ${Date.now()}`,
       userId,
       visibility: 'private' as const,
-      ...overrides
+      ...overrides,
     };
 
-    const result = await db.insert(schema.chat)
-      .values(chatData)
-      .returning();
+    const result = await db.insert(schema.chat).values(chatData).returning();
 
     return result[0];
   }
@@ -131,14 +139,17 @@ export class DatabaseTestHelper {
   /**
    * Create a test message in a chat
    */
-  async createTestMessage(chatId: string, overrides: Partial<{
-    id: string;
-    role: string;
-    parts: any[];
-    attachments: any[];
-  }> = {}): Promise<schema.DBMessage> {
+  async createTestMessage(
+    chatId: string,
+    overrides: Partial<{
+      id: string;
+      role: string;
+      parts: any[];
+      attachments: any[];
+    }> = {},
+  ): Promise<schema.DBMessage> {
     const db = this.getDb();
-    
+
     const messageData = {
       id: `test-message-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       chatId,
@@ -146,10 +157,11 @@ export class DatabaseTestHelper {
       parts: [{ type: 'text', text: 'Test message content' }],
       attachments: [],
       createdAt: new Date(),
-      ...overrides
+      ...overrides,
     };
 
-    const result = await db.insert(schema.message)
+    const result = await db
+      .insert(schema.message)
       .values(messageData)
       .returning();
 
@@ -161,10 +173,10 @@ export class DatabaseTestHelper {
    */
   async createTestDocumentChunks(count = 3): Promise<schema.DocumentChunk[]> {
     const db = this.getDb();
-    
+
     const chunks: Omit<schema.DocumentChunk, 'id'>[] = [];
     const documentId = `test-doc-${Date.now()}`;
-    
+
     for (let i = 0; i < count; i++) {
       chunks.push({
         content: `Test document chunk ${i + 1}: This contains information about RoboRail operations, safety procedures, and maintenance guidelines.`,
@@ -177,7 +189,8 @@ export class DatabaseTestHelper {
       });
     }
 
-    const result = await db.insert(schema.documentChunk)
+    const result = await db
+      .insert(schema.documentChunk)
       .values(chunks)
       .returning();
 
@@ -197,22 +210,24 @@ export class DatabaseTestHelper {
 
     // Clean up in reverse dependency order
     if (patterns.messageIds?.length) {
-      await db.delete(schema.message)
+      await db
+        .delete(schema.message)
         .where(sql`id = ANY(${patterns.messageIds})`);
     }
 
     if (patterns.chatIds?.length) {
-      await db.delete(schema.chat)
-        .where(sql`id = ANY(${patterns.chatIds})`);
+      await db.delete(schema.chat).where(sql`id = ANY(${patterns.chatIds})`);
     }
 
     if (patterns.documentIds?.length) {
-      await db.delete(schema.documentChunk)
+      await db
+        .delete(schema.documentChunk)
         .where(sql`"documentId" = ANY(${patterns.documentIds})`);
     }
 
     if (patterns.userEmails?.length) {
-      await db.delete(schema.user)
+      await db
+        .delete(schema.user)
         .where(sql`email = ANY(${patterns.userEmails})`);
     }
   }
@@ -227,7 +242,7 @@ export class DatabaseTestHelper {
     documentChunks: number;
   }> {
     const connection = this.getConnection();
-    
+
     const stats = await connection`
       SELECT 
         (SELECT COUNT(*) FROM "User") as users,

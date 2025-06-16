@@ -47,7 +47,7 @@ export function Chat({
 
   // Generate and manage sessionId for conversation context persistence
   const sessionIdRef = useRef<string | null>(null);
-  
+
   // Initialize sessionId on mount
   useEffect(() => {
     if (!sessionIdRef.current) {
@@ -156,7 +156,11 @@ export function Chat({
 
   // Auto submit transcribed text when recording stops
   useEffect(() => {
-    if (!voiceAssistant.isRecording && currentTranscription && currentTranscription.trim()) {
+    if (
+      !voiceAssistant.isRecording &&
+      currentTranscription &&
+      currentTranscription.trim()
+    ) {
       // Add a small delay to ensure transcription is complete
       const timer = setTimeout(() => {
         if (status === 'ready' && currentTranscription.trim()) {
@@ -167,7 +171,7 @@ export function Chat({
           setCurrentTranscription('');
         }
       }, 500);
-      
+
       return () => clearTimeout(timer);
     }
   }, [voiceAssistant.isRecording, currentTranscription, append, status]);
@@ -190,8 +194,8 @@ export function Chat({
     >
       <div className="flex flex-col min-w-0 h-dvh bg-background relative">
         {/* Global loading overlay for chat operations */}
-        <LoadingOverlay 
-          isVisible={status === 'submitted' && messages.length === 0} 
+        <LoadingOverlay
+          isVisible={status === 'submitted' && messages.length === 0}
           message="Starting conversation..."
         />
         <ChatHeader
@@ -221,7 +225,7 @@ export function Chat({
               }}
             />
           )}
-          
+
           <div className="flex justify-center">
             <VoiceStatus
               state={voiceAssistant.state}

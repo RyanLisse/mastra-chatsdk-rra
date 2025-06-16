@@ -39,33 +39,37 @@ test.describe('Comprehensive Chat E2E Tests', () => {
     });
 
     test('should show typing indicator during response generation', async () => {
-      const sendPromise = chatPage.sendUserMessage('Tell me about RoboRail safety protocols');
-      
+      const sendPromise = chatPage.sendUserMessage(
+        'Tell me about RoboRail safety protocols',
+      );
+
       // Check for loading state
       await expect(chatPage.stopButton).toBeVisible();
-      
+
       await sendPromise;
       await chatPage.isGenerationComplete();
-      
+
       // Verify stop button disappears after completion
       await expect(chatPage.stopButton).not.toBeVisible();
       await expect(chatPage.sendButton).toBeVisible();
     });
 
     test('should handle stop generation', async () => {
-      await chatPage.sendUserMessage('Tell me a very long story about RoboRail');
-      
+      await chatPage.sendUserMessage(
+        'Tell me a very long story about RoboRail',
+      );
+
       // Wait for generation to start
       await expect(chatPage.stopButton).toBeVisible();
-      
+
       // Stop generation
       await chatPage.stopButton.click();
-      
+
       // Verify we can send another message
       await expect(chatPage.sendButton).toBeVisible();
       await chatPage.sendUserMessage('Short question: What is RoboRail?');
       await chatPage.isGenerationComplete();
-      
+
       const assistantMessage = await chatPage.getRecentAssistantMessage();
       expect(assistantMessage.content.length).toBeGreaterThan(0);
     });
@@ -93,11 +97,11 @@ test.describe('Comprehensive Chat E2E Tests', () => {
       await chatPage.isGenerationComplete();
 
       const assistantMessage = await chatPage.getRecentAssistantMessage();
-      
+
       // Test upvote
       await assistantMessage.upvote();
       await chatPage.isVoteComplete();
-      
+
       // Test downvote (should change from upvote)
       await assistantMessage.downvote();
       await chatPage.isVoteComplete();
@@ -108,19 +112,21 @@ test.describe('Comprehensive Chat E2E Tests', () => {
     test('should redirect to chat ID after sending message', async () => {
       await chatPage.sendUserMessage('Test message');
       await chatPage.isGenerationComplete();
-      
+
       await chatPage.hasChatIdInUrl();
     });
 
-    test('should handle query parameter for initial message', async ({ page }) => {
+    test('should handle query parameter for initial message', async ({
+      page,
+    }) => {
       const testQuery = 'Tell me about RoboRail maintenance';
       await page.goto(`/?query=${encodeURIComponent(testQuery)}`);
-      
+
       await chatPage.isGenerationComplete();
-      
+
       const userMessage = await chatPage.getRecentUserMessage();
       expect(userMessage.content).toBe(testQuery);
-      
+
       const assistantMessage = await chatPage.getRecentAssistantMessage();
       expect(assistantMessage.content).toContain('maintenance');
     });
@@ -130,7 +136,7 @@ test.describe('Comprehensive Chat E2E Tests', () => {
     test('should auto-scroll to bottom after new messages', async () => {
       await chatPage.sendMultipleMessages(3, (i) => `Message ${i + 1}`);
       await chatPage.waitForScrollToBottom();
-      
+
       // Verify scroll position is at bottom
       const isAtBottom = await chatPage.isScrolledToBottom();
       expect(isAtBottom).toBe(true);
@@ -138,16 +144,16 @@ test.describe('Comprehensive Chat E2E Tests', () => {
 
     test('should show scroll to bottom button when scrolled up', async () => {
       await chatPage.sendMultipleMessages(5, (i) => `Filling message ${i + 1}`);
-      
+
       // Should not show scroll button when at bottom
       await expect(chatPage.scrollToBottomButton).not.toBeVisible();
-      
+
       // Scroll up
       await chatPage.scrollToTop();
-      
+
       // Should show scroll button
       await expect(chatPage.scrollToBottomButton).toBeVisible();
-      
+
       // Click button should scroll to bottom and hide button
       await chatPage.scrollToBottomButton.click();
       await chatPage.waitForScrollToBottom();
@@ -180,19 +186,19 @@ test.describe('Comprehensive Chat E2E Tests', () => {
       // Send a message first
       await chatPage.sendUserMessage('Test message');
       await chatPage.isGenerationComplete();
-      
+
       // Simulate network failure
-      await page.route('**/api/chat', route => {
+      await page.route('**/api/chat', (route) => {
         route.abort('failed');
       });
-      
+
       // Try to send another message
       await chatPage.sendUserMessage('This should fail');
-      
+
       // Should show error state or retry mechanism
       // The exact error handling depends on implementation
       await page.waitForTimeout(3000);
-      
+
       // Clear route interception
       await page.unroute('**/api/chat');
     });
@@ -201,7 +207,7 @@ test.describe('Comprehensive Chat E2E Tests', () => {
       const longMessage = `${'A'.repeat(1000)} What is RoboRail?`;
       await chatPage.sendUserMessage(longMessage);
       await chatPage.isGenerationComplete();
-      
+
       const assistantMessage = await chatPage.getRecentAssistantMessage();
       expect(assistantMessage.content.length).toBeGreaterThan(0);
     });
@@ -212,9 +218,9 @@ test.describe('Comprehensive Chat E2E Tests', () => {
       await chatPage.focusMessageInput();
       await page.keyboard.type('Test message using Enter');
       await page.keyboard.press('Enter');
-      
+
       await chatPage.isGenerationComplete();
-      
+
       const assistantMessage = await chatPage.getRecentAssistantMessage();
       expect(assistantMessage.content.length).toBeGreaterThan(0);
     });
@@ -224,14 +230,14 @@ test.describe('Comprehensive Chat E2E Tests', () => {
       await page.keyboard.type('Line 1');
       await page.keyboard.press('Shift+Enter');
       await page.keyboard.type('Line 2');
-      
+
       // Should not have sent the message yet
       await expect(chatPage.sendButton).toBeVisible();
-      
+
       // Now send with Enter
       await page.keyboard.press('Enter');
       await chatPage.isGenerationComplete();
-      
+
       const userMessage = await chatPage.getRecentUserMessage();
       expect(userMessage.content).toContain('Line 1');
       expect(userMessage.content).toContain('Line 2');

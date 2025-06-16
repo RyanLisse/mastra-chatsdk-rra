@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 
 export class AuthPage {
-  constructor(private page: Page) {}
+  constructor(public page: Page) {}
 
   async gotoLogin() {
     await this.page.goto('/login');

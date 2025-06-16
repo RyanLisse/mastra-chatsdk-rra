@@ -16,7 +16,7 @@ test.describe('Database Integration Tests', () => {
   test('should create and retrieve test user data', async () => {
     // Create a test user
     const testUser = await testDatabase.createTestUser({
-      email: 'integration-test@roborail.com'
+      email: 'integration-test@roborail.com',
     });
 
     expect(testUser).toBeTruthy();
@@ -37,7 +37,7 @@ test.describe('Database Integration Tests', () => {
 
     // Create test chat
     const testChat = await testDatabase.createTestChat(testUser.id, {
-      title: 'RoboRail Integration Test Chat'
+      title: 'RoboRail Integration Test Chat',
     });
 
     expect(testChat).toBeTruthy();
@@ -47,12 +47,17 @@ test.describe('Database Integration Tests', () => {
     // Create test messages
     const userMessage = await testDatabase.createTestMessage(testChat.id, {
       role: 'user',
-      parts: [{ type: 'text', text: 'How do I start the RoboRail machine?' }]
+      parts: [{ type: 'text', text: 'How do I start the RoboRail machine?' }],
     });
 
     const assistantMessage = await testDatabase.createTestMessage(testChat.id, {
       role: 'assistant',
-      parts: [{ type: 'text', text: 'To start the RoboRail machine, first ensure the area is clear...' }]
+      parts: [
+        {
+          type: 'text',
+          text: 'To start the RoboRail machine, first ensure the area is clear...',
+        },
+      ],
     });
 
     expect(userMessage.chatId).toBe(testChat.id);
@@ -115,7 +120,7 @@ test.describe('Database Integration Tests', () => {
     for (let i = 0; i < 3; i++) {
       const message = await testDatabase.createTestMessage(testChat.id, {
         role: i % 2 === 0 ? 'user' : 'assistant',
-        parts: [{ type: 'text', text: `Message ${i + 1}` }]
+        parts: [{ type: 'text', text: `Message ${i + 1}` }],
       });
       messages.push(message);
     }
@@ -137,16 +142,16 @@ test.describe('Database Integration Tests', () => {
     // Test concurrent user creation
     const userPromises = Array.from({ length: 5 }, (_, i) =>
       testDatabase.createTestUser({
-        email: `concurrent-user-${i}@test.com`
-      })
+        email: `concurrent-user-${i}@test.com`,
+      }),
     );
 
     const users = await Promise.all(userPromises);
 
     expect(users).toHaveLength(5);
-    
+
     // Verify all users have unique IDs
-    const userIds = users.map(u => u.id);
+    const userIds = users.map((u) => u.id);
     const uniqueIds = new Set(userIds);
     expect(uniqueIds.size).toBe(5);
 
@@ -165,10 +170,10 @@ test.describe('Database Integration Tests', () => {
     const user = await testDatabase.createTestUser();
     const chat = await testDatabase.createTestChat(user.id);
     await testDatabase.createTestMessage(chat.id);
-    
+
     // Query operations
     await testDatabase.getTestStats();
-    
+
     const endTime = Date.now();
     const duration = endTime - startTime;
 
@@ -209,14 +214,16 @@ test.describe('Database Error Handling', () => {
   test('should handle concurrent access safely', async () => {
     // Create base data
     const user = await testDatabase.createTestUser();
-    
+
     // Attempt concurrent modifications
-    const updatePromises = Array.from({ length: 3 }, (_, i) =>
-      testDatabase.getConnection()`
+    const updatePromises = Array.from(
+      { length: 3 },
+      (_, i) =>
+        testDatabase.getConnection()`
         UPDATE "User" 
         SET email = ${`updated-${i}@test.com`} 
         WHERE id = ${user.id};
-      `
+      `,
     );
 
     // Only one should succeed (last one wins)

@@ -266,13 +266,21 @@ export const ThinkingMessage = () => {
       <div className="flex gap-4 w-full">
         <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
           <motion.div
-            animate={{ 
+            animate={{
               rotate: [0, 360],
-              scale: [1, 1.1, 1]
+              scale: [1, 1.1, 1],
             }}
-            transition={{ 
-              rotate: { duration: 3, repeat: Number.POSITIVE_INFINITY, ease: 'linear' },
-              scale: { duration: 2, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }
+            transition={{
+              rotate: {
+                duration: 3,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: 'linear',
+              },
+              scale: {
+                duration: 2,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: 'easeInOut',
+              },
             }}
           >
             <SparklesIcon size={14} />
@@ -280,11 +288,11 @@ export const ThinkingMessage = () => {
         </div>
 
         <div className="flex flex-col gap-3 w-full">
-          <ThinkingIndicator 
-            text="Thinking" 
-            className="text-muted-foreground" 
+          <ThinkingIndicator
+            text="Thinking"
+            className="text-muted-foreground"
           />
-          
+
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

@@ -36,7 +36,7 @@ function PureChatHeader({
   const { width: windowWidth } = useWindowSize();
 
   return (
-    <motion.header 
+    <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -53,7 +53,9 @@ function PureChatHeader({
             className="flex items-center gap-2 text-primary"
           >
             <Sparkles size={20} />
-            <span className="font-semibold text-lg hidden sm:inline">Mastra Chat</span>
+            <span className="font-semibold text-lg hidden sm:inline">
+              Mastra Chat
+            </span>
           </motion.div>
         </div>
       )}
@@ -77,7 +79,7 @@ function PureChatHeader({
             </TooltipTrigger>
             <TooltipContent>Start New Conversation</TooltipContent>
           </Tooltip>
-          
+
           {onResetSession && !isReadonly && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -115,7 +117,6 @@ function PureChatHeader({
           />
         )}
       </div>
-
     </motion.header>
   );
 }

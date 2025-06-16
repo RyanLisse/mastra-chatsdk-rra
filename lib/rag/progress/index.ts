@@ -8,5 +8,5 @@ export type {
   ProcessingStatus,
   ProgressState,
   ProgressUpdate,
-  ProgressEvent
+  ProgressEvent,
 } from './types';

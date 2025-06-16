@@ -3,11 +3,21 @@ import type { CoreMessage } from 'ai';
 export const TEST_PROMPTS: Record<string, CoreMessage> = {
   USER_CALIBRATION: {
     role: 'user',
-    content: [{ type: 'text', text: 'How do I calibrate the RoboRail measurement system?' }],
+    content: [
+      {
+        type: 'text',
+        text: 'How do I calibrate the RoboRail measurement system?',
+      },
+    ],
   },
   USER_SAFETY: {
     role: 'user',
-    content: [{ type: 'text', text: 'What are the safety procedures for RoboRail maintenance?' }],
+    content: [
+      {
+        type: 'text',
+        text: 'What are the safety procedures for RoboRail maintenance?',
+      },
+    ],
   },
   USER_THANKS: {
     role: 'user',
@@ -71,7 +81,7 @@ export const TEST_PROMPTS: Record<string, CoreMessage> = {
     content: [
       {
         type: 'text',
-        text: "What are the troubleshooting steps for communication errors?",
+        text: 'What are the troubleshooting steps for communication errors?',
       },
     ],
   },

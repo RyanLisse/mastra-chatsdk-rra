@@ -5,14 +5,18 @@ export const SupportedFileType = z.enum(['markdown', 'json']);
 
 // Markdown frontmatter schema
 export const MarkdownFrontmatterSchema = z.object({
-  title: z.string().min(1, "Title is required").optional(),
-  date: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional(),
+  title: z.string().min(1, 'Title is required').optional(),
+  date: z
+    .string()
+    .datetime()
+    .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/))
+    .optional(),
   tags: z.array(z.string()).optional(),
   draft: z.boolean().default(false).optional(),
   author: z.string().optional(),
   category: z.string().optional(),
   description: z.string().optional(),
-  source: z.string().optional()
+  source: z.string().optional(),
 });
 
 // Document metadata schema
@@ -22,45 +26,45 @@ export const DocumentMetadataSchema = z.object({
   category: z.string().optional(),
   author: z.string().optional(),
   version: z.string().optional(),
-  customFields: z.record(z.unknown()).optional()
+  customFields: z.record(z.unknown()).optional(),
 });
 
-// File validation schema  
+// File validation schema
 export const FileValidationSchema = z.object({
-  file: z.instanceof(File)
+  file: z
+    .instanceof(File)
     .refine(
       (file) => file.size <= 50 * 1024 * 1024,
-      "File size must be less than 50MB"
+      'File size must be less than 50MB',
     )
-    .refine(
-      (file) => {
-        const allowedTypes = [
-          'text/markdown',
-          'text/plain', // for .md files that might be detected as plain text
-          'application/json'
-        ];
-        return allowedTypes.includes(file.type) || 
-               file.name.endsWith('.md') || 
-               file.name.endsWith('.markdown') ||
-               file.name.endsWith('.json');
-      },
-      "File must be a markdown (.md) or JSON (.json) file"
-    )
+    .refine((file) => {
+      const allowedTypes = [
+        'text/markdown',
+        'text/plain', // for .md files that might be detected as plain text
+        'application/json',
+      ];
+      return (
+        allowedTypes.includes(file.type) ||
+        file.name.endsWith('.md') ||
+        file.name.endsWith('.markdown') ||
+        file.name.endsWith('.json')
+      );
+    }, 'File must be a markdown (.md) or JSON (.json) file'),
 });
 
 // Document upload request schema
 export const DocumentUploadSchema = z.object({
   file: FileValidationSchema.shape.file,
   type: SupportedFileType,
-  metadata: DocumentMetadataSchema.optional()
+  metadata: DocumentMetadataSchema.optional(),
 });
 
 // Document chunk schema
 export const DocumentChunkSchema = z.object({
   id: z.string(),
-  text: z.string().min(1, "Chunk text cannot be empty"),
+  text: z.string().min(1, 'Chunk text cannot be empty'),
   embedding: z.array(z.number()).optional(),
-  metadata: z.record(z.unknown()).default({})
+  metadata: z.record(z.unknown()).default({}),
 });
 
 // Processing result schema
@@ -73,18 +77,14 @@ export const ProcessingResultSchema = z.object({
   metadata: DocumentMetadataSchema.optional(),
   processedAt: z.date(),
   chunkCount: z.number().min(0),
-  embeddingCount: z.number().min(0)
+  embeddingCount: z.number().min(0),
 });
 
 // JSON document validation (for structured documents)
 export const JSONDocumentSchema = z.object({
   title: z.string().optional(),
-  content: z.union([
-    z.string(),
-    z.array(z.unknown()),
-    z.record(z.unknown())
-  ]),
-  metadata: z.record(z.unknown()).optional()
+  content: z.union([z.string(), z.array(z.unknown()), z.record(z.unknown())]),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 // Upload response schema
@@ -93,14 +93,14 @@ export const UploadResponseSchema = z.object({
   filename: z.string(),
   type: SupportedFileType,
   status: z.literal('processing'),
-  message: z.string()
+  message: z.string(),
 });
 
 // Error response schema
 export const ErrorResponseSchema = z.object({
   error: z.string(),
   code: z.string().optional(),
-  details: z.record(z.unknown()).optional()
+  details: z.record(z.unknown()).optional(),
 });
 
 // Export inferred types
@@ -134,14 +134,18 @@ export function detectFileType(file: File): SupportedFileType {
   return 'markdown';
 }
 
-export function validateJSON(content: string): { success: boolean; data?: any; error?: string } {
+export function validateJSON(content: string): {
+  success: boolean;
+  data?: any;
+  error?: string;
+} {
   try {
     const parsed = JSON.parse(content);
     const result = JSONDocumentSchema.safeParse(parsed);
     if (!result.success) {
-      return { 
-        success: false, 
-        error: `Invalid JSON structure: ${result.error.errors.map(e => e.message).join(', ')}` 
+      return {
+        success: false,
+        error: `Invalid JSON structure: ${result.error.errors.map((e) => e.message).join(', ')}`,
       };
     }
     return { success: true, data: result.data };

@@ -19,15 +19,7 @@ import { cn } from '@/lib/utils';
 import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import type { Session } from 'next-auth';
-import { 
-  Eye, 
-  Brain, 
-  Wrench, 
-  Zap,
-  Crown,
-  Sparkles,
-  Star,
-} from 'lucide-react';
+import { Eye, Brain, Wrench, Zap, Crown, Sparkles, Star } from 'lucide-react';
 
 const providerIcons: Record<Provider, React.ReactNode> = {
   openai: <Sparkles className="h-3 w-3" />,
@@ -53,31 +45,31 @@ function formatContextWindow(tokens: number): string {
 
 function ModelCapabilityBadges({ model }: { model: any }) {
   const capabilities = [];
-  
+
   if (model.capabilities.supportsVision) {
     capabilities.push(
       <Badge key="vision" variant="secondary" className="text-xs px-1 py-0">
         <Eye className="h-2 w-2 mr-1" />
         Vision
-      </Badge>
+      </Badge>,
     );
   }
-  
+
   if (model.capabilities.supportsReeasoning) {
     capabilities.push(
       <Badge key="reasoning" variant="secondary" className="text-xs px-1 py-0">
         <Brain className="h-2 w-2 mr-1" />
         Reasoning
-      </Badge>
+      </Badge>,
     );
   }
-  
+
   if (model.capabilities.supportsTools) {
     capabilities.push(
       <Badge key="tools" variant="secondary" className="text-xs px-1 py-0">
         <Wrench className="h-2 w-2 mr-1" />
         Tools
-      </Badge>
+      </Badge>,
     );
   }
 
@@ -113,13 +105,16 @@ export function ModelSelector({
   );
 
   // Group models by provider
-  const modelsByProvider = availableChatModels.reduce((acc, model) => {
-    if (!acc[model.provider]) {
-      acc[model.provider] = [];
-    }
-    acc[model.provider].push(model);
-    return acc;
-  }, {} as Record<Provider, typeof availableChatModels>);
+  const modelsByProvider = availableChatModels.reduce(
+    (acc, model) => {
+      if (!acc[model.provider]) {
+        acc[model.provider] = [];
+      }
+      acc[model.provider].push(model);
+      return acc;
+    },
+    {} as Record<Provider, typeof availableChatModels>,
+  );
 
   const selectedChatModel = useMemo(
     () =>
@@ -152,20 +147,22 @@ export function ModelSelector({
           <ChevronDownIcon />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
-        align="start" 
+      <DropdownMenuContent
+        align="start"
         className="min-w-[400px] max-w-[500px] max-h-[600px] overflow-y-auto"
       >
         {Object.entries(modelsByProvider).map(([provider, models]) => (
           <div key={provider}>
             <DropdownMenuLabel className="flex items-center gap-2 px-3 py-2">
               {providerIcons[provider as Provider]}
-              <span className="font-medium">{providers[provider as Provider].name}</span>
+              <span className="font-medium">
+                {providers[provider as Provider].name}
+              </span>
               <span className="text-xs text-muted-foreground font-normal">
                 {providers[provider as Provider].description}
               </span>
             </DropdownMenuLabel>
-            
+
             {models.map((chatModel) => {
               const { id } = chatModel;
               const isSelected = id === optimisticModelId;
@@ -191,28 +188,35 @@ export function ModelSelector({
                     <div className="flex justify-between items-start gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium truncate">{chatModel.name}</span>
+                          <span className="font-medium truncate">
+                            {chatModel.name}
+                          </span>
                           {chatModel.tier && (
-                            <Badge 
-                              variant="secondary" 
+                            <Badge
+                              variant="secondary"
                               className={cn(
                                 'text-xs px-1.5 py-0.5',
-                                tierColors[chatModel.tier]
+                                tierColors[chatModel.tier],
                               )}
                             >
-                              {chatModel.tier === 'pro' && <Crown className="h-2 w-2 mr-1" />}
+                              {chatModel.tier === 'pro' && (
+                                <Crown className="h-2 w-2 mr-1" />
+                              )}
                               {chatModel.tier.toUpperCase()}
                             </Badge>
                           )}
                         </div>
-                        
+
                         <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
                           {chatModel.description}
                         </p>
-                        
+
                         <div className="flex items-center gap-3 text-xs text-muted-foreground mb-1">
                           <span>
-                            {formatContextWindow(chatModel.capabilities.contextWindow)} tokens
+                            {formatContextWindow(
+                              chatModel.capabilities.contextWindow,
+                            )}{' '}
+                            tokens
                           </span>
                           {chatModel.capabilities.specialty && (
                             <>
@@ -223,14 +227,16 @@ export function ModelSelector({
                             </>
                           )}
                         </div>
-                        
+
                         <ModelCapabilityBadges model={chatModel} />
                       </div>
 
-                      <div className={cn(
-                        "text-foreground dark:text-foreground transition-opacity flex-shrink-0",
-                        isSelected ? "opacity-100" : "opacity-0"
-                      )}>
+                      <div
+                        className={cn(
+                          'text-foreground dark:text-foreground transition-opacity flex-shrink-0',
+                          isSelected ? 'opacity-100' : 'opacity-0',
+                        )}
+                      >
                         <CheckCircleFillIcon />
                       </div>
                     </div>
@@ -238,11 +244,11 @@ export function ModelSelector({
                 </DropdownMenuItem>
               );
             })}
-            
+
             <DropdownMenuSeparator />
           </div>
         ))}
-        
+
         <div className="px-3 py-2 text-xs text-muted-foreground border-t">
           <div className="flex items-center justify-between">
             <span>Available models: {availableChatModels.length}</span>

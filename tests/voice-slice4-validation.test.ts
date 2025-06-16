@@ -1,13 +1,16 @@
 // tests/voice-slice4-validation.test.ts
-import { expect, test, describe } from "bun:test";
+/// <reference path="../types/bun.d.ts" />
+import { expect, test, describe } from 'bun:test';
 import { generateUUID } from '../lib/utils';
 
 describe('Slice 4: Voice Interaction - Implementation Validation', () => {
   test('should have save-message API route file', async () => {
-    const saveMessageRoute = Bun.file('app/api/save-message/route.ts');
+    const saveMessageRoute = (globalThis as any).Bun.file(
+      'app/api/save-message/route.ts',
+    );
     const exists = await saveMessageRoute.exists();
     expect(exists).toBe(true);
-    
+
     const content = await saveMessageRoute.text();
     expect(content).toContain('export async function POST');
     expect(content).toContain('export async function GET');
@@ -17,10 +20,12 @@ describe('Slice 4: Voice Interaction - Implementation Validation', () => {
   });
 
   test('should have voice API route with all HTTP methods', async () => {
-    const voiceRoute = Bun.file('app/(chat)/api/voice/route.ts');
+    const voiceRoute = (globalThis as any).Bun.file(
+      'app/(chat)/api/voice/route.ts',
+    );
     const exists = await voiceRoute.exists();
     expect(exists).toBe(true);
-    
+
     const content = await voiceRoute.text();
     expect(content).toContain('export async function POST');
     expect(content).toContain('export async function GET');
@@ -31,10 +36,12 @@ describe('Slice 4: Voice Interaction - Implementation Validation', () => {
   });
 
   test('should have voice agent implementation', async () => {
-    const voiceAgent = Bun.file('lib/ai/agents/roborail-voice-agent.ts');
+    const voiceAgent = (globalThis as any).Bun.file(
+      'lib/ai/agents/roborail-voice-agent.ts',
+    );
     const exists = await voiceAgent.exists();
     expect(exists).toBe(true);
-    
+
     const content = await voiceAgent.text();
     expect(content).toContain('class RoboRailVoiceAgent');
     expect(content).toContain('OpenAIRealtimeVoice');
@@ -45,10 +52,10 @@ describe('Slice 4: Voice Interaction - Implementation Validation', () => {
   });
 
   test('should have error types for voice functionality', async () => {
-    const errors = Bun.file('lib/errors.ts');
+    const errors = (globalThis as any).Bun.file('lib/errors.ts');
     const exists = await errors.exists();
     expect(exists).toBe(true);
-    
+
     const content = await errors.text();
     expect(content).toContain('save_message');
     expect(content).toContain('voice_session');
@@ -58,10 +65,10 @@ describe('Slice 4: Voice Interaction - Implementation Validation', () => {
   });
 
   test('should have PostgresMemory class for session management', async () => {
-    const memory = Bun.file('lib/mastra/memory.ts');
+    const memory = (globalThis as any).Bun.file('lib/mastra/memory.ts');
     const exists = await memory.exists();
     expect(exists).toBe(true);
-    
+
     const content = await memory.text();
     expect(content).toContain('class PostgresMemory');
     expect(content).toContain('static async getHistory');
@@ -75,24 +82,24 @@ describe('Slice 4: Voice Interaction - Implementation Validation', () => {
     expect(messageId).toBeDefined();
     expect(typeof messageId).toBe('string');
     expect(messageId.length).toBeGreaterThan(10);
-    
+
     // Test message structure that would be used in save-message API
     const userMessage = {
       id: messageId,
       role: 'user' as const,
       content: 'Test voice message content',
     };
-    
+
     expect(userMessage.id).toBe(messageId);
     expect(userMessage.role).toBe('user');
     expect(userMessage.content).toBe('Test voice message content');
-    
+
     const assistantMessage = {
       id: generateUUID(),
       role: 'assistant' as const,
       content: 'Test assistant response',
     };
-    
+
     expect(assistantMessage.role).toBe('assistant');
     expect(assistantMessage.content).toBe('Test assistant response');
   });
@@ -106,19 +113,19 @@ describe('Slice 4: Voice Interaction - Implementation Validation', () => {
         id: generateUUID(),
         role: 'user' as const,
         content: 'Test message',
-      }
+      },
     };
-    
+
     expect(messageData.sessionId).toBe(sessionId);
     expect(messageData.message.role).toBe('user');
     expect(typeof messageData.message.content).toBe('string');
   });
 
   test('should have database setup script with chat_sessions table', async () => {
-    const setupScript = Bun.file('lib/scripts/setup-db.ts');
+    const setupScript = (globalThis as any).Bun.file('lib/scripts/setup-db.ts');
     const exists = await setupScript.exists();
     expect(exists).toBe(true);
-    
+
     const content = await setupScript.text();
     expect(content).toContain('chat_sessions');
     expect(content).toContain('session_id TEXT NOT NULL');
@@ -132,8 +139,8 @@ describe('Slice 4: Voice Interaction - Implementation Validation', () => {
       'app/api/save-message/route.ts',
       'app/(chat)/api/voice/route.ts',
     ];
-    
-    routePaths.forEach(path => {
+
+    routePaths.forEach((path) => {
       expect(path).toMatch(/route\.ts$/);
       expect(path).toContain('api');
     });
@@ -142,12 +149,15 @@ describe('Slice 4: Voice Interaction - Implementation Validation', () => {
   test('should support voice-text integration scenarios', () => {
     // Test integration scenario data structures
     const voiceToTextScenario = {
-      step1: { type: 'voice_transcription', content: 'User speaks about RoboRail' },
+      step1: {
+        type: 'voice_transcription',
+        content: 'User speaks about RoboRail',
+      },
       step2: { type: 'save_to_memory', sessionId: 'voice-session-123' },
       step3: { type: 'generate_response', context: 'conversation_history' },
       step4: { type: 'text_to_speech', output: 'voice_response' },
     };
-    
+
     expect(voiceToTextScenario.step1.type).toBe('voice_transcription');
     expect(voiceToTextScenario.step2.type).toBe('save_to_memory');
     expect(voiceToTextScenario.step3.type).toBe('generate_response');
@@ -163,7 +173,7 @@ describe('Slice 4: Voice Interaction - Implementation Validation', () => {
       timeout: 30 * 60 * 1000, // 30 minutes
       cleanupInterval: 5 * 60 * 1000, // 5 minutes
     };
-    
+
     expect(sessionConfig.sessionId).toMatch(/^voice-/);
     expect(sessionConfig.model).toBe('gpt-4o-mini-realtime-preview-2024-12-17');
     expect(sessionConfig.speaker).toBe('alloy');
@@ -175,16 +185,40 @@ describe('Slice 4: Voice Interaction - Implementation Validation', () => {
 describe('Voice API Documentation Compliance', () => {
   test('should document all required endpoints', () => {
     const requiredEndpoints = [
-      { method: 'POST', path: '/api/voice', purpose: 'Initialize voice session' },
-      { method: 'GET', path: '/api/voice', purpose: 'Stream voice events via SSE' },
+      {
+        method: 'POST',
+        path: '/api/voice',
+        purpose: 'Initialize voice session',
+      },
+      {
+        method: 'GET',
+        path: '/api/voice',
+        purpose: 'Stream voice events via SSE',
+      },
       { method: 'PUT', path: '/api/voice', purpose: 'Send voice actions' },
-      { method: 'DELETE', path: '/api/voice', purpose: 'Disconnect voice session' },
-      { method: 'POST', path: '/api/save-message', purpose: 'Save messages to memory' },
-      { method: 'GET', path: '/api/save-message', purpose: 'Retrieve conversation history' },
-      { method: 'DELETE', path: '/api/save-message', purpose: 'Clear session data' },
+      {
+        method: 'DELETE',
+        path: '/api/voice',
+        purpose: 'Disconnect voice session',
+      },
+      {
+        method: 'POST',
+        path: '/api/save-message',
+        purpose: 'Save messages to memory',
+      },
+      {
+        method: 'GET',
+        path: '/api/save-message',
+        purpose: 'Retrieve conversation history',
+      },
+      {
+        method: 'DELETE',
+        path: '/api/save-message',
+        purpose: 'Clear session data',
+      },
     ];
-    
-    requiredEndpoints.forEach(endpoint => {
+
+    requiredEndpoints.forEach((endpoint) => {
       expect(endpoint.method).toMatch(/^(GET|POST|PUT|DELETE)$/);
       expect(endpoint.path).toMatch(/^\/api\//);
       expect(endpoint.purpose).toBeDefined();
@@ -205,9 +239,11 @@ describe('Voice API Documentation Compliance', () => {
       'bad_request:incomplete_message',
       'bad_request:session_id_required',
     ];
-    
-    voiceErrorCodes.forEach(code => {
-      expect(code).toMatch(/^(unauthorized|rate_limit|not_found|bad_request|internal_error):/);
+
+    voiceErrorCodes.forEach((code) => {
+      expect(code).toMatch(
+        /^(unauthorized|rate_limit|not_found|bad_request|internal_error):/,
+      );
     });
   });
 });

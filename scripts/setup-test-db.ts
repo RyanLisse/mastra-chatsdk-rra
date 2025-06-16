@@ -10,11 +10,11 @@ config({ path: '.env.test' });
 
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout
+  output: process.stdout,
 });
 
 function question(query: string): Promise<string> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     rl.question(query, resolve);
   });
 }
@@ -26,17 +26,17 @@ async function main() {
   // Check if .env.test exists
   const envTestPath = join(process.cwd(), '.env.test');
   const envExamplePath = join(process.cwd(), '.env.test.example');
-  
+
   if (!existsSync(envTestPath)) {
     console.log('📋 Creating .env.test file...');
-    
+
     if (existsSync(envExamplePath)) {
       const exampleContent = readFileSync(envExamplePath, 'utf8');
       writeFileSync(envTestPath, exampleContent);
       console.log('✅ Created .env.test from example file');
     } else {
       console.log('❌ .env.test.example not found. Creating basic template...');
-      
+
       const basicTemplate = `
 # Test environment configuration
 NODE_ENV=test
@@ -59,7 +59,7 @@ TEST_MODE=true
 SKIP_AUTH_IN_TESTS=true
 ENABLE_TEST_ROUTES=true
 `.trim();
-      
+
       writeFileSync(envTestPath, basicTemplate);
       console.log('✅ Created basic .env.test template');
     }
@@ -110,14 +110,16 @@ async function setupLocalPostgres() {
   console.log('- Test database created');
   console.log('- pgvector extension (optional)');
 
-  const host = await question('Database host (localhost): ') || 'localhost';
-  const port = await question('Database port (5432): ') || '5432';
-  const username = await question('Username (postgres): ') || 'postgres';
+  const host = (await question('Database host (localhost): ')) || 'localhost';
+  const port = (await question('Database port (5432): ')) || '5432';
+  const username = (await question('Username (postgres): ')) || 'postgres';
   const password = await question('Password: ');
-  const database = await question('Test database name (mastra_chat_test): ') || 'mastra_chat_test';
+  const database =
+    (await question('Test database name (mastra_chat_test): ')) ||
+    'mastra_chat_test';
 
   const postgresUrl = `postgresql://${username}:${password}@${host}:${port}/${database}`;
-  
+
   console.log('\n📝 Generated connection string:');
   console.log(postgresUrl);
 
@@ -136,16 +138,21 @@ async function setupNeonDatabase() {
   console.log('3. Create a new branch for testing');
   console.log('4. Copy the connection string\n');
 
-  const connectionString = await question('Paste your Neon connection string: ');
-  
+  const connectionString = await question(
+    'Paste your Neon connection string: ',
+  );
+
   if (connectionString?.includes('neon.tech')) {
     updateEnvFile('POSTGRES_URL', connectionString);
     updateEnvFile('DATABASE_URL', connectionString);
-    
+
     console.log('✅ Neon database configuration saved');
-    
+
     // Check if it's a test branch
-    if (connectionString.includes('test') || connectionString.includes('-test-')) {
+    if (
+      connectionString.includes('test') ||
+      connectionString.includes('-test-')
+    ) {
       console.log('✅ Detected test branch - good practice!');
     } else {
       console.log('⚠️  Consider using a dedicated test branch for isolation');
@@ -161,8 +168,11 @@ async function manualConfiguration() {
   console.log('Format: postgresql://user:pass@host:port/database');
 
   const connectionString = await question('Connection string: ');
-  
-  if (connectionString.startsWith('postgresql://') || connectionString.startsWith('postgres://')) {
+
+  if (
+    connectionString.startsWith('postgresql://') ||
+    connectionString.startsWith('postgres://')
+  ) {
     updateEnvFile('POSTGRES_URL', connectionString);
     updateEnvFile('DATABASE_URL', connectionString);
     console.log('✅ Database configuration saved');
@@ -183,7 +193,7 @@ async function setupApiKeys() {
     console.log('⚠️  OpenAI API key should start with "sk-"');
   }
 
-  // Cohere API Key  
+  // Cohere API Key
   const cohereKey = await question('Cohere API Key (required for RAG tests): ');
   if (cohereKey) {
     updateEnvFile('COHERE_API_KEY', cohereKey);
@@ -191,7 +201,9 @@ async function setupApiKeys() {
   }
 
   // Optional: Blob storage for upload tests
-  const blobToken = await question('Vercel Blob Token (optional, for upload tests): ');
+  const blobToken = await question(
+    'Vercel Blob Token (optional, for upload tests): ',
+  );
   if (blobToken) {
     updateEnvFile('BLOB_READ_WRITE_TOKEN', blobToken);
     console.log('✅ Blob storage token saved');
@@ -201,9 +213,9 @@ async function setupApiKeys() {
 function updateEnvFile(key: string, value: string) {
   const envPath = join(process.cwd(), '.env.test');
   let content = readFileSync(envPath, 'utf8');
-  
+
   const keyPattern = new RegExp(`^${key}=.*$`, 'm');
-  
+
   if (keyPattern.test(content)) {
     // Update existing key
     content = content.replace(keyPattern, `${key}=${value}`);
@@ -211,7 +223,7 @@ function updateEnvFile(key: string, value: string) {
     // Add new key
     content += `\n${key}=${value}`;
   }
-  
+
   writeFileSync(envPath, content);
 }
 

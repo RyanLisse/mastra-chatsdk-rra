@@ -2,7 +2,10 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import type { ProcessingStage, ProcessingStatus } from '@/lib/rag/progress/types';
+import type {
+  ProcessingStage,
+  ProcessingStatus,
+} from '@/lib/rag/progress/types';
 
 interface ProgressBarProps {
   stage: ProcessingStage;
@@ -20,16 +23,16 @@ const stageLabels: Record<ProcessingStage, string> = {
   embedding: 'Embedding',
   storing: 'Storing',
   completed: 'Complete',
-  error: 'Failed'
+  error: 'Failed',
 };
 
 const stageOrder: ProcessingStage[] = [
   'upload',
-  'parsing', 
+  'parsing',
   'chunking',
   'embedding',
   'storing',
-  'completed'
+  'completed',
 ];
 
 export function ProgressBar({
@@ -38,11 +41,11 @@ export function ProgressBar({
   status,
   animated = false,
   showLabels = true,
-  className
+  className,
 }: ProgressBarProps) {
   const currentStageIndex = stageOrder.indexOf(stage);
   const isError = status === 'failed' || stage === 'error';
-  
+
   const getStageStatus = (stageIndex: number) => {
     if (isError && stageIndex === currentStageIndex) {
       return 'error';
@@ -62,14 +65,11 @@ export function ProgressBar({
       <div className="relative">
         <div className="h-2 bg-muted rounded-full overflow-hidden">
           <div
-            className={cn(
-              'h-full rounded-full transition-all duration-300',
-              {
-                'bg-primary': !isError,
-                'bg-destructive': isError,
-                'animate-pulse': animated && status === 'processing'
-              }
-            )}
+            className={cn('h-full rounded-full transition-all duration-300', {
+              'bg-primary': !isError,
+              'bg-destructive': isError,
+              'animate-pulse': animated && status === 'processing',
+            })}
             style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
             role="progressbar"
             aria-valuenow={progress}
@@ -78,14 +78,12 @@ export function ProgressBar({
             aria-label={`Processing progress: ${progress}%`}
           />
         </div>
-        
+
         <div className="flex justify-between items-center mt-1">
           <span className="text-sm font-medium text-foreground">
             {stageLabels[stage]}
           </span>
-          <span className="text-sm text-muted-foreground">
-            {progress}%
-          </span>
+          <span className="text-sm text-muted-foreground">{progress}%</span>
         </div>
       </div>
 
@@ -94,11 +92,11 @@ export function ProgressBar({
         <div className="flex justify-between relative">
           {/* Connection Line */}
           <div className="absolute top-2 left-0 right-0 h-0.5 bg-muted" />
-          
+
           {stageOrder.slice(0, -1).map((stageName, index) => {
             const stageStatus = getStageStatus(index);
             const isActive = index === currentStageIndex;
-            
+
             return (
               <div
                 key={stageName}
@@ -109,13 +107,15 @@ export function ProgressBar({
                     'w-4 h-4 rounded-full border-2 transition-all duration-200',
                     {
                       'bg-primary border-primary': stageStatus === 'completed',
-                      'bg-primary border-primary animate-pulse': 
+                      'bg-primary border-primary animate-pulse':
                         stageStatus === 'active' && status === 'processing',
-                      'bg-background border-primary': 
+                      'bg-background border-primary':
                         stageStatus === 'active' && status !== 'processing',
-                      'bg-destructive border-destructive': stageStatus === 'error',
-                      'bg-background border-muted-foreground': stageStatus === 'pending'
-                    }
+                      'bg-destructive border-destructive':
+                        stageStatus === 'error',
+                      'bg-background border-muted-foreground':
+                        stageStatus === 'pending',
+                    },
                   )}
                   role="button"
                   aria-label={`${stageLabels[stageName]} - ${stageStatus}`}
@@ -124,10 +124,11 @@ export function ProgressBar({
                   className={cn(
                     'text-xs mt-1 font-medium transition-colors duration-200 text-center max-w-16',
                     {
-                      'text-primary': stageStatus === 'completed' || stageStatus === 'active',
+                      'text-primary':
+                        stageStatus === 'completed' || stageStatus === 'active',
                       'text-destructive': stageStatus === 'error',
-                      'text-muted-foreground': stageStatus === 'pending'
-                    }
+                      'text-muted-foreground': stageStatus === 'pending',
+                    },
                   )}
                 >
                   {stageLabels[stageName]}

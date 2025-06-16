@@ -145,7 +145,9 @@ export async function DELETE(request: NextRequest) {
       });
     } catch (memoryError) {
       console.error('Error clearing session:', memoryError);
-      return new ChatSDKError('internal_error:memory_clear_failed').toResponse();
+      return new ChatSDKError(
+        'internal_error:memory_clear_failed',
+      ).toResponse();
     }
   } catch (error) {
     console.error('Error in save-message DELETE API:', error);

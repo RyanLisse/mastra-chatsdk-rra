@@ -68,8 +68,12 @@ export const getResponseChunksByPrompt = (
   if (isReasoningEnabled) {
     if (compareMessages(recentMessage, TEST_PROMPTS.USER_CALIBRATION)) {
       return [
-        ...reasoningToDeltas('Calibration requires precise measurement setup and environmental considerations!'),
-        ...textToDeltas("First, ensure the RoboRail is properly positioned and all measurement components are clean."),
+        ...reasoningToDeltas(
+          'Calibration requires precise measurement setup and environmental considerations!',
+        ),
+        ...textToDeltas(
+          'First, ensure the RoboRail is properly positioned and all measurement components are clean.',
+        ),
         {
           type: 'finish',
           finishReason: 'stop',
@@ -82,7 +86,9 @@ export const getResponseChunksByPrompt = (
         ...reasoningToDeltas(
           'Safety is paramount when working with RoboRail machinery!',
         ),
-        ...textToDeltas("Always wear proper PPE and ensure emergency stop procedures are understood."),
+        ...textToDeltas(
+          'Always wear proper PPE and ensure emergency stop procedures are understood.',
+        ),
         {
           type: 'finish',
           finishReason: 'stop',
@@ -105,7 +111,9 @@ export const getResponseChunksByPrompt = (
     ];
   } else if (compareMessages(recentMessage, TEST_PROMPTS.USER_SAFETY)) {
     return [
-      ...textToDeltas("Always wear proper PPE and ensure emergency stop procedures are understood."),
+      ...textToDeltas(
+        'Always wear proper PPE and ensure emergency stop procedures are understood.',
+      ),
       {
         type: 'finish',
         finishReason: 'stop',
@@ -115,7 +123,9 @@ export const getResponseChunksByPrompt = (
     ];
   } else if (compareMessages(recentMessage, TEST_PROMPTS.USER_CALIBRATION)) {
     return [
-      ...textToDeltas("First, ensure the RoboRail is properly positioned and all measurement components are clean."),
+      ...textToDeltas(
+        'First, ensure the RoboRail is properly positioned and all measurement components are clean.',
+      ),
       {
         type: 'finish',
         finishReason: 'stop',
@@ -138,7 +148,9 @@ export const getResponseChunksByPrompt = (
     compareMessages(recentMessage, TEST_PROMPTS.USER_IMAGE_ATTACHMENT)
   ) {
     return [
-      ...textToDeltas('This appears to be a RoboRail component - let me analyze it for you!'),
+      ...textToDeltas(
+        'This appears to be a RoboRail component - let me analyze it for you!',
+      ),
       {
         type: 'finish',
         finishReason: 'stop',
@@ -225,7 +237,9 @@ export const getResponseChunksByPrompt = (
         usage: { completionTokens: 10, promptTokens: 3 },
       },
     ];
-  } else if (compareMessages(recentMessage, TEST_PROMPTS.GET_TROUBLESHOOTING_CALL)) {
+  } else if (
+    compareMessages(recentMessage, TEST_PROMPTS.GET_TROUBLESHOOTING_CALL)
+  ) {
     return [
       {
         type: 'tool-call',
@@ -243,7 +257,9 @@ export const getResponseChunksByPrompt = (
     ];
   } else if (compareMessages(recentMessage, TEST_PROMPTS.GET_WEATHER_RESULT)) {
     return [
-      ...textToDeltas('For communication errors, first check cable connections and power supply status.'),
+      ...textToDeltas(
+        'For communication errors, first check cable connections and power supply status.',
+      ),
       {
         type: 'finish',
         finishReason: 'stop',

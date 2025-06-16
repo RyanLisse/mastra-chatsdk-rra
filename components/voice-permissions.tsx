@@ -17,7 +17,8 @@ export function VoicePermissions({
   onPermissionDenied,
   className,
 }: VoicePermissionsProps) {
-  const [permissionState, setPermissionState] = useState<PermissionState | null>(null);
+  const [permissionState, setPermissionState] =
+    useState<PermissionState | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
 
@@ -32,7 +33,7 @@ export function VoicePermissions({
       try {
         const permission = await checkMicrophonePermission();
         setPermissionState(permission);
-        
+
         if (permission === 'granted') {
           onPermissionGranted?.();
         } else if (permission === 'denied') {
@@ -49,13 +50,13 @@ export function VoicePermissions({
 
   const requestPermission = async () => {
     setIsChecking(true);
-    
+
     try {
       // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
+
       // Success - stop the stream and update state
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
       setPermissionState('granted');
       onPermissionGranted?.();
     } catch (error) {
@@ -70,30 +71,37 @@ export function VoicePermissions({
   const openSettings = () => {
     // Guide user to browser settings
     const userAgent = navigator.userAgent;
-    let instructions = 'Please enable microphone access in your browser settings.';
-    
+    let instructions =
+      'Please enable microphone access in your browser settings.';
+
     if (userAgent.includes('Chrome')) {
-      instructions = 'Click the microphone icon in the address bar or go to Settings > Privacy and security > Site Settings > Microphone.';
+      instructions =
+        'Click the microphone icon in the address bar or go to Settings > Privacy and security > Site Settings > Microphone.';
     } else if (userAgent.includes('Firefox')) {
-      instructions = 'Click the microphone icon in the address bar or go to Preferences > Privacy & Security > Permissions > Microphone.';
+      instructions =
+        'Click the microphone icon in the address bar or go to Preferences > Privacy & Security > Permissions > Microphone.';
     } else if (userAgent.includes('Safari')) {
-      instructions = 'Go to Safari > Preferences > Websites > Microphone and allow access for this site.';
+      instructions =
+        'Go to Safari > Preferences > Websites > Microphone and allow access for this site.';
     }
-    
+
     alert(instructions);
   };
 
   if (!isSupported) {
     return (
-      <div className={cn(
-        'flex items-center gap-3 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800',
-        className
-      )}>
+      <div
+        className={cn(
+          'flex items-center gap-3 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800',
+          className,
+        )}
+      >
         <AlertCircle size={20} className="text-red-500 flex-shrink-0" />
         <div className="flex-1">
           <p className="font-medium">Voice features not supported</p>
           <p className="text-sm text-red-600">
-            Your browser doesn&apos;t support the required audio features for voice interaction.
+            Your browser doesn&apos;t support the required audio features for
+            voice interaction.
           </p>
         </div>
       </div>
@@ -102,10 +110,12 @@ export function VoicePermissions({
 
   if (permissionState === 'granted') {
     return (
-      <div className={cn(
-        'flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200 text-green-800',
-        className
-      )}>
+      <div
+        className={cn(
+          'flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200 text-green-800',
+          className,
+        )}
+      >
         <Mic size={16} className="text-green-500 flex-shrink-0" />
         <span className="text-sm font-medium">Microphone access granted</span>
       </div>
@@ -114,10 +124,12 @@ export function VoicePermissions({
 
   if (permissionState === 'denied') {
     return (
-      <div className={cn(
-        'flex items-center gap-3 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800',
-        className
-      )}>
+      <div
+        className={cn(
+          'flex items-center gap-3 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800',
+          className,
+        )}
+      >
         <MicOff size={20} className="text-red-500 flex-shrink-0" />
         <div className="flex-1">
           <p className="font-medium">Microphone access denied</p>
@@ -139,10 +151,12 @@ export function VoicePermissions({
   }
 
   return (
-    <div className={cn(
-      'flex items-center gap-3 p-4 rounded-lg bg-blue-50 border border-blue-200 text-blue-800',
-      className
-    )}>
+    <div
+      className={cn(
+        'flex items-center gap-3 p-4 rounded-lg bg-blue-50 border border-blue-200 text-blue-800',
+        className,
+      )}
+    >
       <Mic size={20} className="text-blue-500 flex-shrink-0" />
       <div className="flex-1">
         <p className="font-medium">Enable voice features</p>
@@ -174,18 +188,23 @@ export function VoicePermissions({
 }
 
 // Compact version for inline use
-export function VoicePermissionStatus({ 
-  permissionState, 
-  onRequest, 
-  className 
-}: { 
-  permissionState: PermissionState | null; 
+export function VoicePermissionStatus({
+  permissionState,
+  onRequest,
+  className,
+}: {
+  permissionState: PermissionState | null;
   onRequest?: () => void;
   className?: string;
 }) {
   if (permissionState === 'granted') {
     return (
-      <div className={cn('flex items-center gap-1 text-xs text-green-600', className)}>
+      <div
+        className={cn(
+          'flex items-center gap-1 text-xs text-green-600',
+          className,
+        )}
+      >
         <Mic size={12} />
         <span>Microphone ready</span>
       </div>
@@ -194,7 +213,12 @@ export function VoicePermissionStatus({
 
   if (permissionState === 'denied') {
     return (
-      <div className={cn('flex items-center gap-1 text-xs text-red-600', className)}>
+      <div
+        className={cn(
+          'flex items-center gap-1 text-xs text-red-600',
+          className,
+        )}
+      >
         <MicOff size={12} />
         <span>Microphone blocked</span>
       </div>
@@ -203,10 +227,11 @@ export function VoicePermissionStatus({
 
   return (
     <button
+      type="button"
       onClick={onRequest}
       className={cn(
         'flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 underline',
-        className
+        className,
       )}
     >
       <Mic size={12} />

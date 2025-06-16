@@ -4,7 +4,13 @@ import React, { Component, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { RefreshCw, AlertTriangle, Home, Bug } from 'lucide-react';
 import { Button } from './button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from './card';
 import { cn } from '@/lib/utils';
 
 interface ErrorBoundaryState {
@@ -30,7 +36,10 @@ interface ErrorBoundaryFallbackProps {
   resetError: () => void;
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   private retryTimeoutId: NodeJS.Timeout | null = null;
 
   constructor(props: ErrorBoundaryProps) {
@@ -78,7 +87,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     const { retryCount } = this.state;
 
     if (retryCount < maxRetries) {
-      this.setState(prevState => ({
+      this.setState((prevState) => ({
         hasError: false,
         error: undefined,
         errorInfo: undefined,
@@ -98,7 +107,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   render() {
     const { hasError, error, retryCount } = this.state;
-    const { children, fallback: Fallback, maxRetries = 3, className } = this.props;
+    const {
+      children,
+      fallback: Fallback,
+      maxRetries = 3,
+      className,
+    } = this.props;
 
     if (hasError && error) {
       const canRetry = retryCount < maxRetries;
@@ -116,7 +130,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       return (
-        <div className={cn('min-h-[400px] flex items-center justify-center p-4', className)}>
+        <div
+          className={cn(
+            'min-h-[400px] flex items-center justify-center p-4',
+            className,
+          )}
+        >
           <DefaultErrorFallback
             error={error}
             retry={this.handleRetry}
@@ -139,9 +158,10 @@ function DefaultErrorFallback({
   retryCount,
   resetError,
 }: ErrorBoundaryFallbackProps) {
-  const isNetworkError = error.message.includes('fetch') || error.message.includes('network');
+  const isNetworkError =
+    error.message.includes('fetch') || error.message.includes('network');
   const isTimeoutError = error.message.includes('timeout');
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -159,17 +179,17 @@ function DefaultErrorFallback({
           >
             <AlertTriangle size={24} className="text-destructive" />
           </motion.div>
-          
+
           <CardTitle className="text-lg text-destructive">
             Oops! Something went wrong
           </CardTitle>
-          
+
           <CardDescription className="text-sm">
-            {isNetworkError 
+            {isNetworkError
               ? "We're having trouble connecting to our servers."
               : isTimeoutError
-              ? "The request took too long to complete."
-              : "An unexpected error occurred while loading the application."}
+                ? 'The request took too long to complete.'
+                : 'An unexpected error occurred while loading the application.'}
           </CardDescription>
         </CardHeader>
 
@@ -202,16 +222,12 @@ function DefaultErrorFallback({
           {/* Action Buttons */}
           <div className="flex flex-col gap-2">
             {canRetry && (
-              <Button
-                onClick={retry}
-                className="w-full"
-                size="sm"
-              >
+              <Button onClick={retry} className="w-full" size="sm">
                 <RefreshCw size={16} className="mr-2" />
                 Try Again
               </Button>
             )}
-            
+
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -222,7 +238,7 @@ function DefaultErrorFallback({
                 <Home size={16} className="mr-2" />
                 Reset
               </Button>
-              
+
               <Button
                 variant="outline"
                 onClick={() => window.location.reload()}
@@ -238,8 +254,8 @@ function DefaultErrorFallback({
           {/* Help Text */}
           <div className="text-xs text-muted-foreground text-center">
             If the problem persists, try refreshing the page or{' '}
-            <a 
-              href="mailto:support@example.com" 
+            <a
+              href="mailto:support@example.com"
               className="text-primary hover:underline"
             >
               contact support
@@ -279,7 +295,11 @@ interface ChatErrorBoundaryProps {
   className?: string;
 }
 
-export function ChatErrorBoundary({ children, onRetry, className }: ChatErrorBoundaryProps) {
+export function ChatErrorBoundary({
+  children,
+  onRetry,
+  className,
+}: ChatErrorBoundaryProps) {
   return (
     <ErrorBoundary
       className={className}
@@ -295,17 +315,18 @@ export function ChatErrorBoundary({ children, onRetry, className }: ChatErrorBou
                 <div className="p-2 rounded-full bg-destructive/10 flex-shrink-0">
                   <Bug size={20} className="text-destructive" />
                 </div>
-                
+
                 <div className="flex-1 space-y-3">
                   <div>
                     <h3 className="font-semibold text-destructive">
                       Chat Error
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Unable to load the chat interface. This might be a temporary issue.
+                      Unable to load the chat interface. This might be a
+                      temporary issue.
                     </p>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     {canRetry && (
                       <Button
@@ -319,12 +340,8 @@ export function ChatErrorBoundary({ children, onRetry, className }: ChatErrorBou
                         Retry
                       </Button>
                     )}
-                    
-                    <Button
-                      variant="outline"
-                      onClick={resetError}
-                      size="sm"
-                    >
+
+                    <Button variant="outline" onClick={resetError} size="sm">
                       Reset
                     </Button>
                   </div>

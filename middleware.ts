@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { guestRegex, isDevelopmentEnvironment, isTestEnvironment } from './lib/constants';
+import {
+  guestRegex,
+  isDevelopmentEnvironment,
+  isTestEnvironment,
+} from './lib/constants';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -15,13 +19,17 @@ export async function middleware(request: NextRequest) {
 
   // Check if this is a Playwright test by examining user agent or headers
   const userAgent = request.headers.get('user-agent') || '';
-  const isPlaywrightRequest = userAgent.includes('Playwright') || 
-                              request.headers.get('x-test-mode') === 'true' ||
-                              pathname.startsWith('/api/test/');
+  const isPlaywrightRequest =
+    userAgent.includes('Playwright') ||
+    request.headers.get('x-test-mode') === 'true' ||
+    pathname.startsWith('/api/test/');
 
   // Skip authentication entirely during tests to prevent redirect loops
   if (isTestEnvironment || isPlaywrightRequest) {
-    console.log('Test environment detected, skipping auth middleware for:', { pathname, userAgent: userAgent.substring(0, 50) });
+    console.log('Test environment detected, skipping auth middleware for:', {
+      pathname,
+      userAgent: userAgent.substring(0, 50),
+    });
     return NextResponse.next();
   }
 

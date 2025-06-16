@@ -8,7 +8,8 @@ import { SessionProvider } from 'next-auth/react';
 
 export const metadata: Metadata = {
   title: 'Mastra Chat SDK - RoboRail Assistant',
-  description: 'AI-powered chat application with advanced RAG capabilities for RoboRail technical documentation.',
+  description:
+    'AI-powered chat application with advanced RAG capabilities for RoboRail technical documentation.',
 };
 
 export const viewport = {

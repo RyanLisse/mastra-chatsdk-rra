@@ -20,7 +20,10 @@ export interface ChatModel {
   tier?: 'free' | 'premium' | 'pro';
 }
 
-export const providers: Record<Provider, { name: string; description: string }> = {
+export const providers: Record<
+  Provider,
+  { name: string; description: string }
+> = {
   openai: {
     name: 'OpenAI',
     description: 'Advanced language models including GPT-4 series',
@@ -44,7 +47,8 @@ export const chatModels: Array<ChatModel> = [
   {
     id: 'o3-pro',
     name: 'o3-pro',
-    description: 'Most advanced reasoning model with exceptional problem-solving',
+    description:
+      'Most advanced reasoning model with exceptional problem-solving',
     provider: 'openai',
     capabilities: {
       contextWindow: 200000,
@@ -171,7 +175,8 @@ export const chatModels: Array<ChatModel> = [
   {
     id: 'claude-4-sonnet',
     name: 'Claude 4 Sonnet',
-    description: 'Balanced model for general-purpose tasks with strong reasoning',
+    description:
+      'Balanced model for general-purpose tasks with strong reasoning',
     provider: 'anthropic',
     capabilities: {
       contextWindow: 200000,
@@ -229,7 +234,8 @@ export const chatModels: Array<ChatModel> = [
   {
     id: 'gemini-2.5-pro',
     name: 'Gemini 2.5 Pro',
-    description: 'Most advanced Gemini model with superior multimodal capabilities',
+    description:
+      'Most advanced Gemini model with superior multimodal capabilities',
     provider: 'google',
     capabilities: {
       contextWindow: 1000000,
@@ -313,7 +319,8 @@ export const chatModels: Array<ChatModel> = [
   {
     id: 'llama-3-groq-70b-tool-use',
     name: 'LLaMA-3-Groq-70B-Tool-Use',
-    description: 'Specialized model optimized for tool usage and function calling',
+    description:
+      'Specialized model optimized for tool usage and function calling',
     provider: 'groq',
     capabilities: {
       contextWindow: 64000,

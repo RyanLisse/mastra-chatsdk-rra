@@ -4,7 +4,9 @@ import { getUnixTime } from 'date-fns';
 
 // Validate test environment
 if (process.env.NODE_ENV !== 'test' && process.env.PLAYWRIGHT !== 'true') {
-  console.warn('⚠️  Test environment not properly configured. Set NODE_ENV=test or PLAYWRIGHT=true');
+  console.warn(
+    '⚠️  Test environment not properly configured. Set NODE_ENV=test or PLAYWRIGHT=true',
+  );
 }
 
 const baseExpect = baseExpected;

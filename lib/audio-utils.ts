@@ -17,17 +17,22 @@ export class AudioPlayer {
 
   private ensureAudioContext() {
     if (!this.audioContext) {
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      this.audioContext = new (
+        window.AudioContext || (window as any).webkitAudioContext
+      )();
     }
   }
 
   /**
    * Play audio from base64 encoded data
    */
-  async playAudioFromBase64(base64Data: string, onEnded?: () => void): Promise<void> {
+  async playAudioFromBase64(
+    base64Data: string,
+    onEnded?: () => void,
+  ): Promise<void> {
     try {
       this.ensureAudioContext();
-      
+
       if (!this.audioContext) {
         throw new Error('Audio context not available');
       }
@@ -39,14 +44,14 @@ export class AudioPlayer {
       const binaryString = atob(base64Data);
       const arrayBuffer = new ArrayBuffer(binaryString.length);
       const uint8Array = new Uint8Array(arrayBuffer);
-      
+
       for (let i = 0; i < binaryString.length; i++) {
         uint8Array[i] = binaryString.charCodeAt(i);
       }
 
       // Decode audio data
       const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-      
+
       // Create audio source
       const source = this.audioContext.createBufferSource();
       source.buffer = audioBuffer;
@@ -69,7 +74,6 @@ export class AudioPlayer {
       this.currentSource = source;
       this.isPlaying = true;
       source.start();
-
     } catch (error) {
       console.error('Error playing audio:', error);
       throw new Error('Failed to play audio response');
@@ -82,7 +86,7 @@ export class AudioPlayer {
   async playAudioFromUrl(url: string, onEnded?: () => void): Promise<void> {
     try {
       this.ensureAudioContext();
-      
+
       if (!this.audioContext) {
         throw new Error('Audio context not available');
       }
@@ -96,7 +100,7 @@ export class AudioPlayer {
 
       // Decode audio data
       const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-      
+
       // Create audio source
       const source = this.audioContext.createBufferSource();
       source.buffer = audioBuffer;
@@ -119,7 +123,6 @@ export class AudioPlayer {
       this.currentSource = source;
       this.isPlaying = true;
       source.start();
-
     } catch (error) {
       console.error('Error playing audio from URL:', error);
       throw new Error('Failed to play audio from URL');
@@ -198,7 +201,7 @@ export class AudioRecorder {
           autoGainControl: true,
           sampleRate: 16000,
           channelCount: 1,
-        }
+        },
       });
 
       // Create media recorder
@@ -218,7 +221,6 @@ export class AudioRecorder {
       // Start recording
       this.mediaRecorder.start(100); // Collect data every 100ms
       this.isRecording = true;
-
     } catch (error) {
       console.error('Error starting audio recording:', error);
       throw new Error('Failed to start audio recording');
@@ -237,10 +239,10 @@ export class AudioRecorder {
 
       this.mediaRecorder.onstop = () => {
         try {
-          const audioBlob = new Blob(this.audioChunks, { 
-            type: this.getSupportedMimeType() 
+          const audioBlob = new Blob(this.audioChunks, {
+            type: this.getSupportedMimeType(),
           });
-          
+
           // Clean up
           this.cleanup();
           resolve(audioBlob);
@@ -286,7 +288,7 @@ export class AudioRecorder {
    */
   private cleanup(): void {
     if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
+      this.stream.getTracks().forEach((track) => track.stop());
       this.stream = null;
     }
     this.mediaRecorder = null;
@@ -340,8 +342,10 @@ export async function checkMicrophonePermission(): Promise<PermissionState> {
   if (!('permissions' in navigator) || !navigator.mediaDevices) {
     // Fallback: try to access microphone
     try {
-      const stream = await navigator.mediaDevices?.getUserMedia({ audio: true });
-      stream.getTracks().forEach(track => track.stop());
+      const stream = await navigator.mediaDevices?.getUserMedia({
+        audio: true,
+      });
+      stream.getTracks().forEach((track) => track.stop());
       return 'granted';
     } catch {
       return 'denied';
@@ -349,8 +353,8 @@ export async function checkMicrophonePermission(): Promise<PermissionState> {
   }
 
   try {
-    const permission = await navigator.permissions.query({ 
-      name: 'microphone' as PermissionName 
+    const permission = await navigator.permissions.query({
+      name: 'microphone' as PermissionName,
     });
     return permission.state;
   } catch {

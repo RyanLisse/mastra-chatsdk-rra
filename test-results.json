@@ -1,6 +1,0 @@
-$ export PLAYWRIGHT=true && bun run playwright test tests/e2e/ "--reporter=json"
-❌ Test database not configured!
-Please set up your test database URL in .env.test
-Run: bun run db:test:setup for setup instructions
-error: "playwright" exited with code 1
-error: script "test:e2e" exited with code 1

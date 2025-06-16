@@ -7,7 +7,12 @@ export const TEST_PROMPTS = {
       createdAt: new Date().toISOString(),
       role: 'user',
       content: 'How do I calibrate the RoboRail measurement system?',
-      parts: [{ type: 'text', text: 'How do I calibrate the RoboRail measurement system?' }],
+      parts: [
+        {
+          type: 'text',
+          text: 'How do I calibrate the RoboRail measurement system?',
+        },
+      ],
     },
     OUTPUT_STREAM: [
       '0:"First, "',
@@ -33,7 +38,12 @@ export const TEST_PROMPTS = {
       createdAt: new Date().toISOString(),
       role: 'user',
       content: 'What are the safety procedures for RoboRail maintenance?',
-      parts: [{ type: 'text', text: 'What are the safety procedures for RoboRail maintenance?' }],
+      parts: [
+        {
+          type: 'text',
+          text: 'What are the safety procedures for RoboRail maintenance?',
+        },
+      ],
     },
 
     OUTPUT_STREAM: [

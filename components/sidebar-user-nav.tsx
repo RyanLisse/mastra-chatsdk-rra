@@ -52,7 +52,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                 className="data-[state=open]:bg-sidebar-accent bg-background data-[state=open]:text-sidebar-accent-foreground h-10"
               >
                 <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
-                  {isGuest ? 'G' : (user?.email?.[0]?.toUpperCase() || 'U')}
+                  {isGuest ? 'G' : user?.email?.[0]?.toUpperCase() || 'U'}
                 </div>
                 <span data-testid="user-email" className="truncate">
                   {isGuest ? 'Guest' : user?.email}
@@ -69,7 +69,9 @@ export function SidebarUserNav({ user }: { user: User }) {
             <DropdownMenuItem
               data-testid="user-nav-item-theme"
               className="cursor-pointer"
-              onSelect={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              onSelect={() =>
+                setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
+              }
             >
               {`Toggle ${resolvedTheme === 'light' ? 'dark' : 'light'} mode`}
             </DropdownMenuItem>

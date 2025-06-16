@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from './ui/card';
 import { Badge } from './ui/badge';
 import { useVoiceAssistant } from '@/hooks/use-voice-assistant';
 import { VoiceButton } from './voice-button';
@@ -15,18 +21,31 @@ import { PlayCircle, RotateCcw } from 'lucide-react';
  * This component can be used during development to test voice features
  */
 export function VoiceTest() {
-  const [transcriptions, setTranscriptions] = useState<Array<{ text: string; role: string; timestamp: Date }>>([]);
-  const [audioEvents, setAudioEvents] = useState<Array<{ type: string; data: any; timestamp: Date }>>([]);
+  const [transcriptions, setTranscriptions] = useState<
+    Array<{ text: string; role: string; timestamp: Date }>
+  >([]);
+  const [audioEvents, setAudioEvents] = useState<
+    Array<{ type: string; data: any; timestamp: Date }>
+  >([]);
 
   const voiceAssistant = useVoiceAssistant({
     onTranscription: (text: string, role: string) => {
-      setTranscriptions(prev => [...prev, { text, role, timestamp: new Date() }]);
+      setTranscriptions((prev) => [
+        ...prev,
+        { text, role, timestamp: new Date() },
+      ]);
     },
     onError: (error: string) => {
-      setAudioEvents(prev => [...prev, { type: 'error', data: error, timestamp: new Date() }]);
+      setAudioEvents((prev) => [
+        ...prev,
+        { type: 'error', data: error, timestamp: new Date() },
+      ]);
     },
     onAudioReceived: (audioLength: number) => {
-      setAudioEvents(prev => [...prev, { type: 'audio', data: { audioLength }, timestamp: new Date() }]);
+      setAudioEvents((prev) => [
+        ...prev,
+        { type: 'audio', data: { audioLength }, timestamp: new Date() },
+      ]);
     },
   });
 
@@ -37,7 +56,9 @@ export function VoiceTest() {
 
   const testSpeak = async () => {
     try {
-      await voiceAssistant.speak('Hello, this is a test message from the voice assistant.');
+      await voiceAssistant.speak(
+        'Hello, this is a test message from the voice assistant.',
+      );
     } catch (error) {
       console.error('Test speak failed:', error);
     }
@@ -60,10 +81,16 @@ export function VoiceTest() {
 
           {/* Connection Status */}
           <div className="flex items-center gap-4">
-            <Badge variant={voiceAssistant.isConnected ? 'default' : 'secondary'}>
+            <Badge
+              variant={voiceAssistant.isConnected ? 'default' : 'secondary'}
+            >
               {voiceAssistant.isConnected ? 'Connected' : 'Disconnected'}
             </Badge>
-            <Badge variant={voiceAssistant.state === 'error' ? 'destructive' : 'outline'}>
+            <Badge
+              variant={
+                voiceAssistant.state === 'error' ? 'destructive' : 'outline'
+              }
+            >
               State: {voiceAssistant.state}
             </Badge>
             {voiceAssistant.permissionStatus && (
@@ -92,7 +119,11 @@ export function VoiceTest() {
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
-              onClick={voiceAssistant.isConnected ? voiceAssistant.disconnect : voiceAssistant.connect}
+              onClick={
+                voiceAssistant.isConnected
+                  ? voiceAssistant.disconnect
+                  : voiceAssistant.connect
+              }
             >
               {voiceAssistant.isConnected ? 'Disconnect' : 'Connect'}
             </Button>
@@ -118,11 +149,7 @@ export function VoiceTest() {
               Test Speak
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={clearLogs}
-            >
+            <Button variant="outline" size="sm" onClick={clearLogs}>
               <RotateCcw size={16} className="mr-2" />
               Clear Logs
             </Button>
@@ -131,8 +158,13 @@ export function VoiceTest() {
           {/* Audio Level Indicator */}
           {voiceAssistant.isRecording && (
             <div className="space-y-2">
-              <label className="text-sm font-medium">Audio Level</label>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <label htmlFor="audio-level" className="text-sm font-medium">
+                Audio Level
+              </label>
+              <div
+                id="audio-level"
+                className="w-full bg-gray-200 rounded-full h-2"
+              >
                 <div
                   className="bg-green-600 h-2 rounded-full transition-all duration-100"
                   style={{ width: `${voiceAssistant.audioLevel * 100}%` }}
@@ -151,18 +183,20 @@ export function VoiceTest() {
         <Card>
           <CardHeader>
             <CardTitle>Transcriptions</CardTitle>
-            <CardDescription>
-              Real-time speech-to-text results
-            </CardDescription>
+            <CardDescription>Real-time speech-to-text results</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {transcriptions.map((transcription, index) => (
                 <div
-                  key={index}
+                  key={`transcription-${index}-${transcription.timestamp}`}
                   className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
                 >
-                  <Badge variant={transcription.role === 'user' ? 'default' : 'secondary'}>
+                  <Badge
+                    variant={
+                      transcription.role === 'user' ? 'default' : 'secondary'
+                    }
+                  >
                     {transcription.role}
                   </Badge>
                   <div className="flex-1">
@@ -183,18 +217,18 @@ export function VoiceTest() {
         <Card>
           <CardHeader>
             <CardTitle>Audio Events</CardTitle>
-            <CardDescription>
-              Audio processing and error events
-            </CardDescription>
+            <CardDescription>Audio processing and error events</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {audioEvents.map((event, index) => (
                 <div
-                  key={index}
+                  key={`audio-event-${index}-${event.timestamp}`}
                   className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
                 >
-                  <Badge variant={event.type === 'error' ? 'destructive' : 'outline'}>
+                  <Badge
+                    variant={event.type === 'error' ? 'destructive' : 'outline'}
+                  >
                     {event.type}
                   </Badge>
                   <div className="flex-1">
@@ -236,7 +270,9 @@ export function VoiceTest() {
             <div>
               <dt className="font-medium text-gray-500">Recording State</dt>
               <dd className="mt-1">
-                <Badge variant={voiceAssistant.isRecording ? 'default' : 'outline'}>
+                <Badge
+                  variant={voiceAssistant.isRecording ? 'default' : 'outline'}
+                >
                   {voiceAssistant.isRecording ? 'Recording' : 'Not recording'}
                 </Badge>
               </dd>
@@ -244,7 +280,9 @@ export function VoiceTest() {
             <div>
               <dt className="font-medium text-gray-500">Connection State</dt>
               <dd className="mt-1">
-                <Badge variant={voiceAssistant.isConnected ? 'default' : 'outline'}>
+                <Badge
+                  variant={voiceAssistant.isConnected ? 'default' : 'outline'}
+                >
                   {voiceAssistant.isConnected ? 'Connected' : 'Disconnected'}
                 </Badge>
               </dd>

@@ -22,8 +22,12 @@ async function testLangSmithIntegration() {
     console.log('✅ LangSmith client initialized successfully');
     console.log(`   Project: ${process.env.LANGSMITH_PROJECT}`);
   } else {
-    console.log('⚠️  LangSmith client not initialized (this is OK if not configured)');
-    console.log('   Set LANGSMITH_API_KEY and LANGSMITH_PROJECT to enable tracing');
+    console.log(
+      '⚠️  LangSmith client not initialized (this is OK if not configured)',
+    );
+    console.log(
+      '   Set LANGSMITH_API_KEY and LANGSMITH_PROJECT to enable tracing',
+    );
   }
   console.log();
 
@@ -32,21 +36,26 @@ async function testLangSmithIntegration() {
   try {
     const agent = createRoboRailAgent({
       sessionId: `test-session-${Date.now()}`,
-      selectedChatModel: 'title-model' // Uses gpt-4o-mini
+      selectedChatModel: 'title-model', // Uses gpt-4o-mini
     });
 
     console.log('   Generating test response...');
-    const response = await agent.generate('What are the safety protocols for RoboRail operations?');
-    
+    const response = await agent.generate(
+      'What are the safety protocols for RoboRail operations?',
+    );
+
     console.log('✅ Agent generation completed successfully');
     console.log(`   Response length: ${response.text.length} characters`);
     console.log(`   Session ID: ${agent.getSessionId()}`);
-    
+
     // Clean up test session
     await agent.clearMemory();
     console.log('   Test session memory cleared');
   } catch (error) {
-    console.error('❌ Agent test failed:', error instanceof Error ? error.message : error);
+    console.error(
+      '❌ Agent test failed:',
+      error instanceof Error ? error.message : error,
+    );
   }
   console.log();
 
@@ -55,36 +64,32 @@ async function testLangSmithIntegration() {
   try {
     const voiceAgent = createRoboRailVoiceAgent({
       sessionId: `voice-test-session-${Date.now()}`,
-      apiKey: process.env.OPENAI_API_KEY
+      apiKey: process.env.OPENAI_API_KEY,
     });
 
     console.log('✅ Voice agent initialized successfully');
     console.log(`   Session ID: ${voiceAgent.getSessionId()}`);
     console.log(`   Connection status: ${voiceAgent.isVoiceConnected()}`);
-    
+
     // Clean up test session
     await voiceAgent.clearMemory();
     console.log('   Voice test session memory cleared');
   } catch (error) {
-    console.error('❌ Voice agent test failed:', error instanceof Error ? error.message : error);
+    console.error(
+      '❌ Voice agent test failed:',
+      error instanceof Error ? error.message : error,
+    );
   }
   console.log();
 
   // Test 4: Verify environment variables
   console.log('4. Environment Variables Check...');
-  const requiredEnvVars = [
-    'POSTGRES_URL',
-    'OPENAI_API_KEY',
-    'COHERE_API_KEY'
-  ];
+  const requiredEnvVars = ['POSTGRES_URL', 'OPENAI_API_KEY', 'COHERE_API_KEY'];
 
-  const optionalEnvVars = [
-    'LANGSMITH_API_KEY',
-    'LANGSMITH_PROJECT'
-  ];
+  const optionalEnvVars = ['LANGSMITH_API_KEY', 'LANGSMITH_PROJECT'];
 
   let allRequired = true;
-  requiredEnvVars.forEach(envVar => {
+  requiredEnvVars.forEach((envVar) => {
     if (process.env[envVar]) {
       console.log(`✅ ${envVar}: Configured`);
     } else {
@@ -93,7 +98,7 @@ async function testLangSmithIntegration() {
     }
   });
 
-  optionalEnvVars.forEach(envVar => {
+  optionalEnvVars.forEach((envVar) => {
     if (process.env[envVar]) {
       console.log(`✅ ${envVar}: Configured (for LangSmith tracing)`);
     } else {
@@ -113,7 +118,7 @@ async function testLangSmithIntegration() {
   try {
     const packageInfo = require('../package.json');
     const langsmithVersion = packageInfo.dependencies?.langsmith;
-    
+
     if (langsmithVersion) {
       console.log(`✅ LangSmith package installed: ${langsmithVersion}`);
     } else {
@@ -125,7 +130,8 @@ async function testLangSmithIntegration() {
       console.log(`✅ Mastra Core package: ${mastraCore}`);
     }
 
-    const mastraVoice = packageInfo.dependencies?.['@mastra/voice-openai-realtime'];
+    const mastraVoice =
+      packageInfo.dependencies?.['@mastra/voice-openai-realtime'];
     if (mastraVoice) {
       console.log(`✅ Mastra Voice package: ${mastraVoice}`);
     }
@@ -134,7 +140,7 @@ async function testLangSmithIntegration() {
   }
 
   console.log('\n🔍 LangSmith Integration Test Complete!');
-  
+
   if (client) {
     console.log('\n📊 Check your LangSmith dashboard for traces:');
     console.log(`   Project: ${process.env.LANGSMITH_PROJECT}`);
@@ -143,7 +149,9 @@ async function testLangSmithIntegration() {
     console.log('\n💡 To enable LangSmith tracing:');
     console.log('   1. Sign up at https://smith.langchain.com/');
     console.log('   2. Create a project and get your API key');
-    console.log('   3. Set LANGSMITH_API_KEY and LANGSMITH_PROJECT in your .env file');
+    console.log(
+      '   3. Set LANGSMITH_API_KEY and LANGSMITH_PROJECT in your .env file',
+    );
   }
 }
 

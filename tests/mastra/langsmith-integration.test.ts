@@ -13,10 +13,10 @@ describe('LangSmith Integration', () => {
 
   test('should initialize LangSmith client properly', () => {
     const client = getLangSmithClient();
-    
+
     // Should either return a client or null (if not configured)
     expect(client === null || typeof client === 'object').toBe(true);
-    
+
     if (client) {
       expect(client).toBeDefined();
       console.log('✅ LangSmith client initialized for testing');
@@ -28,7 +28,7 @@ describe('LangSmith Integration', () => {
   test('should create RoboRail agent with tracing support', async () => {
     const agent = createRoboRailAgent({
       sessionId,
-      selectedChatModel: 'title-model'
+      selectedChatModel: 'title-model',
     });
 
     expect(agent).toBeDefined();
@@ -41,18 +41,20 @@ describe('LangSmith Integration', () => {
   test('should generate response with tracing (if configured)', async () => {
     const agent = createRoboRailAgent({
       sessionId,
-      selectedChatModel: 'title-model'
+      selectedChatModel: 'title-model',
     });
 
     try {
       const response = await agent.generate('What is RoboRail?');
-      
+
       expect(response).toBeDefined();
       expect(response.text).toBeDefined();
       expect(response.content).toBeDefined();
       expect(typeof response.text).toBe('string');
-      
-      console.log(`✅ Generated response with tracing: ${response.text.substring(0, 100)}...`);
+
+      console.log(
+        `✅ Generated response with tracing: ${response.text.substring(0, 100)}...`,
+      );
     } catch (error) {
       // If the test fails due to missing environment variables, that's expected
       if (error instanceof Error && error.message.includes('POSTGRES_URL')) {
@@ -70,12 +72,12 @@ describe('LangSmith Integration', () => {
     // Test that the system works even without LangSmith configuration
     const agent = createRoboRailAgent({
       sessionId,
-      selectedChatModel: 'title-model'
+      selectedChatModel: 'title-model',
     });
 
     // This should not throw even if LangSmith is not configured
     expect(() => agent.getSessionId()).not.toThrow();
-    
+
     // Clean up
     await agent.clearMemory();
   });
@@ -83,11 +85,11 @@ describe('LangSmith Integration', () => {
 
 describe('LangSmith Tracing Functions', () => {
   test('should import tracing functions without errors', async () => {
-    const { 
-      traceAgentGeneration, 
-      traceRAGTool, 
-      traceVoiceAgent, 
-      traceMemoryOperation 
+    const {
+      traceAgentGeneration,
+      traceRAGTool,
+      traceVoiceAgent,
+      traceMemoryOperation,
     } = await import('../../lib/mastra/langsmith');
 
     expect(traceAgentGeneration).toBeDefined();
@@ -102,7 +104,7 @@ describe('LangSmith Tracing Functions', () => {
 
   test('should execute traced function even when LangSmith is not configured', async () => {
     const { traceAgentGeneration } = await import('../../lib/mastra/langsmith');
-    
+
     let executed = false;
     const result = await traceAgentGeneration(
       'TestAgent',
@@ -111,7 +113,7 @@ describe('LangSmith Tracing Functions', () => {
       async () => {
         executed = true;
         return { success: true };
-      }
+      },
     );
 
     expect(executed).toBe(true);

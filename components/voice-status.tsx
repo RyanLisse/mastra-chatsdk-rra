@@ -4,7 +4,14 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import type { VoiceState } from '@/hooks/use-voice-assistant';
-import { Mic, Volume2, Loader2, AlertCircle, Wifi, WifiOff } from 'lucide-react';
+import {
+  Mic,
+  Volume2,
+  Loader2,
+  AlertCircle,
+  Wifi,
+  WifiOff,
+} from 'lucide-react';
 
 export interface VoiceStatusProps {
   state: VoiceState;
@@ -109,7 +116,12 @@ export function VoiceStatus({
     }
   };
 
-  const { icon: Icon, iconClassName, textClassName, bgClassName } = getStatusProps();
+  const {
+    icon: Icon,
+    iconClassName,
+    textClassName,
+    bgClassName,
+  } = getStatusProps();
 
   if (!isVisible && state === 'idle') {
     return null;
@@ -122,23 +134,21 @@ export function VoiceStatus({
           initial={{ opacity: 0, y: -20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
-          transition={{ 
-            type: 'spring', 
-            stiffness: 300, 
+          transition={{
+            type: 'spring',
+            stiffness: 300,
             damping: 20,
-            duration: 0.2 
+            duration: 0.2,
           }}
           className={cn(
             'flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium shadow-sm',
             bgClassName,
-            className
+            className,
           )}
         >
           <Icon size={16} className={iconClassName} />
-          <span className={textClassName}>
-            {displayText}
-          </span>
-          
+          <span className={textClassName}>{displayText}</span>
+
           {/* Typing indicator for transcription */}
           {state === 'listening' && currentTranscription && (
             <motion.div
@@ -154,12 +164,12 @@ export function VoiceStatus({
 }
 
 // Connection status indicator (can be used separately)
-export function VoiceConnectionStatus({ 
-  isConnected, 
-  className 
-}: { 
-  isConnected: boolean; 
-  className?: string; 
+export function VoiceConnectionStatus({
+  isConnected,
+  className,
+}: {
+  isConnected: boolean;
+  className?: string;
 }) {
   return (
     <div className={cn('flex items-center gap-1 text-xs', className)}>

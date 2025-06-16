@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  PlayIcon, 
-  StopIcon, 
-  TrashIcon, 
+import {
+  PlayIcon,
+  StopIcon,
+  TrashIcon,
   CheckCircleFillIcon,
   WarningIcon,
-  LoaderIcon
+  LoaderIcon,
 } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { ProcessingCard, type ProcessingState } from './processing-card';
@@ -43,25 +43,34 @@ export function FileQueue({
   onRemoveItem,
   onClearCompleted,
   onClearAll,
-  className
+  className,
 }: FileQueueProps) {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   const stats = {
     total: items.length,
-    pending: items.filter(item => !item.processingState || item.processingState.status === 'pending').length,
-    processing: items.filter(item => item.processingState?.status === 'processing').length,
-    completed: items.filter(item => item.processingState?.status === 'completed').length,
-    failed: items.filter(item => item.processingState?.status === 'failed').length,
-    validFiles: items.filter(item => !item.error).length,
-    invalidFiles: items.filter(item => item.error).length
+    pending: items.filter(
+      (item) =>
+        !item.processingState || item.processingState.status === 'pending',
+    ).length,
+    processing: items.filter(
+      (item) => item.processingState?.status === 'processing',
+    ).length,
+    completed: items.filter(
+      (item) => item.processingState?.status === 'completed',
+    ).length,
+    failed: items.filter((item) => item.processingState?.status === 'failed')
+      .length,
+    validFiles: items.filter((item) => !item.error).length,
+    invalidFiles: items.filter((item) => item.error).length,
   };
 
-  const canStart = stats.total > 0 && !isProcessing && (stats.pending > 0 || stats.failed > 0);
+  const canStart =
+    stats.total > 0 && !isProcessing && (stats.pending > 0 || stats.failed > 0);
   const canStop = isProcessing && stats.processing > 0;
 
   const toggleItemSelection = useCallback((itemId: string) => {
-    setSelectedItems(prev => {
+    setSelectedItems((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(itemId)) {
         newSet.delete(itemId);
@@ -76,12 +85,12 @@ export function FileQueue({
     if (selectedItems.size === items.length) {
       setSelectedItems(new Set());
     } else {
-      setSelectedItems(new Set(items.map(item => item.id)));
+      setSelectedItems(new Set(items.map((item) => item.id)));
     }
   }, [selectedItems.size, items]);
 
   const removeSelectedItems = useCallback(() => {
-    selectedItems.forEach(itemId => onRemoveItem(itemId));
+    selectedItems.forEach((itemId) => onRemoveItem(itemId));
     setSelectedItems(new Set());
   }, [selectedItems, onRemoveItem]);
 
@@ -94,8 +103,10 @@ export function FileQueue({
   };
 
   const getStatusColor = () => {
-    if (isProcessing) return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-    if (stats.failed > 0) return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+    if (isProcessing)
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+    if (stats.failed > 0)
+      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
     if (stats.completed === stats.validFiles && stats.validFiles > 0) {
       return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
     }
@@ -123,11 +134,9 @@ export function FileQueue({
             <CardTitle className="text-lg">
               Processing Queue ({stats.total})
             </CardTitle>
-            <Badge className={getStatusColor()}>
-              {getQueueStatus()}
-            </Badge>
+            <Badge className={getStatusColor()}>{getQueueStatus()}</Badge>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {canStart && (
               <Button
@@ -141,7 +150,7 @@ export function FileQueue({
                 Start Processing
               </Button>
             )}
-            
+
             {canStop && (
               <Button
                 variant="outline"
@@ -156,7 +165,7 @@ export function FileQueue({
             )}
           </div>
         </div>
-        
+
         {/* Queue Statistics */}
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-6">
@@ -193,7 +202,7 @@ export function FileQueue({
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         {/* Bulk Actions */}
         {items.length > 1 && (
@@ -209,7 +218,7 @@ export function FileQueue({
                 Select All ({selectedItems.size}/{items.length})
               </label>
             </div>
-            
+
             <div className="flex items-center gap-2">
               {selectedItems.size > 0 && (
                 <Button
@@ -224,7 +233,7 @@ export function FileQueue({
                   Remove Selected
                 </Button>
               )}
-              
+
               {stats.completed > 0 && (
                 <Button
                   variant="outline"
@@ -235,7 +244,7 @@ export function FileQueue({
                   Clear Completed
                 </Button>
               )}
-              
+
               <Button
                 variant="outline"
                 size="sm"
@@ -247,7 +256,7 @@ export function FileQueue({
             </div>
           </div>
         )}
-        
+
         <div className="space-y-4">
           {items.map((item, index) => (
             <div key={item.id} className="relative">
@@ -263,7 +272,7 @@ export function FileQueue({
                   />
                 </div>
               )}
-              
+
               {/* Processing Card or File Preview */}
               {item.processingState ? (
                 <ProcessingCard
@@ -272,15 +281,17 @@ export function FileQueue({
                   onCancel={() => onRemoveItem(item.id)}
                   className={cn(
                     'transition-all duration-200',
-                    items.length > 1 ? 'ml-8' : ''
+                    items.length > 1 ? 'ml-8' : '',
                   )}
                 />
               ) : (
-                <Card className={cn(
-                  'transition-all duration-200',
-                  items.length > 1 ? 'ml-8' : '',
-                  item.error ? 'border-destructive' : ''
-                )}>
+                <Card
+                  className={cn(
+                    'transition-all duration-200',
+                    items.length > 1 ? 'ml-8' : '',
+                    item.error ? 'border-destructive' : '',
+                  )}
+                >
                   <CardContent className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="flex-shrink-0">
@@ -292,9 +303,12 @@ export function FileQueue({
                           <div className="w-2 h-2 rounded-full bg-gray-400" />
                         )}
                       </div>
-                      
+
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm truncate" title={item.file.name}>
+                        <p
+                          className="font-medium text-sm truncate"
+                          title={item.file.name}
+                        >
                           {item.file.name}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
@@ -306,13 +320,16 @@ export function FileQueue({
                           </span>
                         </div>
                         {item.error && (
-                          <p className="text-xs text-destructive mt-1" role="alert">
+                          <p
+                            className="text-xs text-destructive mt-1"
+                            role="alert"
+                          >
                             {item.error}
                           </p>
                         )}
                       </div>
                     </div>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"
@@ -325,10 +342,8 @@ export function FileQueue({
                   </CardContent>
                 </Card>
               )}
-              
-              {index < items.length - 1 && (
-                <Separator className="my-2" />
-              )}
+
+              {index < items.length - 1 && <Separator className="my-2" />}
             </div>
           ))}
         </div>

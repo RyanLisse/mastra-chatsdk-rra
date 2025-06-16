@@ -15,7 +15,8 @@ test.describe
         throw new Error('Failed to load page');
       }
 
-      let request = response.request();
+      let request: import('@playwright/test').Request | null =
+        response.request();
 
       const chain = [];
 
@@ -26,9 +27,7 @@ test.describe
 
       // During tests, we bypass the guest auth redirect and serve the page directly
       // In production, this would include the guest auth redirect
-      expect(chain).toEqual([
-        'http://localhost:3000/',
-      ]);
+      expect(chain).toEqual(['http://localhost:3000/']);
     });
 
     test('Log out is not available for guest users', async ({ page }) => {
@@ -57,7 +56,8 @@ test.describe
         throw new Error('Failed to load page');
       }
 
-      let request = response.request();
+      let request: import('@playwright/test').Request | null =
+        response.request();
 
       const chain = [];
 

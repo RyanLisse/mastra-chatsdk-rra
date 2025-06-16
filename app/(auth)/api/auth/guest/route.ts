@@ -7,7 +7,10 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const redirectUrl = searchParams.get('redirectUrl') || '/';
 
-  console.log('Guest auth route called with:', { redirectUrl, isTestEnvironment });
+  console.log('Guest auth route called with:', {
+    redirectUrl,
+    isTestEnvironment,
+  });
 
   let token: any;
   try {
@@ -30,7 +33,10 @@ export async function GET(request: Request) {
   // Create a guest session for both test and non-test environments
   try {
     console.log('Creating guest session...');
-    const result = await signIn('guest', { redirect: true, redirectTo: redirectUrl });
+    const result = await signIn('guest', {
+      redirect: true,
+      redirectTo: redirectUrl,
+    });
     console.log('Guest sign-in result:', result);
     return result;
   } catch (error) {
@@ -40,13 +46,16 @@ export async function GET(request: Request) {
       // Re-throw the redirect error so Next.js can handle it properly
       throw error;
     }
-    
+
     console.error('Failed to sign in guest user:', error);
-    
+
     // If guest sign in fails, return an error response instead of redirect
     return NextResponse.json(
-      { error: 'Failed to create guest session', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+      {
+        error: 'Failed to create guest session',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 },
     );
   }
 }

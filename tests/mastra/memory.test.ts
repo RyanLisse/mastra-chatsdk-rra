@@ -1,5 +1,12 @@
 // tests/mastra/memory.test.ts
-import { expect, test, describe, beforeAll, afterAll, beforeEach } from "bun:test";
+import {
+  expect,
+  test,
+  describe,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from 'bun:test';
 import { config } from 'dotenv';
 import { PostgresMemory } from '../../lib/mastra/memory';
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -11,7 +18,10 @@ import { randomUUID } from 'node:crypto';
 // Load environment variables for testing
 // Try .env.local first, fallback to .env
 config({ path: '.env.local' });
-if (!process.env.POSTGRES_URL || process.env.POSTGRES_URL.includes('your-test-postgres-url-here')) {
+if (
+  !process.env.POSTGRES_URL ||
+  process.env.POSTGRES_URL.includes('your-test-postgres-url-here')
+) {
   config({ path: '.env' });
 }
 
@@ -21,9 +31,11 @@ function getDatabase() {
     throw new Error('POSTGRES_URL environment variable is not set');
   }
   if (process.env.POSTGRES_URL.includes('your-test-postgres-url-here')) {
-    throw new Error('POSTGRES_URL is still set to placeholder value. Please configure your database connection.');
+    throw new Error(
+      'POSTGRES_URL is still set to placeholder value. Please configure your database connection.',
+    );
   }
-  
+
   const client = postgres(process.env.POSTGRES_URL);
   return drizzle(client);
 }
@@ -71,13 +83,17 @@ describe('PostgresMemory', () => {
 
   describe('getHistory', () => {
     test('should return empty array for new session', async () => {
-      const history = await PostgresMemory.getHistory({ sessionId: testSessionId });
+      const history = await PostgresMemory.getHistory({
+        sessionId: testSessionId,
+      });
       expect(history).toEqual([]);
     });
 
     test('should return empty array for non-existent session', async () => {
       const nonExistentSessionId = randomUUID();
-      const history = await PostgresMemory.getHistory({ sessionId: nonExistentSessionId });
+      const history = await PostgresMemory.getHistory({
+        sessionId: nonExistentSessionId,
+      });
       expect(history).toEqual([]);
     });
   });
@@ -87,12 +103,14 @@ describe('PostgresMemory', () => {
       const message: Message = {
         id: randomUUID(),
         role: 'user',
-        content: 'Hello, how do I start the machine?'
+        content: 'Hello, how do I start the machine?',
       };
 
       await PostgresMemory.addMessage({ sessionId: testSessionId, message });
 
-      const history = await PostgresMemory.getHistory({ sessionId: testSessionId });
+      const history = await PostgresMemory.getHistory({
+        sessionId: testSessionId,
+      });
       expect(history).toHaveLength(1);
       expect(history[0]).toEqual(message);
     });
@@ -101,30 +119,42 @@ describe('PostgresMemory', () => {
       const message1: Message = {
         id: randomUUID(),
         role: 'user',
-        content: 'How do I start the RoboRail machine?'
+        content: 'How do I start the RoboRail machine?',
       };
 
       const message2: Message = {
         id: randomUUID(),
         role: 'assistant',
-        content: 'To start the RoboRail machine, first ensure the area is clear...'
+        content:
+          'To start the RoboRail machine, first ensure the area is clear...',
       };
 
       const message3: Message = {
         id: randomUUID(),
         role: 'user',
-        content: 'What is the second step?'
+        content: 'What is the second step?',
       };
 
       // Add messages sequentially
-      await PostgresMemory.addMessage({ sessionId: testSessionId, message: message1 });
+      await PostgresMemory.addMessage({
+        sessionId: testSessionId,
+        message: message1,
+      });
       // Small delay to ensure different timestamps
-      await new Promise(resolve => setTimeout(resolve, 10));
-      await PostgresMemory.addMessage({ sessionId: testSessionId, message: message2 });
-      await new Promise(resolve => setTimeout(resolve, 10));
-      await PostgresMemory.addMessage({ sessionId: testSessionId, message: message3 });
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      await PostgresMemory.addMessage({
+        sessionId: testSessionId,
+        message: message2,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      await PostgresMemory.addMessage({
+        sessionId: testSessionId,
+        message: message3,
+      });
 
-      const history = await PostgresMemory.getHistory({ sessionId: testSessionId });
+      const history = await PostgresMemory.getHistory({
+        sessionId: testSessionId,
+      });
       expect(history).toHaveLength(3);
       expect(history[0]).toEqual(message1);
       expect(history[1]).toEqual(message2);
@@ -135,19 +165,28 @@ describe('PostgresMemory', () => {
       const userMessage: Message = {
         id: randomUUID(),
         role: 'user',
-        content: 'What safety procedures should I follow?'
+        content: 'What safety procedures should I follow?',
       };
 
       const assistantMessage: Message = {
         id: randomUUID(),
         role: 'assistant',
-        content: 'Always wear appropriate PPE including safety glasses and steel-toed boots.'
+        content:
+          'Always wear appropriate PPE including safety glasses and steel-toed boots.',
       };
 
-      await PostgresMemory.addMessage({ sessionId: testSessionId, message: userMessage });
-      await PostgresMemory.addMessage({ sessionId: testSessionId, message: assistantMessage });
+      await PostgresMemory.addMessage({
+        sessionId: testSessionId,
+        message: userMessage,
+      });
+      await PostgresMemory.addMessage({
+        sessionId: testSessionId,
+        message: assistantMessage,
+      });
 
-      const history = await PostgresMemory.getHistory({ sessionId: testSessionId });
+      const history = await PostgresMemory.getHistory({
+        sessionId: testSessionId,
+      });
       expect(history).toHaveLength(2);
       expect(history[0].role).toBe('user');
       expect(history[1].role).toBe('assistant');
@@ -156,33 +195,42 @@ describe('PostgresMemory', () => {
     test('should throw error for invalid message (missing id)', async () => {
       const invalidMessage = {
         role: 'user',
-        content: 'Test message'
+        content: 'Test message',
       } as any;
 
       await expect(
-        PostgresMemory.addMessage({ sessionId: testSessionId, message: invalidMessage })
+        PostgresMemory.addMessage({
+          sessionId: testSessionId,
+          message: invalidMessage,
+        }),
       ).rejects.toThrow('Message must have id, role, and content properties');
     });
 
     test('should throw error for invalid message (missing role)', async () => {
       const invalidMessage = {
         id: randomUUID(),
-        content: 'Test message'
+        content: 'Test message',
       } as any;
 
       await expect(
-        PostgresMemory.addMessage({ sessionId: testSessionId, message: invalidMessage })
+        PostgresMemory.addMessage({
+          sessionId: testSessionId,
+          message: invalidMessage,
+        }),
       ).rejects.toThrow('Message must have id, role, and content properties');
     });
 
     test('should throw error for invalid message (missing content)', async () => {
       const invalidMessage = {
         id: randomUUID(),
-        role: 'user'
+        role: 'user',
       } as any;
 
       await expect(
-        PostgresMemory.addMessage({ sessionId: testSessionId, message: invalidMessage })
+        PostgresMemory.addMessage({
+          sessionId: testSessionId,
+          message: invalidMessage,
+        }),
       ).rejects.toThrow('Message must have id, role, and content properties');
     });
   });
@@ -192,20 +240,30 @@ describe('PostgresMemory', () => {
       const message1: Message = {
         id: randomUUID(),
         role: 'user',
-        content: 'Message for session 1'
+        content: 'Message for session 1',
       };
 
       const message2: Message = {
         id: randomUUID(),
         role: 'user',
-        content: 'Message for session 2'
+        content: 'Message for session 2',
       };
 
-      await PostgresMemory.addMessage({ sessionId: testSessionId, message: message1 });
-      await PostgresMemory.addMessage({ sessionId: testSessionId2, message: message2 });
+      await PostgresMemory.addMessage({
+        sessionId: testSessionId,
+        message: message1,
+      });
+      await PostgresMemory.addMessage({
+        sessionId: testSessionId2,
+        message: message2,
+      });
 
-      const history1 = await PostgresMemory.getHistory({ sessionId: testSessionId });
-      const history2 = await PostgresMemory.getHistory({ sessionId: testSessionId2 });
+      const history1 = await PostgresMemory.getHistory({
+        sessionId: testSessionId,
+      });
+      const history2 = await PostgresMemory.getHistory({
+        sessionId: testSessionId2,
+      });
 
       expect(history1).toHaveLength(1);
       expect(history2).toHaveLength(1);
@@ -219,21 +277,29 @@ describe('PostgresMemory', () => {
       const message1: Message = {
         id: randomUUID(),
         role: 'user',
-        content: 'First message'
+        content: 'First message',
       };
 
       const message2: Message = {
         id: randomUUID(),
         role: 'assistant',
-        content: 'Second message'
+        content: 'Second message',
       };
 
       // Add messages to the session
-      await PostgresMemory.addMessage({ sessionId: testSessionId, message: message1 });
-      await PostgresMemory.addMessage({ sessionId: testSessionId, message: message2 });
+      await PostgresMemory.addMessage({
+        sessionId: testSessionId,
+        message: message1,
+      });
+      await PostgresMemory.addMessage({
+        sessionId: testSessionId,
+        message: message2,
+      });
 
       // Verify messages were added
-      let history = await PostgresMemory.getHistory({ sessionId: testSessionId });
+      let history = await PostgresMemory.getHistory({
+        sessionId: testSessionId,
+      });
       expect(history).toHaveLength(2);
 
       // Clear the session
@@ -248,25 +314,35 @@ describe('PostgresMemory', () => {
       const message1: Message = {
         id: randomUUID(),
         role: 'user',
-        content: 'Message for session 1'
+        content: 'Message for session 1',
       };
 
       const message2: Message = {
         id: randomUUID(),
         role: 'user',
-        content: 'Message for session 2'
+        content: 'Message for session 2',
       };
 
       // Add messages to both sessions
-      await PostgresMemory.addMessage({ sessionId: testSessionId, message: message1 });
-      await PostgresMemory.addMessage({ sessionId: testSessionId2, message: message2 });
+      await PostgresMemory.addMessage({
+        sessionId: testSessionId,
+        message: message1,
+      });
+      await PostgresMemory.addMessage({
+        sessionId: testSessionId2,
+        message: message2,
+      });
 
       // Clear only the first session
       await PostgresMemory.clearSession({ sessionId: testSessionId });
 
       // Verify first session is empty, second is intact
-      const history1 = await PostgresMemory.getHistory({ sessionId: testSessionId });
-      const history2 = await PostgresMemory.getHistory({ sessionId: testSessionId2 });
+      const history1 = await PostgresMemory.getHistory({
+        sessionId: testSessionId,
+      });
+      const history2 = await PostgresMemory.getHistory({
+        sessionId: testSessionId2,
+      });
 
       expect(history1).toHaveLength(0);
       expect(history2).toHaveLength(1);
@@ -279,15 +355,21 @@ describe('PostgresMemory', () => {
       const complexMessage: Message = {
         id: randomUUID(),
         role: 'assistant',
-        content: 'Here are the safety procedures:\n\n1. Check emergency stop\n2. Verify PPE\n3. Clear work area',
+        content:
+          'Here are the safety procedures:\n\n1. Check emergency stop\n2. Verify PPE\n3. Clear work area',
         // Test with additional properties that might be added to Message type
         experimental_attachments: undefined,
-        toolInvocations: undefined
+        toolInvocations: undefined,
       };
 
-      await PostgresMemory.addMessage({ sessionId: testSessionId, message: complexMessage });
+      await PostgresMemory.addMessage({
+        sessionId: testSessionId,
+        message: complexMessage,
+      });
 
-      const history = await PostgresMemory.getHistory({ sessionId: testSessionId });
+      const history = await PostgresMemory.getHistory({
+        sessionId: testSessionId,
+      });
       expect(history).toHaveLength(1);
       expect(history[0]).toEqual(complexMessage);
       expect(history[0].content).toContain('1. Check emergency stop');
@@ -298,12 +380,17 @@ describe('PostgresMemory', () => {
       const messageWithSpecialChars: Message = {
         id: randomUUID(),
         role: 'user',
-        content: 'How do I handle "quoted text" and symbols: @#$%^&*(){}[]?'
+        content: 'How do I handle "quoted text" and symbols: @#$%^&*(){}[]?',
       };
 
-      await PostgresMemory.addMessage({ sessionId: testSessionId, message: messageWithSpecialChars });
+      await PostgresMemory.addMessage({
+        sessionId: testSessionId,
+        message: messageWithSpecialChars,
+      });
 
-      const history = await PostgresMemory.getHistory({ sessionId: testSessionId });
+      const history = await PostgresMemory.getHistory({
+        sessionId: testSessionId,
+      });
       expect(history).toHaveLength(1);
       expect(history[0].content).toBe(messageWithSpecialChars.content);
     });
@@ -312,12 +399,17 @@ describe('PostgresMemory', () => {
       const messageWithEmptyContent: Message = {
         id: randomUUID(),
         role: 'user',
-        content: ''
+        content: '',
       };
 
-      await PostgresMemory.addMessage({ sessionId: testSessionId, message: messageWithEmptyContent });
+      await PostgresMemory.addMessage({
+        sessionId: testSessionId,
+        message: messageWithEmptyContent,
+      });
 
-      const history = await PostgresMemory.getHistory({ sessionId: testSessionId });
+      const history = await PostgresMemory.getHistory({
+        sessionId: testSessionId,
+      });
       expect(history).toHaveLength(1);
       expect(history[0].content).toBe('');
     });
@@ -330,14 +422,17 @@ describe('PostgresMemory', () => {
       const message: Message = {
         id: randomUUID(),
         role: 'user',
-        content: 'Test message'
+        content: 'Test message',
       };
 
       // Test with an invalid session ID that might cause issues
       const invalidSessionId = '';
-      
+
       try {
-        await PostgresMemory.addMessage({ sessionId: invalidSessionId, message });
+        await PostgresMemory.addMessage({
+          sessionId: invalidSessionId,
+          message,
+        });
         await PostgresMemory.getHistory({ sessionId: invalidSessionId });
       } catch (error) {
         // Errors should be properly caught and re-thrown with meaningful messages

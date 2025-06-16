@@ -39,7 +39,7 @@ export function VoiceButton({
   // Handle press and hold for recording
   const handleMouseDown = () => {
     if (disabled || state === 'error') return;
-    
+
     if (!isConnected) {
       onConnect();
       return;
@@ -67,7 +67,7 @@ export function VoiceButton({
 
   const handleClick = () => {
     if (disabled || state === 'error') return;
-    
+
     if (!isConnected) {
       onConnect();
       return;
@@ -131,7 +131,7 @@ export function VoiceButton({
           variant: 'default' as const,
           className: cn(
             'bg-red-500 hover:bg-red-600 text-white animate-pulse',
-            isPressed && 'scale-110'
+            isPressed && 'scale-110',
           ),
           tooltip: 'Listening... Release to stop',
         };
@@ -153,13 +153,22 @@ export function VoiceButton({
         return {
           icon: isConnected ? Mic : MicOff,
           variant: 'outline' as const,
-          className: isConnected ? 'hover:bg-primary hover:text-primary-foreground' : 'opacity-50',
-          tooltip: isConnected ? 'Hold to talk' : 'Click to connect voice assistant',
+          className: isConnected
+            ? 'hover:bg-primary hover:text-primary-foreground'
+            : 'opacity-50',
+          tooltip: isConnected
+            ? 'Hold to talk'
+            : 'Click to connect voice assistant',
         };
     }
   };
 
-  const { icon: Icon, variant, className: stateClassName, tooltip } = getButtonAppearance();
+  const {
+    icon: Icon,
+    variant,
+    className: stateClassName,
+    tooltip,
+  } = getButtonAppearance();
 
   return (
     <div className="relative">
@@ -171,7 +180,7 @@ export function VoiceButton({
             className={cn(
               'rounded-full p-2 h-fit transition-all duration-200',
               stateClassName,
-              className
+              className,
             )}
             disabled={disabled}
             onMouseDown={handleMouseDown}
@@ -183,18 +192,16 @@ export function VoiceButton({
             <Icon size={16} />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>
-          {tooltip}
-        </TooltipContent>
+        <TooltipContent>{tooltip}</TooltipContent>
       </Tooltip>
 
       {/* Audio level indicator */}
       {isRecording && audioLevel > 0 && (
         <div className="absolute -inset-1 rounded-full border-2 border-red-500 opacity-50">
-          <div 
+          <div
             className="absolute inset-0 rounded-full bg-red-500 opacity-30 transition-transform duration-100"
             style={{
-              transform: `scale(${1 + audioLevel * 0.5})`
+              transform: `scale(${1 + audioLevel * 0.5})`,
             }}
           />
         </div>

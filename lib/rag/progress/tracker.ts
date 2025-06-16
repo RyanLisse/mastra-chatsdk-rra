@@ -19,9 +19,12 @@ export class ProgressTracker {
   /**
    * Update progress and notify all subscribers
    */
-  async update(documentId: string, update: ProgressUpdate): Promise<ProgressState> {
+  async update(
+    documentId: string,
+    update: ProgressUpdate,
+  ): Promise<ProgressState> {
     const state = progressStore.update(documentId, update);
-    
+
     if (!state) {
       throw new Error(`Document ${documentId} not found in progress store`);
     }
@@ -33,13 +36,13 @@ export class ProgressTracker {
       progress: state.progress,
       status: state.status,
       error: state.error,
-      timestamp: state.updatedAt.toISOString()
+      timestamp: state.updatedAt.toISOString(),
     };
 
     // Notify all callbacks for this document
     const documentCallbacks = this.callbacks.get(documentId);
     if (documentCallbacks) {
-      documentCallbacks.forEach(callback => {
+      documentCallbacks.forEach((callback) => {
         try {
           callback(event);
         } catch (error) {
@@ -65,8 +68,11 @@ export class ProgressTracker {
     if (!this.callbacks.has(documentId)) {
       this.callbacks.set(documentId, new Set());
     }
-    
-    const documentCallbacks = this.callbacks.get(documentId)!;
+
+    const documentCallbacks = this.callbacks.get(documentId);
+    if (!documentCallbacks) {
+      throw new Error(`Document callbacks not found for ${documentId}`);
+    }
     documentCallbacks.add(callback);
 
     // Return unsubscribe function
@@ -105,7 +111,7 @@ export class ProgressTracker {
    */
   createSSEStream(documentId: string): ReadableStream<Uint8Array> {
     const encoder = new TextEncoder();
-    
+
     return new ReadableStream({
       start: (controller) => {
         // Send initial state if available
@@ -117,9 +123,9 @@ export class ProgressTracker {
             progress: currentState.progress,
             status: currentState.status,
             error: currentState.error,
-            timestamp: currentState.updatedAt.toISOString()
+            timestamp: currentState.updatedAt.toISOString(),
           };
-          
+
           const data = `data: ${JSON.stringify(event)}\n\n`;
           controller.enqueue(encoder.encode(data));
         }
@@ -129,7 +135,7 @@ export class ProgressTracker {
           try {
             const data = `data: ${JSON.stringify(event)}\n\n`;
             controller.enqueue(encoder.encode(data));
-            
+
             // Close stream when processing is complete
             if (event.status === 'completed' || event.status === 'failed') {
               setTimeout(() => {
@@ -147,11 +153,11 @@ export class ProgressTracker {
           unsubscribe();
         };
       },
-      
+
       cancel: () => {
         // Client disconnected, cleanup subscription
         this.unsubscribe(documentId);
-      }
+      },
     });
   }
 }

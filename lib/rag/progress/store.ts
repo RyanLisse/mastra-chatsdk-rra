@@ -7,7 +7,7 @@ import type { ProgressState, ProgressUpdate } from './types';
 class ProgressStore {
   private states = new Map<string, ProgressState>();
   private timeouts = new Map<string, NodeJS.Timeout>();
-  
+
   // Cleanup timeout for completed/failed states (5 minutes)
   private readonly CLEANUP_TIMEOUT = 5 * 60 * 1000;
 
@@ -23,12 +23,12 @@ class ProgressStore {
       progress: 0,
       status: 'pending',
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
 
     this.states.set(documentId, state);
     this.scheduleCleanup(documentId);
-    
+
     return state;
   }
 
@@ -44,7 +44,7 @@ class ProgressStore {
     const updatedState: ProgressState = {
       ...currentState,
       ...update,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.states.set(documentId, updatedState);
@@ -80,7 +80,7 @@ class ProgressStore {
       clearTimeout(timeout);
       this.timeouts.delete(documentId);
     }
-    
+
     return this.states.delete(documentId);
   }
 
@@ -121,9 +121,9 @@ class ProgressStore {
    */
   clear(): void {
     // Clear all timeouts
-    this.timeouts.forEach(timeout => clearTimeout(timeout));
+    this.timeouts.forEach((timeout) => clearTimeout(timeout));
     this.timeouts.clear();
-    
+
     // Clear all states
     this.states.clear();
   }

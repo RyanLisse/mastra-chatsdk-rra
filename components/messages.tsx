@@ -69,7 +69,9 @@ function PureMessages({
             <PreviewMessage
               chatId={chatId}
               message={message}
-              isLoading={status === 'streaming' && messages.length - 1 === index}
+              isLoading={
+                status === 'streaming' && messages.length - 1 === index
+              }
               vote={
                 votes
                   ? votes.find((vote) => vote.messageId === message.id)
@@ -98,7 +100,7 @@ function PureMessages({
               <ThinkingMessage />
             </motion.div>
           )}
-        
+
         {/* Loading state for first message */}
         {status === 'streaming' && messages.length === 0 && (
           <motion.div
@@ -111,7 +113,11 @@ function PureMessages({
               <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
                 <motion.div
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
+                  transition={{
+                    duration: 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: 'linear',
+                  }}
                 >
                   <span className="text-primary">✨</span>
                 </motion.div>

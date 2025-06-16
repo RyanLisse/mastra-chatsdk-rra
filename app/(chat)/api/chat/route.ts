@@ -23,9 +23,8 @@ import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
-// import { ragTool } from '@/lib/ai/tools/rag';
 import { isProductionEnvironment } from '@/lib/constants';
-import { myProvider, getLanguageModel, isModelAvailable } from '@/lib/ai/providers';
+import { myProvider, isModelAvailable } from '@/lib/ai/providers';
 import { getModelInfo, getFallbackModel } from '@/lib/ai/provider-config';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { postRequestBodySchema, type PostRequestBody } from './schema';
@@ -75,22 +74,29 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { id, message, selectedChatModel, selectedVisibilityType, sessionId } =
-      requestBody;
+    const {
+      id,
+      message,
+      selectedChatModel,
+      selectedVisibilityType,
+      sessionId,
+    } = requestBody;
 
     // Validate and handle model availability
     let effectiveModel = selectedChatModel;
     const modelInfo = getModelInfo(selectedChatModel);
-    
+
     if (!modelInfo || !isModelAvailable(selectedChatModel)) {
-      console.warn(`Model ${selectedChatModel} is not available, using fallback`);
+      console.warn(
+        `Model ${selectedChatModel} is not available, using fallback`,
+      );
       // If model is not available, use a fallback based on the provider
       if (modelInfo) {
         effectiveModel = getFallbackModel(modelInfo.provider);
       } else {
         effectiveModel = 'gpt-4o-mini'; // Default fallback
       }
-      
+
       // Verify fallback is available
       if (!isModelAvailable(effectiveModel)) {
         effectiveModel = 'gpt-4o-mini'; // Ultimate fallback
@@ -181,12 +187,12 @@ export async function POST(request: Request) {
             });
 
             const result = await agent.generateStream(message.content);
-            
+
             // Merge the streaming result into the data stream
             result.mergeIntoDataStream(dataStream, {
               sendReasoning: true,
             });
-            
+
             // Note: The agent already handles saving messages to PostgreSQL memory
             // Chat database saving is handled by the agent's memory system
           } catch (error) {
@@ -200,18 +206,22 @@ export async function POST(request: Request) {
           // Use existing AI SDK streamText approach
           const result = streamText({
             model: myProvider.languageModel(effectiveModel),
-            system: systemPrompt({ selectedChatModel: effectiveModel, requestHints }),
+            system: systemPrompt({
+              selectedChatModel: effectiveModel,
+              requestHints,
+            }),
             messages,
             maxSteps: 5,
             experimental_activeTools:
-              effectiveModel === 'chat-model-reasoning' || effectiveModel.includes('o3') || effectiveModel.includes('o1')
+              effectiveModel === 'chat-model-reasoning' ||
+              effectiveModel.includes('o3') ||
+              effectiveModel.includes('o1')
                 ? []
                 : [
                     'getWeather',
                     'createDocument',
                     'updateDocument',
                     'requestSuggestions',
-                    // 'ragTool',
                   ],
             experimental_transform: smoothStream({ chunking: 'word' }),
             experimental_generateMessageId: generateUUID,
@@ -223,7 +233,6 @@ export async function POST(request: Request) {
                 session,
                 dataStream,
               }),
-              // ragTool,
             },
             onFinish: async ({ response }) => {
               if (session.user?.id) {

@@ -29,7 +29,7 @@ import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
 import type { UseVoiceAssistantReturn } from '@/hooks/use-voice-assistant';
 import { VoiceButton } from './voice-button';
-import { ProgressSpinner, } from './ui/loading-indicators';
+import { ProgressSpinner } from './ui/loading-indicators';
 import { cn } from '@/lib/utils';
 
 function PureMultimodalInput({
@@ -338,9 +338,18 @@ export const MultimodalInput = memo(
     if (!equal(prevProps.attachments, nextProps.attachments)) return false;
     if (prevProps.selectedVisibilityType !== nextProps.selectedVisibilityType)
       return false;
-    if (prevProps.voiceAssistant?.state !== nextProps.voiceAssistant?.state) return false;
-    if (prevProps.voiceAssistant?.isRecording !== nextProps.voiceAssistant?.isRecording) return false;
-    if (prevProps.voiceAssistant?.isConnected !== nextProps.voiceAssistant?.isConnected) return false;
+    if (prevProps.voiceAssistant?.state !== nextProps.voiceAssistant?.state)
+      return false;
+    if (
+      prevProps.voiceAssistant?.isRecording !==
+      nextProps.voiceAssistant?.isRecording
+    )
+      return false;
+    if (
+      prevProps.voiceAssistant?.isConnected !==
+      nextProps.voiceAssistant?.isConnected
+    )
+      return false;
 
     return true;
   },
@@ -354,7 +363,7 @@ function PureAttachmentsButton({
   status: UseChatHelpers['status'];
 }) {
   const isDisabled = status !== 'ready';
-  
+
   return (
     <motion.div
       whileHover={!isDisabled ? { scale: 1.05 } : {}}
@@ -363,8 +372,8 @@ function PureAttachmentsButton({
       <Button
         data-testid="attachments-button"
         className={cn(
-          "rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200 transition-all duration-200",
-          isDisabled && "opacity-50 cursor-not-allowed"
+          'rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200 transition-all duration-200',
+          isDisabled && 'opacity-50 cursor-not-allowed',
         )}
         onClick={(event) => {
           event.preventDefault();
@@ -411,7 +420,11 @@ function PureStopButton({
         {status === 'streaming' ? (
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
+            transition={{
+              duration: 1,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: 'linear',
+            }}
           >
             <Loader2 size={14} className="text-red-600" />
           </motion.div>
@@ -438,24 +451,30 @@ function PureSendButton({
   uploadQueue: Array<string>;
   status: UseChatHelpers['status'];
 }) {
-  const isDisabled = input.length === 0 || uploadQueue.length > 0 || status !== 'ready';
+  const isDisabled =
+    input.length === 0 || uploadQueue.length > 0 || status !== 'ready';
   const isUploading = uploadQueue.length > 0;
-  
+
   return (
     <motion.div
       whileHover={!isDisabled ? { scale: 1.05 } : {}}
       whileTap={!isDisabled ? { scale: 0.95 } : {}}
-      animate={isUploading ? { 
-        background: ['#f3f4f6', '#e5e7eb', '#f3f4f6'],
-        transition: { duration: 1.5, repeat: Number.POSITIVE_INFINITY } 
-      } : {}}
+      animate={
+        isUploading
+          ? {
+              background: ['#f3f4f6', '#e5e7eb', '#f3f4f6'],
+              transition: { duration: 1.5, repeat: Number.POSITIVE_INFINITY },
+            }
+          : {}
+      }
     >
       <Button
         data-testid="send-button"
         className={cn(
-          "rounded-full p-1.5 h-fit border dark:border-zinc-600 transition-all duration-200",
-          !isDisabled && "bg-primary hover:bg-primary/90 border-primary text-primary-foreground shadow-sm",
-          isDisabled && "opacity-50 cursor-not-allowed"
+          'rounded-full p-1.5 h-fit border dark:border-zinc-600 transition-all duration-200',
+          !isDisabled &&
+            'bg-primary hover:bg-primary/90 border-primary text-primary-foreground shadow-sm',
+          isDisabled && 'opacity-50 cursor-not-allowed',
         )}
         onClick={(event) => {
           event.preventDefault();

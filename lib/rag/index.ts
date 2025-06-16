@@ -15,7 +15,7 @@ export type {
   MarkdownFrontmatter,
   JSONDocument,
   UploadResponse,
-  ErrorResponse
+  ErrorResponse,
 } from './validation';
 
 export type {
@@ -23,26 +23,24 @@ export type {
   ProcessingStatus,
   ProgressState,
   ProgressUpdate,
-  ProgressEvent
+  ProgressEvent,
 } from './progress';
 
-export type {
-  ProcessorConfig
-} from './processor';
+export type { ProcessorConfig } from './processor';
 
 export type {
   StoreChunkParams,
-  UpdateProcessingStatusParams
+  UpdateProcessingStatusParams,
 } from './database';
 
 export type {
   MarkdownProcessingOptions,
   MarkdownParseResult,
-  HeaderInfo
+  HeaderInfo,
 } from './strategies/markdown';
 
 export type {
   JSONProcessingOptions,
   JSONParseResult,
-  JSONSchemaInfo
+  JSONSchemaInfo,
 } from './strategies/json';

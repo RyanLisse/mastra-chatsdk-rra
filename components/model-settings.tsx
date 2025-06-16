@@ -7,20 +7,31 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ProviderSelector, getProviderStats } from './provider-selector';
-import { chatModels, providers, type Provider, type ChatModel } from '@/lib/ai/models';
+import {
+  chatModels,
+  providers,
+  type Provider,
+  type ChatModel,
+} from '@/lib/ai/models';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { cn } from '@/lib/utils';
 import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
 import type { Session } from 'next-auth';
-import { 
+import {
   Settings,
-  Eye, 
-  Brain, 
-  Wrench, 
+  Eye,
+  Brain,
+  Wrench,
   Crown,
   Info,
   Sparkles,
@@ -66,8 +77,9 @@ export function ModelSettings({
   );
 
   const selectedChatModel = useMemo(
-    () => availableChatModels.find((chatModel) => chatModel.id === selectedModelId),
-    [selectedModelId, availableChatModels]
+    () =>
+      availableChatModels.find((chatModel) => chatModel.id === selectedModelId),
+    [selectedModelId, availableChatModels],
   );
 
   // Update selected provider when model changes
@@ -80,19 +92,24 @@ export function ModelSettings({
   // Filter models by provider if filter is enabled
   const filteredModels = useMemo(() => {
     if (filterByProvider) {
-      return availableChatModels.filter(model => model.provider === selectedProvider);
+      return availableChatModels.filter(
+        (model) => model.provider === selectedProvider,
+      );
     }
     return availableChatModels;
   }, [availableChatModels, selectedProvider, filterByProvider]);
 
   // Group models by provider
-  const modelsByProvider = filteredModels.reduce((acc, model) => {
-    if (!acc[model.provider]) {
-      acc[model.provider] = [];
-    }
-    acc[model.provider].push(model);
-    return acc;
-  }, {} as Record<Provider, ChatModel[]>);
+  const modelsByProvider = filteredModels.reduce(
+    (acc, model) => {
+      if (!acc[model.provider]) {
+        acc[model.provider] = [];
+      }
+      acc[model.provider].push(model);
+      return acc;
+    },
+    {} as Record<Provider, ChatModel[]>,
+  );
 
   // Get statistics for current selection
   const providerStats = getProviderStats(selectedProvider, availableChatModels);
@@ -129,11 +146,16 @@ export function ModelSettings({
                     {selectedChatModel?.name || 'Select Model'}
                   </span>
                   {selectedChatModel?.tier && (
-                    <Badge 
-                      variant="secondary" 
-                      className={cn('text-xs', tierColors[selectedChatModel.tier])}
+                    <Badge
+                      variant="secondary"
+                      className={cn(
+                        'text-xs',
+                        tierColors[selectedChatModel.tier],
+                      )}
                     >
-                      {selectedChatModel.tier === 'pro' && <Crown className="h-2 w-2 mr-1" />}
+                      {selectedChatModel.tier === 'pro' && (
+                        <Crown className="h-2 w-2 mr-1" />
+                      )}
                       {selectedChatModel.tier.toUpperCase()}
                     </Badge>
                   )}
@@ -148,8 +170,8 @@ export function ModelSettings({
             <ChevronDownIcon />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent 
-          align="start" 
+        <DropdownMenuContent
+          align="start"
           className="w-[400px] max-h-[500px] overflow-y-auto p-0"
         >
           <div className="p-3 border-b">
@@ -159,7 +181,7 @@ export function ModelSettings({
                 {filteredModels.length} models
               </Badge>
             </div>
-            
+
             {/* Provider Filter */}
             <div className="flex items-center gap-2">
               <ProviderSelector
@@ -168,7 +190,7 @@ export function ModelSettings({
                 className="flex-1"
               />
               <Button
-                variant={filterByProvider ? "default" : "outline"}
+                variant={filterByProvider ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilterByProvider(!filterByProvider)}
                 className="px-3"
@@ -190,61 +212,78 @@ export function ModelSettings({
                     </Badge>
                   </div>
                 )}
-                
+
                 {models.map((model) => (
                   <button
+                    type="button"
                     key={model.id}
                     onClick={() => {
                       onModelChange(model.id);
                       setOpen(false);
                     }}
                     className={cn(
-                      "w-full p-3 text-left hover:bg-accent transition-colors",
-                      model.id === selectedModelId && "bg-accent"
+                      'w-full p-3 text-left hover:bg-accent transition-colors',
+                      model.id === selectedModelId && 'bg-accent',
                     )}
                   >
                     <div className="flex justify-between items-start gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium truncate">{model.name}</span>
+                          <span className="font-medium truncate">
+                            {model.name}
+                          </span>
                           {model.tier && (
-                            <Badge 
-                              variant="secondary" 
+                            <Badge
+                              variant="secondary"
                               className={cn('text-xs', tierColors[model.tier])}
                             >
-                              {model.tier === 'pro' && <Crown className="h-2 w-2 mr-1" />}
+                              {model.tier === 'pro' && (
+                                <Crown className="h-2 w-2 mr-1" />
+                              )}
                               {model.tier.toUpperCase()}
                             </Badge>
                           )}
                         </div>
-                        
+
                         <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
                           {model.description}
                         </p>
-                        
+
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{formatContextWindow(model.capabilities.contextWindow)} tokens</span>
+                          <span>
+                            {formatContextWindow(
+                              model.capabilities.contextWindow,
+                            )}{' '}
+                            tokens
+                          </span>
                           {model.capabilities.supportsVision && (
-                            <Badge variant="secondary" className="text-xs px-1 py-0">
+                            <Badge
+                              variant="secondary"
+                              className="text-xs px-1 py-0"
+                            >
                               <Eye className="h-2 w-2" />
                             </Badge>
                           )}
                           {model.capabilities.supportsReeasoning && (
-                            <Badge variant="secondary" className="text-xs px-1 py-0">
+                            <Badge
+                              variant="secondary"
+                              className="text-xs px-1 py-0"
+                            >
                               <Brain className="h-2 w-2" />
                             </Badge>
                           )}
                           {model.capabilities.supportsTools && (
-                            <Badge variant="secondary" className="text-xs px-1 py-0">
+                            <Badge
+                              variant="secondary"
+                              className="text-xs px-1 py-0"
+                            >
                               <Wrench className="h-2 w-2" />
                             </Badge>
                           )}
                         </div>
                       </div>
 
-                      {model.id === selectedModelId && (
-                        <CheckCircleFillIcon />
-                      )}
+                      {model.id === selectedModelId && <CheckCircleFillIcon />}
                     </div>
                   </button>
                 ))}
@@ -260,13 +299,17 @@ export function ModelSettings({
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               {providerIcons[selectedChatModel.provider]}
-              <CardTitle className="text-sm">{selectedChatModel.name}</CardTitle>
+              <CardTitle className="text-sm">
+                {selectedChatModel.name}
+              </CardTitle>
               {selectedChatModel.tier && (
-                <Badge 
-                  variant="secondary" 
+                <Badge
+                  variant="secondary"
                   className={cn('text-xs', tierColors[selectedChatModel.tier])}
                 >
-                  {selectedChatModel.tier === 'pro' && <Crown className="h-2 w-2 mr-1" />}
+                  {selectedChatModel.tier === 'pro' && (
+                    <Crown className="h-2 w-2 mr-1" />
+                  )}
                   {selectedChatModel.tier.toUpperCase()}
                 </Badge>
               )}
@@ -308,24 +351,34 @@ export function ModelSettings({
               <div>
                 <span className="text-muted-foreground">Context Window:</span>
                 <div className="font-medium">
-                  {formatContextWindow(selectedChatModel.capabilities.contextWindow)} tokens
+                  {formatContextWindow(
+                    selectedChatModel.capabilities.contextWindow,
+                  )}{' '}
+                  tokens
                 </div>
               </div>
               {selectedChatModel.capabilities.maxTokens && (
                 <div>
                   <span className="text-muted-foreground">Max Output:</span>
                   <div className="font-medium">
-                    {formatContextWindow(selectedChatModel.capabilities.maxTokens)} tokens
+                    {formatContextWindow(
+                      selectedChatModel.capabilities.maxTokens,
+                    )}{' '}
+                    tokens
                   </div>
                 </div>
               )}
               <div>
                 <span className="text-muted-foreground">Provider:</span>
-                <div className="font-medium">{providers[selectedChatModel.provider].name}</div>
+                <div className="font-medium">
+                  {providers[selectedChatModel.provider].name}
+                </div>
               </div>
               <div>
                 <span className="text-muted-foreground">Specialty:</span>
-                <div className="font-medium">{selectedChatModel.capabilities.specialty}</div>
+                <div className="font-medium">
+                  {selectedChatModel.capabilities.specialty}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -336,7 +389,10 @@ export function ModelSettings({
       <div className="flex items-center justify-between text-xs text-muted-foreground p-2 bg-muted/30 rounded">
         <div className="flex items-center gap-1">
           <Info className="h-3 w-3" />
-          <span>Your tier: <span className="capitalize font-medium">{userType}</span></span>
+          <span>
+            Your tier:{' '}
+            <span className="capitalize font-medium">{userType}</span>
+          </span>
         </div>
         <span>{availableChatModels.length} models available</span>
       </div>
