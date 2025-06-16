@@ -9,7 +9,9 @@ import {
   primaryKey,
   foreignKey,
   boolean,
+  serial,
 } from 'drizzle-orm/pg-core';
+import { vector } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('User', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
@@ -168,3 +170,41 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+// Document chunks table for RAG system
+export const documentChunk = pgTable('DocumentChunk', {
+  id: serial('id').primaryKey(),
+  content: text('content').notNull(),
+  embedding: vector('embedding', { dimensions: 1024 }),
+  documentId: uuid('documentId'), // References the uploaded document
+  filename: text('filename'), // Original filename
+  chunkIndex: serial('chunkIndex'), // Position in the original document
+  metadata: json('metadata'), // Additional metadata (frontmatter, etc.)
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+});
+
+export type DocumentChunk = InferSelectModel<typeof documentChunk>;
+
+// Document processing status table
+export const documentProcessing = pgTable('DocumentProcessing', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  documentId: uuid('documentId').notNull().unique(), // Unique document processing record
+  filename: text('filename').notNull(),
+  status: varchar('status', { enum: ['pending', 'processing', 'completed', 'failed'] })
+    .notNull()
+    .default('pending'),
+  stage: varchar('stage', { enum: ['upload', 'parsing', 'chunking', 'embedding', 'storing', 'completed', 'error'] })
+    .notNull()
+    .default('upload'),
+  progress: serial('progress').default(0), // 0-100
+  chunkCount: serial('chunkCount').default(0),
+  errorMessage: text('errorMessage'),
+  metadata: json('metadata'), // File metadata, processing settings, etc.
+  userId: uuid('userId')
+    .notNull()
+    .references(() => user.id),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+});
+
+export type DocumentProcessing = InferSelectModel<typeof documentProcessing>;

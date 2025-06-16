@@ -3,7 +3,7 @@
 import type { User } from 'next-auth';
 import { useRouter } from 'next/navigation';
 
-import { PlusIcon } from '@/components/icons';
+import { PlusIcon, FileIcon } from '@/components/icons';
 import { SidebarHistory } from '@/components/sidebar-history';
 import { SidebarUserNav } from '@/components/sidebar-user-nav';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,20 @@ export function AppSidebar({ user }: { user: User | undefined }) {
               </TooltipTrigger>
               <TooltipContent align="end">New Chat</TooltipContent>
             </Tooltip>
+          </div>
+        </SidebarMenu>
+        
+        {/* Navigation Menu */}
+        <SidebarMenu className="mt-4">
+          <div className="px-2">
+            <Link
+              href="/documents"
+              onClick={() => setOpenMobile(false)}
+              className="flex items-center gap-3 px-2 py-2 text-sm hover:bg-muted rounded-md transition-colors"
+            >
+              <FileIcon size={16} />
+              Document Upload
+            </Link>
           </div>
         </SidebarMenu>
       </SidebarHeader>

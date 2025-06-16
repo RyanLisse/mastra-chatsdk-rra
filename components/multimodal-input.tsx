@@ -24,9 +24,13 @@ import { SuggestedActions } from './suggested-actions';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, Loader2 } from 'lucide-react';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
+import type { UseVoiceAssistantReturn } from '@/hooks/use-voice-assistant';
+import { VoiceButton } from './voice-button';
+import { ProgressSpinner, LoadingDots } from './ui/loading-indicators';
+import { cn } from '@/lib/utils';
 
 function PureMultimodalInput({
   chatId,
@@ -42,6 +46,7 @@ function PureMultimodalInput({
   handleSubmit,
   className,
   selectedVisibilityType,
+  voiceAssistant,
 }: {
   chatId: string;
   input: UseChatHelpers['input'];
@@ -56,6 +61,7 @@ function PureMultimodalInput({
   handleSubmit: UseChatHelpers['handleSubmit'];
   className?: string;
   selectedVisibilityType: VisibilityType;
+  voiceAssistant?: UseVoiceAssistantReturn;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -291,18 +297,32 @@ function PureMultimodalInput({
         }}
       />
 
-      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start gap-1">
         <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+        {voiceAssistant && (
+          <VoiceButton
+            state={voiceAssistant.state}
+            isRecording={voiceAssistant.isRecording}
+            isConnected={voiceAssistant.isConnected}
+            audioLevel={voiceAssistant.audioLevel}
+            onStartRecording={voiceAssistant.startRecording}
+            onStopRecording={voiceAssistant.stopRecording}
+            onConnect={voiceAssistant.connect}
+            onDisconnect={voiceAssistant.disconnect}
+            disabled={status !== 'ready'}
+          />
+        )}
       </div>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
-        {status === 'submitted' ? (
-          <StopButton stop={stop} setMessages={setMessages} />
+        {status === 'submitted' || status === 'streaming' ? (
+          <StopButton stop={stop} setMessages={setMessages} status={status} />
         ) : (
           <SendButton
             input={input}
             submitForm={submitForm}
             uploadQueue={uploadQueue}
+            status={status}
           />
         )}
       </div>
@@ -318,6 +338,9 @@ export const MultimodalInput = memo(
     if (!equal(prevProps.attachments, nextProps.attachments)) return false;
     if (prevProps.selectedVisibilityType !== nextProps.selectedVisibilityType)
       return false;
+    if (prevProps.voiceAssistant?.state !== nextProps.voiceAssistant?.state) return false;
+    if (prevProps.voiceAssistant?.isRecording !== nextProps.voiceAssistant?.isRecording) return false;
+    if (prevProps.voiceAssistant?.isConnected !== nextProps.voiceAssistant?.isConnected) return false;
 
     return true;
   },
@@ -330,19 +353,31 @@ function PureAttachmentsButton({
   fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
   status: UseChatHelpers['status'];
 }) {
+  const isDisabled = status !== 'ready';
+  
   return (
-    <Button
-      data-testid="attachments-button"
-      className="rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
-      onClick={(event) => {
-        event.preventDefault();
-        fileInputRef.current?.click();
-      }}
-      disabled={status !== 'ready'}
-      variant="ghost"
+    <motion.div
+      whileHover={!isDisabled ? { scale: 1.05 } : {}}
+      whileTap={!isDisabled ? { scale: 0.95 } : {}}
     >
-      <PaperclipIcon size={14} />
-    </Button>
+      <Button
+        data-testid="attachments-button"
+        className={cn(
+          "rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200 transition-all duration-200",
+          isDisabled && "opacity-50 cursor-not-allowed"
+        )}
+        onClick={(event) => {
+          event.preventDefault();
+          if (!isDisabled) {
+            fileInputRef.current?.click();
+          }
+        }}
+        disabled={isDisabled}
+        variant="ghost"
+      >
+        <PaperclipIcon size={14} />
+      </Button>
+    </motion.div>
   );
 }
 
@@ -351,48 +386,95 @@ const AttachmentsButton = memo(PureAttachmentsButton);
 function PureStopButton({
   stop,
   setMessages,
+  status,
 }: {
   stop: () => void;
   setMessages: UseChatHelpers['setMessages'];
+  status: UseChatHelpers['status'];
 }) {
   return (
-    <Button
-      data-testid="stop-button"
-      className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
-      onClick={(event) => {
-        event.preventDefault();
-        stop();
-        setMessages((messages) => messages);
-      }}
+    <motion.div
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
     >
-      <StopIcon size={14} />
-    </Button>
+      <Button
+        data-testid="stop-button"
+        className="rounded-full p-1.5 h-fit border dark:border-zinc-600 bg-red-50 hover:bg-red-100 dark:bg-red-950 dark:hover:bg-red-900 border-red-200 dark:border-red-800 transition-colors"
+        onClick={(event) => {
+          event.preventDefault();
+          stop();
+          setMessages((messages) => messages);
+        }}
+      >
+        {status === 'streaming' ? (
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          >
+            <Loader2 size={14} className="text-red-600" />
+          </motion.div>
+        ) : (
+          <StopIcon size={14} />
+        )}
+      </Button>
+    </motion.div>
   );
 }
 
-const StopButton = memo(PureStopButton);
+const StopButton = memo(PureStopButton, (prevProps, nextProps) => {
+  return prevProps.status === nextProps.status;
+});
 
 function PureSendButton({
   submitForm,
   input,
   uploadQueue,
+  status,
 }: {
   submitForm: () => void;
   input: string;
   uploadQueue: Array<string>;
+  status: UseChatHelpers['status'];
 }) {
+  const isDisabled = input.length === 0 || uploadQueue.length > 0 || status !== 'ready';
+  const isUploading = uploadQueue.length > 0;
+  
   return (
-    <Button
-      data-testid="send-button"
-      className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
-      onClick={(event) => {
-        event.preventDefault();
-        submitForm();
-      }}
-      disabled={input.length === 0 || uploadQueue.length > 0}
+    <motion.div
+      whileHover={!isDisabled ? { scale: 1.05 } : {}}
+      whileTap={!isDisabled ? { scale: 0.95 } : {}}
+      animate={isUploading ? { 
+        background: ['#f3f4f6', '#e5e7eb', '#f3f4f6'],
+        transition: { duration: 1.5, repeat: Infinity } 
+      } : {}}
     >
-      <ArrowUpIcon size={14} />
-    </Button>
+      <Button
+        data-testid="send-button"
+        className={cn(
+          "rounded-full p-1.5 h-fit border dark:border-zinc-600 transition-all duration-200",
+          !isDisabled && "bg-primary hover:bg-primary/90 border-primary text-primary-foreground shadow-sm",
+          isDisabled && "opacity-50 cursor-not-allowed"
+        )}
+        onClick={(event) => {
+          event.preventDefault();
+          if (!isDisabled) {
+            submitForm();
+          }
+        }}
+        disabled={isDisabled}
+      >
+        {isUploading ? (
+          <div className="flex items-center gap-1">
+            <ProgressSpinner size={14} />
+            <span className="text-xs hidden sm:inline">Uploading...</span>
+          </div>
+        ) : (
+          <ArrowUpIcon size={14} />
+        )}
+      </Button>
+    </motion.div>
   );
 }
 
@@ -400,5 +482,6 @@ const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
   if (prevProps.uploadQueue.length !== nextProps.uploadQueue.length)
     return false;
   if (prevProps.input !== nextProps.input) return false;
+  if (prevProps.status !== nextProps.status) return false;
   return true;
 });

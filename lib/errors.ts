@@ -4,7 +4,8 @@ export type ErrorType =
   | 'forbidden'
   | 'not_found'
   | 'rate_limit'
-  | 'offline';
+  | 'offline'
+  | 'internal_error';
 
 export type Surface =
   | 'chat'
@@ -15,7 +16,24 @@ export type Surface =
   | 'history'
   | 'vote'
   | 'document'
-  | 'suggestions';
+  | 'suggestions'
+  | 'voice'
+  | 'voice_session'
+  | 'voice_stream'
+  | 'voice_action'
+  | 'voice_disconnect'
+  | 'text_required'
+  | 'audio_required'
+  | 'voice_session_required'
+  | 'invalid_action'
+  | 'internal_server_error'
+  | 'save_message'
+  | 'invalid_message_data'
+  | 'incomplete_message'
+  | 'memory_save_failed'
+  | 'memory_read_failed'
+  | 'memory_clear_failed'
+  | 'session_id_required';
 
 export type ErrorCode = `${ErrorType}:${Surface}`;
 
@@ -31,6 +49,23 @@ export const visibilityBySurface: Record<Surface, ErrorVisibility> = {
   vote: 'response',
   document: 'response',
   suggestions: 'response',
+  voice: 'response',
+  voice_session: 'response',
+  voice_stream: 'response',
+  voice_action: 'response',
+  voice_disconnect: 'response',
+  text_required: 'response',
+  audio_required: 'response',
+  voice_session_required: 'response',
+  invalid_action: 'response',
+  internal_server_error: 'log',
+  save_message: 'response',
+  invalid_message_data: 'response',
+  incomplete_message: 'response',
+  memory_save_failed: 'log',
+  memory_read_failed: 'log',
+  memory_clear_failed: 'log',
+  session_id_required: 'response',
 };
 
 export class ChatSDKError extends Error {
@@ -107,6 +142,32 @@ export function getMessageByErrorCode(errorCode: ErrorCode): string {
     case 'bad_request:document':
       return 'The request to create or update the document was invalid. Please check your input and try again.';
 
+    // Voice-related error messages
+    case 'unauthorized:voice':
+      return 'You need to sign in to use voice features. Please sign in and try again.';
+    case 'rate_limit:voice':
+      return 'You have exceeded your maximum number of voice messages for the day. Please try again later.';
+    case 'not_found:voice_session':
+      return 'The voice session was not found. Please initialize a new voice session.';
+    case 'bad_request:voice_session_required':
+      return 'A voice session ID is required for this operation.';
+    case 'bad_request:text_required':
+      return 'Text content is required for this voice operation.';
+    case 'bad_request:audio_required':
+      return 'Audio data is required for this voice operation.';
+    case 'bad_request:invalid_action':
+      return 'The requested voice action is invalid. Please check the action parameter.';
+
+    // Save-message API error messages
+    case 'unauthorized:save_message':
+      return 'You need to sign in to save messages. Please sign in and try again.';
+    case 'bad_request:invalid_message_data':
+      return 'The message data provided is invalid. Please check the format and try again.';
+    case 'bad_request:incomplete_message':
+      return 'The message is missing required fields (id, role, or content).';
+    case 'bad_request:session_id_required':
+      return 'A session ID is required for this operation.';
+
     default:
       return 'Something went wrong. Please try again later.';
   }
@@ -126,6 +187,8 @@ function getStatusCodeByType(type: ErrorType) {
       return 429;
     case 'offline':
       return 503;
+    case 'internal_error':
+      return 500;
     default:
       return 500;
   }

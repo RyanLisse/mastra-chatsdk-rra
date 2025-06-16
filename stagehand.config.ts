@@ -1,6 +1,6 @@
-import type { StagehandConfig } from "stagehand";
+// import type { StagehandConfig } from "stagehand";
 
-const config: StagehandConfig = {
+const config: any = {
   env: "LOCAL", // or "BROWSERBASE"
   apiKey: process.env.STAGEHAND_API_KEY,
   projectId: process.env.STAGEHAND_PROJECT_ID,

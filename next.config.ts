@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     // Temporarily disabled to fix test compatibility issues
     // ppr: true,
   },
+  serverExternalPackages: ['gray-matter'],
   images: {
     remotePatterns: [
       {

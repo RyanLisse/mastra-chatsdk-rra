@@ -4,6 +4,7 @@ import { Chat } from '@/components/chat';
 import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import { generateUUID } from '@/lib/utils';
 import { DataStreamHandler } from '@/components/data-stream-handler';
+import { GlobalErrorProvider } from '@/components/ui/global-error-handler';
 import { auth } from '../(auth)/auth';
 import { redirect } from 'next/navigation';
 import { isTestEnvironment } from '@/lib/constants';
@@ -29,7 +30,7 @@ export default async function Page() {
       const modelIdFromCookie = cookieStore.get('chat-model');
 
       return (
-        <>
+        <GlobalErrorProvider>
           <Chat
             key={id}
             id={id}
@@ -41,7 +42,7 @@ export default async function Page() {
             autoResume={false}
           />
           <DataStreamHandler id={id} />
-        </>
+        </GlobalErrorProvider>
       );
     }
 
@@ -55,7 +56,7 @@ export default async function Page() {
 
   if (!modelIdFromCookie) {
     return (
-      <>
+      <GlobalErrorProvider>
         <Chat
           key={id}
           id={id}
@@ -67,12 +68,12 @@ export default async function Page() {
           autoResume={false}
         />
         <DataStreamHandler id={id} />
-      </>
+      </GlobalErrorProvider>
     );
   }
 
   return (
-    <>
+    <GlobalErrorProvider>
       <Chat
         key={id}
         id={id}
@@ -84,6 +85,6 @@ export default async function Page() {
         autoResume={false}
       />
       <DataStreamHandler id={id} />
-    </>
+    </GlobalErrorProvider>
   );
 }
