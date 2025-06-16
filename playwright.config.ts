@@ -7,7 +7,7 @@ import { defineConfig, devices } from '@playwright/test';
 import { config } from 'dotenv';
 
 config({
-  path: '.env.local',
+  path: process.env.CI ? '.env.test' : '.env.local',
 });
 
 /* Use process.env.PORT by default and fallback to port 3000 */
@@ -44,9 +44,9 @@ export default defineConfig({
   },
 
   /* Configure global timeout for each test */
-  timeout: 120 * 1000, // 120 seconds
+  timeout: 60 * 1000, // 60 seconds
   expect: {
-    timeout: 120 * 1000,
+    timeout: 30 * 1000, // 30 seconds
   },
 
   /* Configure projects */
@@ -99,9 +99,11 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm dev',
-    url: `${baseURL}/ping`,
-    timeout: 120 * 1000,
+    command: 'bun run dev',
+    url: `${baseURL}`,
+    timeout: 60 * 1000,
     reuseExistingServer: !process.env.CI,
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 });
