@@ -1,7 +1,7 @@
 # RoboRail Assistant Makefile
 # Built with Bun for improved performance
 
-.PHONY: help install dev build test clean lint format setup db-setup db-migrate db-studio test-setup test-all test-stagehand test-playwright commit-check deploy-check
+.PHONY: help install dev build test clean lint format setup db-setup db-migrate db-studio test-setup test-all test-stagehand test-playwright commit-check deploy-check kill-port kill-all-dev-ports show-ports dev-clean
 
 # Default target
 .DEFAULT_GOAL := help
@@ -10,6 +10,7 @@
 NODE_ENV ?= development
 DATABASE_URL ?= $(shell grep "^DATABASE_URL" .env.local 2>/dev/null | cut -d'=' -f2-)
 COMMIT_MSG ?= "feat: automated commit"
+DEV_PORT ?= 3000
 
 # Colors for output
 RED = \033[0;31m
@@ -37,13 +38,28 @@ setup: install db-setup ## Complete project setup (install + database setup)
 	@echo "$(GREEN)Project setup complete!$(NC)"
 
 ## Development
-dev: ## Start development server
+kill-port: ## Kill any process running on the development port
+	@echo "$(YELLOW)Checking for processes on port $(DEV_PORT)...$(NC)"
+	@PID=$$(lsof -t -i:$(DEV_PORT) 2>/dev/null); \
+	if [ ! -z "$$PID" ]; then \
+		echo "$(RED)Killing process $$PID on port $(DEV_PORT)...$(NC)"; \
+		kill -9 $$PID && \
+		echo "$(GREEN)Process killed successfully!$(NC)"; \
+	else \
+		echo "$(GREEN)No process found on port $(DEV_PORT)$(NC)"; \
+	fi
+
+dev: kill-port ## Start development server (kills existing processes first)
 	@echo "$(BLUE)Starting development server...$(NC)"
 	bun run dev
 
-dev-turbo: ## Start development server with Turbopack
+dev-turbo: kill-port ## Start development server with Turbopack (kills existing processes first)
 	@echo "$(BLUE)Starting development server with Turbopack...$(NC)"
 	bun run dev --turbo
+
+dev-clean: kill-port clean ## Clean, kill port, and start fresh development server
+	@echo "$(BLUE)Starting clean development server...$(NC)"
+	bun install && bun run dev
 
 ## Build & Production
 build: ## Build the application for production
@@ -265,3 +281,29 @@ troubleshoot: ## Run troubleshooting diagnostics
 	@echo ""
 	@echo "=== Git Status ==="
 	@make git-status
+
+## Port Management
+kill-all-dev-ports: ## Kill processes on common dev ports (3000, 3001, 5173, 8080)
+	@echo "$(YELLOW)Killing processes on common development ports...$(NC)"
+	@for port in 3000 3001 5173 8080; do \
+		PID=$$(lsof -t -i:$$port 2>/dev/null); \
+		if [ ! -z "$$PID" ]; then \
+			echo "$(RED)Killing process $$PID on port $$port...$(NC)"; \
+			kill -9 $$PID; \
+		else \
+			echo "$(GREEN)No process on port $$port$(NC)"; \
+		fi; \
+	done
+	@echo "$(GREEN)Port cleanup completed!$(NC)"
+
+show-ports: ## Show processes running on common dev ports
+	@echo "$(BLUE)Checking common development ports...$(NC)"
+	@for port in 3000 3001 5173 8080; do \
+		PID=$$(lsof -t -i:$$port 2>/dev/null); \
+		if [ ! -z "$$PID" ]; then \
+			PROCESS=$$(ps -p $$PID -o comm= 2>/dev/null); \
+			echo "Port $$port: $(RED)$$PROCESS (PID: $$PID)$(NC)"; \
+		else \
+			echo "Port $$port: $(GREEN)Available$(NC)"; \
+		fi; \
+	done
