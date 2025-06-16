@@ -25,7 +25,8 @@ import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 // import { ragTool } from '@/lib/ai/tools/rag';
 import { isProductionEnvironment } from '@/lib/constants';
-import { myProvider } from '@/lib/ai/providers';
+import { myProvider, getLanguageModel, isModelAvailable } from '@/lib/ai/providers';
+import { getModelInfo, getFallbackModel } from '@/lib/ai/provider-config';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { postRequestBodySchema, type PostRequestBody } from './schema';
 import { geolocation } from '@vercel/functions';
@@ -76,6 +77,25 @@ export async function POST(request: Request) {
   try {
     const { id, message, selectedChatModel, selectedVisibilityType, sessionId } =
       requestBody;
+
+    // Validate and handle model availability
+    let effectiveModel = selectedChatModel;
+    const modelInfo = getModelInfo(selectedChatModel);
+    
+    if (!modelInfo || !isModelAvailable(selectedChatModel)) {
+      console.warn(`Model ${selectedChatModel} is not available, using fallback`);
+      // If model is not available, use a fallback based on the provider
+      if (modelInfo) {
+        effectiveModel = getFallbackModel(modelInfo.provider);
+      } else {
+        effectiveModel = 'gpt-4o-mini'; // Default fallback
+      }
+      
+      // Verify fallback is available
+      if (!isModelAvailable(effectiveModel)) {
+        effectiveModel = 'gpt-4o-mini'; // Ultimate fallback
+      }
+    }
 
     const session = await auth();
 
@@ -157,7 +177,7 @@ export async function POST(request: Request) {
           try {
             const agent = createRoboRailAgent({
               sessionId: effectiveSessionId,
-              selectedChatModel,
+              selectedChatModel: effectiveModel,
             });
 
             const result = await agent.generateStream(message.content);
@@ -179,12 +199,12 @@ export async function POST(request: Request) {
         } else {
           // Use existing AI SDK streamText approach
           const result = streamText({
-            model: myProvider.languageModel(selectedChatModel),
-            system: systemPrompt({ selectedChatModel, requestHints }),
+            model: myProvider.languageModel(effectiveModel),
+            system: systemPrompt({ selectedChatModel: effectiveModel, requestHints }),
             messages,
             maxSteps: 5,
             experimental_activeTools:
-              selectedChatModel === 'chat-model-reasoning'
+              effectiveModel === 'chat-model-reasoning' || effectiveModel.includes('o3') || effectiveModel.includes('o1')
                 ? []
                 : [
                     'getWeather',

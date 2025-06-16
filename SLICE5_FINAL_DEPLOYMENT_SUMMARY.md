@@ -10,7 +10,7 @@ All requirements from the implementation guide have been successfully implemente
 
 - ✅ **Comprehensive README.md** with complete setup and configuration instructions
 - ✅ **Complete .env.example** with all required environment variables documented
-- ✅ **Vercel deployment preparation** with optimized configuration
+- ✅ **Cloud deployment preparation** with optimized configuration
 - ✅ **Clear development and contribution guidelines** for future developers
 - ✅ **Professional documentation** covering all implemented features
 - ✅ **Production build verification** with clean compilation
@@ -65,7 +65,7 @@ All requirements from the implementation guide have been successfully implemente
 **Size**: 400+ lines of deployment instructions
 
 **Content Includes**:
-- **Vercel Deployment**: Step-by-step Vercel deployment with optimizations
+- **Cloud Deployment**: Step-by-step cloud deployment with optimizations
 - **Database Setup**: Multiple database provider options
 - **Environment Configuration**: Production environment setup
 - **Docker Deployment**: Complete containerization setup
@@ -92,16 +92,15 @@ All requirements from the implementation guide have been successfully implemente
 - **Bug Report Templates**: Structured issue reporting
 - **Feature Request Process**: Feature proposal guidelines
 
-### 5. vercel.json - Deployment Configuration
+### 5. Cloud Deployment Configuration
 
-**File**: `/vercel.json`
 **Features**:
 - **Function Configuration**: Optimized timeout settings for API routes
 - **Region Configuration**: Single region deployment for optimal performance
 - **Security Headers**: X-Frame-Options, Content-Type-Options, Referrer-Policy
 - **CORS Configuration**: API access control headers
 - **Rewrites**: Proper routing for document API endpoints
-- **Cron Jobs**: Automated cleanup tasks
+- **Automated Tasks**: Scheduled cleanup jobs
 
 ## 🔧 Build & Deployment Optimization
 
@@ -148,16 +147,16 @@ All requirements from the implementation guide have been successfully implemente
 - Efficient middleware (104 kB)
 - Optimized database queries with proper indexing
 
-## 🚀 Vercel Deployment Preparation
+## 🚀 Cloud Deployment Preparation
 
 ### Deployment Configuration
 
-**Vercel-Specific Optimizations**:
+**Cloud Platform Optimizations**:
 - Function timeout configuration (60 seconds for complex operations)
-- Region optimization (iad1 for optimal performance)
+- Region optimization for optimal performance
 - Security headers implementation
 - CORS configuration for API access
-- Automated cleanup cron jobs
+- Automated cleanup scheduled tasks
 
 **Environment Variables**:
 - Complete documentation of all required variables
@@ -166,7 +165,7 @@ All requirements from the implementation guide have been successfully implemente
 - Security best practices documented
 
 **Database Integration**:
-- Support for Vercel Postgres
+- Support for cloud PostgreSQL providers
 - Alternative database providers documented
 - Migration strategy for production deployment
 - pgvector extension requirements documented
@@ -329,10 +328,10 @@ npm run dev
 - ✅ OpenAI API integration ready
 - ✅ Cohere API configuration documented
 - ✅ LangSmith observability optional setup
-- ✅ Vercel Blob storage configuration
+- ✅ Cloud storage configuration
 
 **Deployment Platforms**:
-- ✅ Vercel deployment fully configured
+- ✅ Cloud deployment fully configured
 - ✅ Docker containerization ready
 - ✅ Alternative platform instructions provided
 - ✅ CI/CD pipeline template available
@@ -398,12 +397,12 @@ The Mastra Chat SDK is now fully prepared for production deployment with:
    - [ ] Create OpenAI API account and key
    - [ ] Create Cohere API account and key
    - [ ] Setup PostgreSQL database with pgvector
-   - [ ] Configure Vercel Blob storage
+   - [ ] Configure cloud storage service
 
 2. **Deploy Application**:
    - [ ] Fork/clone repository
    - [ ] Configure environment variables
-   - [ ] Deploy to Vercel (or preferred platform)
+   - [ ] Deploy to preferred cloud platform
    - [ ] Run database migrations
    - [ ] Verify all functionality
 

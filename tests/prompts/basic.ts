@@ -1,22 +1,22 @@
 import type { CoreMessage } from 'ai';
 
 export const TEST_PROMPTS: Record<string, CoreMessage> = {
-  USER_SKY: {
+  USER_CALIBRATION: {
     role: 'user',
-    content: [{ type: 'text', text: 'Why is the sky blue?' }],
+    content: [{ type: 'text', text: 'How do I calibrate the RoboRail measurement system?' }],
   },
-  USER_GRASS: {
+  USER_SAFETY: {
     role: 'user',
-    content: [{ type: 'text', text: 'Why is grass green?' }],
+    content: [{ type: 'text', text: 'What are the safety procedures for RoboRail maintenance?' }],
   },
   USER_THANKS: {
     role: 'user',
     content: [{ type: 'text', text: 'Thanks!' }],
   },
-  USER_NEXTJS: {
+  USER_PMAC_ISSUE: {
     role: 'user',
     content: [
-      { type: 'text', text: 'What are the advantages of using Next.js?' },
+      { type: 'text', text: 'What should I do if the PMAC is not responding?' },
     ],
   },
   USER_IMAGE_ATTACHMENT: {
@@ -24,7 +24,7 @@ export const TEST_PROMPTS: Record<string, CoreMessage> = {
     content: [
       {
         type: 'text',
-        text: 'Who painted this?',
+        text: 'What component is shown in this image?',
       },
       {
         type: 'image',
@@ -37,7 +37,7 @@ export const TEST_PROMPTS: Record<string, CoreMessage> = {
     content: [
       {
         type: 'text',
-        text: 'Help me write an essay about Silicon Valley',
+        text: 'Help me create a maintenance checklist for RoboRail',
       },
     ],
   },
@@ -46,7 +46,7 @@ export const TEST_PROMPTS: Record<string, CoreMessage> = {
     content: [
       {
         type: 'text',
-        text: 'Essay about Silicon Valley',
+        text: 'RoboRail Maintenance Checklist',
       },
     ],
   },
@@ -59,19 +59,19 @@ export const TEST_PROMPTS: Record<string, CoreMessage> = {
         toolName: 'createDocument',
         result: {
           id: '3ca386a4-40c6-4630-8ed1-84cbd46cc7eb',
-          title: 'Essay about Silicon Valley',
+          title: 'RoboRail Maintenance Checklist',
           kind: 'text',
           content: 'A document was created and is now visible to the user.',
         },
       },
     ],
   },
-  GET_WEATHER_CALL: {
+  GET_TROUBLESHOOTING_CALL: {
     role: 'user',
     content: [
       {
         type: 'text',
-        text: "What's the weather in sf?",
+        text: "What are the troubleshooting steps for communication errors?",
       },
     ],
   },

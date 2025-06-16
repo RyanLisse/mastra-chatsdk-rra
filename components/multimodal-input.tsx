@@ -271,7 +271,7 @@ function PureMultimodalInput({
       <Textarea
         data-testid="multimodal-input"
         ref={textareaRef}
-        placeholder="Send a message..."
+        placeholder="Ask about RoboRail operations, maintenance, or troubleshooting..."
         value={input}
         onChange={handleInput}
         className={cx(

@@ -1,13 +1,12 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useWindowSize } from 'usehooks-ts';
 
 import { ModelSelector } from '@/components/model-selector';
 import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, VercelIcon } from './icons';
+import { PlusIcon } from './icons';
 import { RefreshCwIcon, Sparkles } from 'lucide-react';
 import { useSidebar } from './ui/sidebar';
 import { memo } from 'react';
@@ -117,24 +116,6 @@ function PureChatHeader({
         )}
       </div>
 
-      {/* Deploy Button */}
-      <motion.div
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        <Button
-          className="bg-gradient-to-r from-zinc-900 to-zinc-800 dark:from-zinc-100 dark:to-zinc-200 hover:from-zinc-800 hover:to-zinc-700 dark:hover:from-zinc-200 dark:hover:to-zinc-300 text-zinc-50 dark:text-zinc-900 hidden md:flex py-2 px-3 h-9 shadow-sm transition-all duration-200"
-          asChild
-        >
-          <Link
-            href={`https://vercel.com/new/clone?repository-url=https://github.com/vercel/ai-chatbot&env=AUTH_SECRET&envDescription=Learn more about how to get the API Keys for the application&envLink=https://github.com/vercel/ai-chatbot/blob/main/.env.example&demo-title=AI Chatbot&demo-description=An Open-Source AI Chatbot Template Built With Next.js and the AI SDK by Vercel.&demo-url=https://chat.vercel.ai&products=[{"type":"integration","protocol":"ai","productSlug":"grok","integrationSlug":"xai"},{"type":"integration","protocol":"storage","productSlug":"neon","integrationSlug":"neon"},{"type":"integration","protocol":"storage","productSlug":"upstash-kv","integrationSlug":"upstash"},{"type":"blob"}]`}
-            target="_noblank"
-          >
-            <VercelIcon size={16} />
-            <span className="ml-1">Deploy</span>
-          </Link>
-        </Button>
-      </motion.div>
     </motion.header>
   );
 }

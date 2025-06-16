@@ -66,10 +66,10 @@ export const getResponseChunksByPrompt = (
   }
 
   if (isReasoningEnabled) {
-    if (compareMessages(recentMessage, TEST_PROMPTS.USER_SKY)) {
+    if (compareMessages(recentMessage, TEST_PROMPTS.USER_CALIBRATION)) {
       return [
-        ...reasoningToDeltas('The sky is blue because of rayleigh scattering!'),
-        ...textToDeltas("It's just blue duh!"),
+        ...reasoningToDeltas('Calibration requires precise measurement setup and environmental considerations!'),
+        ...textToDeltas("First, ensure the RoboRail is properly positioned and all measurement components are clean."),
         {
           type: 'finish',
           finishReason: 'stop',
@@ -77,12 +77,12 @@ export const getResponseChunksByPrompt = (
           usage: { completionTokens: 10, promptTokens: 3 },
         },
       ];
-    } else if (compareMessages(recentMessage, TEST_PROMPTS.USER_GRASS)) {
+    } else if (compareMessages(recentMessage, TEST_PROMPTS.USER_SAFETY)) {
       return [
         ...reasoningToDeltas(
-          'Grass is green because of chlorophyll absorption!',
+          'Safety is paramount when working with RoboRail machinery!',
         ),
-        ...textToDeltas("It's just green duh!"),
+        ...textToDeltas("Always wear proper PPE and ensure emergency stop procedures are understood."),
         {
           type: 'finish',
           finishReason: 'stop',
@@ -103,9 +103,9 @@ export const getResponseChunksByPrompt = (
         usage: { completionTokens: 10, promptTokens: 3 },
       },
     ];
-  } else if (compareMessages(recentMessage, TEST_PROMPTS.USER_GRASS)) {
+  } else if (compareMessages(recentMessage, TEST_PROMPTS.USER_SAFETY)) {
     return [
-      ...textToDeltas("It's just green duh!"),
+      ...textToDeltas("Always wear proper PPE and ensure emergency stop procedures are understood."),
       {
         type: 'finish',
         finishReason: 'stop',
@@ -113,9 +113,9 @@ export const getResponseChunksByPrompt = (
         usage: { completionTokens: 10, promptTokens: 3 },
       },
     ];
-  } else if (compareMessages(recentMessage, TEST_PROMPTS.USER_SKY)) {
+  } else if (compareMessages(recentMessage, TEST_PROMPTS.USER_CALIBRATION)) {
     return [
-      ...textToDeltas("It's just blue duh!"),
+      ...textToDeltas("First, ensure the RoboRail is properly positioned and all measurement components are clean."),
       {
         type: 'finish',
         finishReason: 'stop',
@@ -123,9 +123,9 @@ export const getResponseChunksByPrompt = (
         usage: { completionTokens: 10, promptTokens: 3 },
       },
     ];
-  } else if (compareMessages(recentMessage, TEST_PROMPTS.USER_NEXTJS)) {
+  } else if (compareMessages(recentMessage, TEST_PROMPTS.USER_PMAC_ISSUE)) {
     return [
-      ...textToDeltas('With Next.js, you can ship fast!'),
+      ...textToDeltas('Check the PMAC connections and power supply first!'),
 
       {
         type: 'finish',
@@ -138,7 +138,7 @@ export const getResponseChunksByPrompt = (
     compareMessages(recentMessage, TEST_PROMPTS.USER_IMAGE_ATTACHMENT)
   ) {
     return [
-      ...textToDeltas('This painting is by Monet!'),
+      ...textToDeltas('This appears to be a RoboRail component - let me analyze it for you!'),
       {
         type: 'finish',
         finishReason: 'stop',
@@ -154,7 +154,7 @@ export const getResponseChunksByPrompt = (
         toolName: 'createDocument',
         toolCallType: 'function',
         args: JSON.stringify({
-          title: 'Essay about Silicon Valley',
+          title: 'RoboRail Maintenance Checklist',
           kind: 'text',
         }),
       },
@@ -170,23 +170,38 @@ export const getResponseChunksByPrompt = (
   ) {
     return [
       ...textToDeltas(`\n
-# Silicon Valley: The Epicenter of Innovation
+# RoboRail Maintenance Checklist
 
-## Origins and Evolution
+## Daily Inspection
 
-Silicon Valley, nestled in the southern part of the San Francisco Bay Area, emerged as a global technology hub in the late 20th century. Its transformation began in the 1950s when Stanford University encouraged its graduates to start their own companies nearby, leading to the formation of pioneering semiconductor firms that gave the region its name.
+- [ ] Visual inspection of rail alignment
+- [ ] Check measurement system calibration
+- [ ] Verify PMAC communication status
+- [ ] Inspect Chuck alignment mechanism
+- [ ] Test emergency stop functionality
 
-## The Innovation Ecosystem
+## Weekly Maintenance
 
-What makes Silicon Valley unique is its perfect storm of critical elements: prestigious universities like Stanford and Berkeley, abundant venture capital, a culture that celebrates risk-taking, and a dense network of talented individuals. This ecosystem has consistently nurtured groundbreaking technologies from personal computers to social media platforms to artificial intelligence.
+- [ ] Clean measurement sensors
+- [ ] Lubricate moving parts
+- [ ] Check cable connections
+- [ ] Verify safety systems operation
+- [ ] Review system logs for errors
 
-## Challenges and Criticisms
+## Monthly Tasks
 
-Despite its remarkable success, Silicon Valley faces significant challenges including extreme income inequality, housing affordability crises, and questions about technology's impact on society. Critics argue the region has developed a monoculture that sometimes struggles with diversity and inclusion.
+- [ ] Full system calibration
+- [ ] Backup configuration settings
+- [ ] Update software if needed
+- [ ] Comprehensive safety audit
+- [ ] Document maintenance activities
 
-## Future Prospects
+## Safety Reminders
 
-As we move forward, Silicon Valley continues to reinvent itself. While some predict its decline due to remote work trends and competition from other tech hubs, the region's adaptability and innovative spirit suggest it will remain influential in shaping our technological future for decades to come.
+- Always wear appropriate PPE
+- Ensure proper lockout/tagout procedures
+- Maintain clear emergency access routes
+- Keep documentation updated
 `),
       {
         type: 'finish',
@@ -210,14 +225,14 @@ As we move forward, Silicon Valley continues to reinvent itself. While some pred
         usage: { completionTokens: 10, promptTokens: 3 },
       },
     ];
-  } else if (compareMessages(recentMessage, TEST_PROMPTS.GET_WEATHER_CALL)) {
+  } else if (compareMessages(recentMessage, TEST_PROMPTS.GET_TROUBLESHOOTING_CALL)) {
     return [
       {
         type: 'tool-call',
         toolCallId: 'call_456',
-        toolName: 'getWeather',
+        toolName: 'ragTool',
         toolCallType: 'function',
-        args: JSON.stringify({ latitude: 37.7749, longitude: -122.4194 }),
+        args: JSON.stringify({ query: 'troubleshooting communication errors' }),
       },
       {
         type: 'finish',
@@ -228,7 +243,7 @@ As we move forward, Silicon Valley continues to reinvent itself. While some pred
     ];
   } else if (compareMessages(recentMessage, TEST_PROMPTS.GET_WEATHER_RESULT)) {
     return [
-      ...textToDeltas('The current temperature in San Francisco is 17°C.'),
+      ...textToDeltas('For communication errors, first check cable connections and power supply status.'),
       {
         type: 'finish',
         finishReason: 'stop',

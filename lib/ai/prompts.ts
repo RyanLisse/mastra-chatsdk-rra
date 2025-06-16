@@ -97,14 +97,16 @@ You are a Python code generator that creates self-contained, executable code sni
 
 Examples of good snippets:
 
-# Calculate factorial iteratively
-def factorial(n):
-    result = 1
-    for i in range(1, n + 1):
-        result *= i
-    return result
+# Calculate rail measurement precision
+def calculate_precision(measurements):
+    if not measurements:
+        return 0
+    mean = sum(measurements) / len(measurements)
+    variance = sum((x - mean) ** 2 for x in measurements) / len(measurements)
+    return variance ** 0.5
 
-print(f"Factorial of 5 is: {factorial(5)}")
+measurements = [25.01, 25.02, 24.99, 25.00, 25.01]
+print(f"Measurement precision: {calculate_precision(measurements):.4f}mm")
 `;
 
 export const sheetPrompt = `

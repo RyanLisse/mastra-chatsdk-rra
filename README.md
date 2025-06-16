@@ -63,17 +63,17 @@ A comprehensive AI-powered chat application built with Next.js 15, Mastra AI fra
 │                External Services & Storage                  │
 ├─────────────────────────────────────────────────────────────┤
 │  • PostgreSQL/pgvector  • OpenAI API  • Cohere API         │
-│  • Vercel Blob         • LangSmith    • Redis (Optional)   │
+│  • Cloud Storage       • LangSmith    • Redis (Optional)   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ### Core Technologies
 
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
-- **AI/ML**: Mastra AI, OpenAI GPT-4, Cohere Embeddings, LangSmith
+- **AI/ML**: Mastra AI, Multi-Provider Support (OpenAI, Anthropic, Google, Groq), Cohere Embeddings, LangSmith
 - **Database**: PostgreSQL with pgvector extension
 - **Authentication**: NextAuth.js with credential-based auth
-- **Storage**: Vercel Blob for file uploads
+- **Storage**: Cloud storage for file uploads
 - **Observability**: LangSmith tracing, built-in error tracking
 
 ## 🚀 Getting Started
@@ -82,7 +82,7 @@ A comprehensive AI-powered chat application built with Next.js 15, Mastra AI fra
 
 - Node.js 18+ or Bun runtime
 - PostgreSQL database with pgvector extension
-- OpenAI API key
+- At least one AI provider API key (OpenAI recommended)
 - Cohere API key (for embeddings)
 
 ### Installation
@@ -104,7 +104,11 @@ A comprehensive AI-powered chat application built with Next.js 15, Mastra AI fra
 
 3. **Environment Setup**
    ```bash
+   # For full configuration reference
    cp .env.example .env.local
+   
+   # Or for minimal local development setup  
+   cp .env.local.example .env.local
    ```
    
    Edit `.env.local` with your configuration (see [Environment Variables](#environment-variables))
@@ -126,31 +130,59 @@ A comprehensive AI-powered chat application built with Next.js 15, Mastra AI fra
    npm run dev
    ```
 
-6. **Access the Application**
+6. **Validate Configuration**
+   ```bash
+   npm run validate:providers
+   ```
+   This will check your API key configuration and show available models.
+
+7. **Access the Application**
    - Open [http://localhost:3000](http://localhost:3000)
    - Create an account or use guest mode
    - Start chatting with the RoboRail assistant!
 
 ### Environment Variables
 
-Create a `.env.local` file with the following variables:
+Create a `.env.local` file with the following variables. Use `.env.local.example` for a minimal setup or `.env.example` for the complete configuration reference.
 
 #### Required Variables
 
 ```env
 # Authentication
-AUTH_SECRET=your-auth-secret-here
+AUTH_SECRET=your-auth-secret-here                    # Generate: https://generate-secret.vercel.app/32
 NEXTAUTH_URL=http://localhost:3000
 
 # Database
 POSTGRES_URL=postgresql://user:password@host:port/database
 
-# AI Services
-OPENAI_API_KEY=sk-your-openai-api-key
-COHERE_API_KEY=your-cohere-api-key
+# AI Services (At least one provider required)
+OPENAI_API_KEY=sk-your-openai-api-key               # Primary provider
+COHERE_API_KEY=your-cohere-api-key                  # Required for RAG/embeddings
 
 # File Storage
-BLOB_READ_WRITE_TOKEN=your-vercel-blob-token
+BLOB_READ_WRITE_TOKEN=your-cloud-storage-token
+```
+
+#### AI Provider Support
+
+The application supports multiple AI providers. Configure any or all:
+
+```env
+# OpenAI (Recommended - primary provider)
+OPENAI_API_KEY=sk-your-openai-api-key
+# Models: o3, o4, GPT-4.1, GPT-4o, GPT-4o-mini
+
+# Anthropic Claude Models (Optional)
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-api-key
+# Models: Claude 4 Opus, Claude 4 Sonnet, Claude 3.5 Sonnet, Claude 3.5 Haiku
+
+# Google Gemini Models (Optional)
+GOOGLE_API_KEY=AIzaSy-your-google-api-key
+# Models: Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.0 Flash, Gemini 2.0 Pro
+
+# Groq High-Speed Inference (Optional)
+GROQ_API_KEY=gsk_your-groq-api-key
+# Models: LLaMA 3.3-70B, LLaMA 3.1-405B, LLaMA-3-Groq tool-use variants
 ```
 
 #### Optional Variables
@@ -163,9 +195,36 @@ LANGSMITH_PROJECT=your-project-name
 # Redis (for enhanced caching)
 REDIS_URL=redis://localhost:6379
 
+# Feature Flags
+ENABLE_VOICE_CHAT=true
+ENABLE_DOCUMENT_UPLOAD=true
+ENABLE_GUEST_ACCESS=true
+
 # xAI (alternative to OpenAI)
 XAI_API_KEY=xai-your-xai-api-key
 ```
+
+#### Provider-Specific Setup
+
+**Getting API Keys:**
+- **OpenAI**: [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+- **Anthropic**: [https://console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
+- **Google**: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+- **Groq**: [https://console.groq.com/keys](https://console.groq.com/keys)
+- **Cohere**: [https://dashboard.cohere.ai/api-keys](https://dashboard.cohere.ai/api-keys)
+
+#### Model Selection
+
+The application automatically detects available providers and offers their models in the UI. Users can:
+
+- Switch between providers in real-time
+- Choose models based on capabilities (reasoning, vision, speed)
+- Fallback gracefully if a provider becomes unavailable
+
+**Model Tiers:**
+- **Free**: Quick responses for simple tasks
+- **Premium**: Balanced performance for most use cases  
+- **Pro**: Maximum capabilities for complex reasoning
 
 ## 📚 Feature Documentation
 
@@ -232,37 +291,6 @@ The application uses specialized Mastra AI agents:
 - **RAG Integration**: Document context combined with conversation memory
 
 ## 🚀 Deployment
-
-### Vercel Deployment (Recommended)
-
-1. **Prerequisites**
-   - Vercel account
-   - PostgreSQL database (recommend Neon or Vercel Postgres)
-   - Required API keys
-
-2. **Deploy Steps**
-   ```bash
-   # Install Vercel CLI
-   npm i -g vercel
-   
-   # Login to Vercel
-   vercel login
-   
-   # Deploy
-   vercel --prod
-   ```
-
-3. **Environment Configuration**
-   - Set all environment variables in Vercel dashboard
-   - Enable PostgreSQL integration
-   - Configure Vercel Blob storage
-
-4. **Database Setup**
-   ```bash
-   # Run migrations on production
-   vercel env pull .env.production
-   npm run build  # This runs migrations
-   ```
 
 ### Alternative Deployment Options
 
@@ -528,7 +556,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - **Mastra AI Team** for the comprehensive AI framework
-- **Vercel** for the deployment platform and AI SDK
+- **Next.js Team** for the excellent framework and AI SDK
 - **OpenAI** for language models and Realtime API
 - **Cohere** for embedding models
 - **RoboRail** for domain expertise and documentation
