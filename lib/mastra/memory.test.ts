@@ -15,6 +15,7 @@ interface AddMessageConfig extends MemoryConfig {
  * Mock PostgreSQL-based memory provider for testing
  * Avoids database dependencies and import issues
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: Test utility class pattern
 export class PostgresMemory {
   private static sessions = new Map<string, Message[]>();
 
