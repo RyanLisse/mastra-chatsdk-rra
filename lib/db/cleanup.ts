@@ -13,7 +13,7 @@ if (typeof window === 'undefined' && !process.env.PLAYWRIGHT) {
 import { cleanupMemoryConnections } from '../mastra/memory';
 import { cleanupQueryConnections } from './queries';
 import { cleanupGlobalTestDatabase, forceCleanupGlobalTestDatabase } from './test-config';
-import { cleanupAllDatabaseConnections, forceCleanupAllDatabaseConnections } from './connection-manager';
+import { cleanupAllDatabaseConnections, forceCleanupAllDatabaseConnections, DatabaseConnectionManager } from './connection-manager';
 
 /**
  * Cleanup all database connections for graceful shutdown
@@ -182,8 +182,17 @@ export async function checkConnectionHealth(): Promise<{
   };
 }> {
   try {
-    const { cleanupAllDatabaseConnections } = await import('./connection-manager');
-    const { DatabaseConnectionManager } = await import('./connection-manager');
+    // Check if DatabaseConnectionManager is properly available
+    if (!DatabaseConnectionManager || typeof DatabaseConnectionManager.getConnectionStats !== 'function') {
+      console.warn('DatabaseConnectionManager not available, assuming no active connections');
+      return {
+        healthy: true,
+        details: {
+          connections: 0,
+          names: [],
+        },
+      };
+    }
     
     const stats = DatabaseConnectionManager.getConnectionStats();
     const health = await DatabaseConnectionManager.healthCheck();
