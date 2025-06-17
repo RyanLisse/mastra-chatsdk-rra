@@ -5,17 +5,16 @@
  * across different parts of the application with proper pooling and cleanup.
  */
 
-// Only import server-only in actual server environments (not in Playwright tests)
-// Skip server-only for Playwright tests completely
-if (
-  typeof window === 'undefined' &&
-  process.env.PLAYWRIGHT !== 'true' &&
-  process.env.NODE_ENV !== 'test'
-) {
+// Only import server-only in actual server environments (not in tests)
+// Skip server-only import entirely in test/Playwright environments
+const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'true';
+const isClientSide = typeof window !== 'undefined';
+
+if (!isTestEnvironment && !isClientSide) {
   try {
     require('server-only');
-  } catch (e) {
-    // Ignore if server-only fails to load in test environments
+  } catch (error) {
+    // Silently ignore server-only import errors in edge cases
   }
 }
 
