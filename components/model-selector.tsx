@@ -149,19 +149,24 @@ export function ModelSelector({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className="min-w-[400px] max-w-[500px] max-h-[600px] overflow-y-auto"
+        className="min-w-[420px] max-w-[520px] max-h-[650px] overflow-y-auto"
       >
         {Object.entries(modelsByProvider).map(([provider, models]) => (
           <div key={provider}>
-            <DropdownMenuLabel className="flex items-center gap-2 px-3 py-2">
-              {providerIcons[provider as Provider]}
-              <span className="font-medium">
-                {providers[provider as Provider].name}
-              </span>
-              <span className="text-xs text-muted-foreground font-normal">
-                {providers[provider as Provider].description}
-              </span>
+            <DropdownMenuLabel className="flex items-center gap-2 px-3 py-2 bg-muted/30 sticky top-0 z-10">
+              <div className="flex items-center gap-2 flex-1">
+                {providerIcons[provider as Provider]}
+                <span className="font-semibold">
+                  {providers[provider as Provider].name}
+                </span>
+                <Badge variant="outline" className="text-xs ml-auto">
+                  {models.length} models
+                </Badge>
+              </div>
             </DropdownMenuLabel>
+            <div className="px-3 pb-2 text-xs text-muted-foreground">
+              {providers[provider as Provider].description}
+            </div>
 
             {models.map((chatModel) => {
               const { id } = chatModel;
@@ -249,10 +254,14 @@ export function ModelSelector({
           </div>
         ))}
 
-        <div className="px-3 py-2 text-xs text-muted-foreground border-t">
-          <div className="flex items-center justify-between">
-            <span>Available models: {availableChatModels.length}</span>
-            <span className="capitalize">{userType} tier</span>
+        <div className="px-3 py-2 text-xs text-muted-foreground border-t bg-muted/20">
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-medium">Available models: {availableChatModels.length}</span>
+            <span className="capitalize font-medium">{userType} tier</span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span>Providers: {Object.keys(modelsByProvider).length}</span>
+            <span>Free: {availableChatModels.filter(m => m.tier === 'free').length} • Premium: {availableChatModels.filter(m => m.tier === 'premium').length} • Pro: {availableChatModels.filter(m => m.tier === 'pro').length}</span>
           </div>
         </div>
       </DropdownMenuContent>

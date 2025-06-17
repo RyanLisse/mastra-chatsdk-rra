@@ -187,6 +187,8 @@ export function ModelSettings({
               <ProviderSelector
                 selectedProvider={selectedProvider}
                 onProviderChange={setSelectedProvider}
+                availableModels={availableChatModels}
+                showModelCount={true}
                 className="flex-1"
               />
               <Button

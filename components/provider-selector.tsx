@@ -11,6 +11,7 @@ import {
 import { providers, type Provider } from '@/lib/ai/models';
 import { cn } from '@/lib/utils';
 import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
+import { Badge } from '@/components/ui/badge';
 import { Brain, Sparkles, Star, Zap } from 'lucide-react';
 
 const providerIcons: Record<Provider, React.ReactNode> = {
@@ -32,6 +33,8 @@ interface ProviderSelectorProps {
   onProviderChange: (provider: Provider) => void;
   className?: string;
   disabled?: boolean;
+  availableModels?: any[];
+  showModelCount?: boolean;
 }
 
 export function ProviderSelector({
@@ -39,6 +42,8 @@ export function ProviderSelector({
   onProviderChange,
   className,
   disabled = false,
+  availableModels = [],
+  showModelCount = true,
 }: ProviderSelectorProps) {
   const [open, setOpen] = useState(false);
 
@@ -66,7 +71,7 @@ export function ProviderSelector({
           <ChevronDownIcon />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-[280px]">
+      <DropdownMenuContent align="start" className="min-w-[320px] max-w-[400px]">
         {Object.entries(providers).map(([providerId, providerData]) => {
           const provider = providerId as Provider;
           const isSelected = provider === selectedProvider;
@@ -93,12 +98,30 @@ export function ProviderSelector({
                       {providerIcons[provider]}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium mb-1">
-                        {providerData.name}
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium">{providerData.name}</span>
+                        {showModelCount && availableModels.length > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            {availableModels.filter(m => m.provider === provider).length} models
+                          </Badge>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-2">
                         {providerData.description}
                       </p>
+                      {showModelCount && availableModels.length > 0 && (
+                        <div className="flex items-center gap-2 mt-2 text-xs">
+                          {getProviderStats(provider, availableModels).hasVision && (
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0.5">Vision</Badge>
+                          )}
+                          {getProviderStats(provider, availableModels).hasReasoning && (
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0.5">Reasoning</Badge>
+                          )}
+                          {getProviderStats(provider, availableModels).hasTools && (
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0.5">Tools</Badge>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 

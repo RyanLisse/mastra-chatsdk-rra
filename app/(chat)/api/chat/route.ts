@@ -258,15 +258,18 @@ export async function POST(request: Request) {
                         id: assistantId,
                         chatId: id,
                         role: assistantMessage.role,
-                        parts: assistantMessage.parts,
+                        // Transform AI SDK message format to database schema
+                        parts: assistantMessage.parts || [
+                          { type: 'text', text: assistantMessage.content || '' }
+                        ],
                         attachments:
                           assistantMessage.experimental_attachments ?? [],
                         createdAt: new Date(),
                       },
                     ],
                   });
-                } catch (_) {
-                  console.error('Failed to save chat');
+                } catch (error) {
+                  console.error('Failed to save chat:', error);
                 }
               }
             },

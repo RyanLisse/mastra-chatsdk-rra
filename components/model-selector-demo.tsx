@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { ModelSelector } from './model-selector';
 import { ProviderSelector } from './provider-selector';
 import { ModelSettings } from './model-settings';
+import { ProviderOverview } from './provider-overview';
+import { ModelGrid } from './model-grid';
 import { useModelSettings } from '@/hooks/use-model-settings';
 import { providers, type Provider } from '@/lib/ai/models';
 import type { Session } from 'next-auth';
@@ -47,6 +49,8 @@ export function ModelSelectorDemo({
 }: ModelSelectorDemoProps) {
   const [selectedProvider, setSelectedProvider] = useState<Provider>('openai');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
+  const [showProviderOverview, setShowProviderOverview] = useState(false);
 
   const {
     selectedModel,
@@ -184,6 +188,8 @@ export function ModelSelectorDemo({
             <ProviderSelector
               selectedProvider={selectedProvider}
               onProviderChange={setSelectedProvider}
+              availableModels={availableModels}
+              showModelCount={true}
               className="w-full max-w-md"
             />
           </div>
@@ -278,6 +284,66 @@ export function ModelSelectorDemo({
             ))}
           </div>
         </CardContent>
+      </Card>
+
+      {/* Enhanced Model Grid View */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center justify-between">
+            Enhanced Model Grid
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowGrid(!showGrid)}
+            >
+              {showGrid ? 'Hide' : 'Show'}
+            </Button>
+          </CardTitle>
+          <CardDescription>
+            Comprehensive view of all available models with search and filtering
+          </CardDescription>
+        </CardHeader>
+        {showGrid && (
+          <CardContent>
+            <ModelGrid
+              session={session}
+              selectedModelId={selectedModelId}
+              onModelSelect={onModelChange}
+              compact={true}
+            />
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Provider Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center justify-between">
+            Provider Overview
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowProviderOverview(!showProviderOverview)}
+            >
+              {showProviderOverview ? 'Hide' : 'Show'}
+            </Button>
+          </CardTitle>
+          <CardDescription>
+            Detailed breakdown of AI providers and their model ecosystems
+          </CardDescription>
+        </CardHeader>
+        {showProviderOverview && (
+          <CardContent>
+            <ProviderOverview
+              session={session}
+              selectedProvider={selectedModel?.provider}
+              onProviderSelect={(provider) => {
+                switchToProvider(provider);
+                setSelectedProvider(provider);
+              }}
+            />
+          </CardContent>
+        )}
       </Card>
 
       {/* User Tier Information */}
