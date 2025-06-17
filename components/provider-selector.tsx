@@ -71,7 +71,10 @@ export function ProviderSelector({
           <ChevronDownIcon />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-[320px] max-w-[400px]">
+      <DropdownMenuContent
+        align="start"
+        className="min-w-[320px] max-w-[400px]"
+      >
         {Object.entries(providers).map(([providerId, providerData]) => {
           const provider = providerId as Provider;
           const isSelected = provider === selectedProvider;
@@ -102,7 +105,12 @@ export function ProviderSelector({
                         <span className="font-medium">{providerData.name}</span>
                         {showModelCount && availableModels.length > 0 && (
                           <Badge variant="outline" className="text-xs">
-                            {availableModels.filter(m => m.provider === provider).length} models
+                            {
+                              availableModels.filter(
+                                (m) => m.provider === provider,
+                              ).length
+                            }{' '}
+                            models
                           </Badge>
                         )}
                       </div>
@@ -111,14 +119,32 @@ export function ProviderSelector({
                       </p>
                       {showModelCount && availableModels.length > 0 && (
                         <div className="flex items-center gap-2 mt-2 text-xs">
-                          {getProviderStats(provider, availableModels).hasVision && (
-                            <Badge variant="secondary" className="text-xs px-1.5 py-0.5">Vision</Badge>
+                          {getProviderStats(provider, availableModels)
+                            .hasVision && (
+                            <Badge
+                              variant="secondary"
+                              className="text-xs px-1.5 py-0.5"
+                            >
+                              Vision
+                            </Badge>
                           )}
-                          {getProviderStats(provider, availableModels).hasReasoning && (
-                            <Badge variant="secondary" className="text-xs px-1.5 py-0.5">Reasoning</Badge>
+                          {getProviderStats(provider, availableModels)
+                            .hasReasoning && (
+                            <Badge
+                              variant="secondary"
+                              className="text-xs px-1.5 py-0.5"
+                            >
+                              Reasoning
+                            </Badge>
                           )}
-                          {getProviderStats(provider, availableModels).hasTools && (
-                            <Badge variant="secondary" className="text-xs px-1.5 py-0.5">Tools</Badge>
+                          {getProviderStats(provider, availableModels)
+                            .hasTools && (
+                            <Badge
+                              variant="secondary"
+                              className="text-xs px-1.5 py-0.5"
+                            >
+                              Tools
+                            </Badge>
                           )}
                         </div>
                       )}

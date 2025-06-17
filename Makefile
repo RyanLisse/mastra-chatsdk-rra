@@ -110,18 +110,27 @@ test-setup: ## Set up test environment and database
 
 test-stagehand: test-setup ## Run Stagehand tests (AI-powered E2E tests)
 	@echo "$(BLUE)Running Stagehand tests...$(NC)"
-	PLAYWRIGHT=true bun test tests/stagehand/
+	bun run test:stagehand
 
 test-playwright: test-setup ## Run Playwright tests
 	@echo "$(BLUE)Running Playwright tests...$(NC)"
-	PLAYWRIGHT=true bun run playwright test
+	bun run test:e2e
 
-test-unit: ## Run unit tests
+test-unit: ## Run unit tests (safe subset)
 	@echo "$(BLUE)Running unit tests...$(NC)"
-	bun test --exclude tests/stagehand/ --exclude tests/e2e/ --exclude tests/routes/
+	bun run test:unit:safe
 
-test-all: test-setup test-stagehand test-playwright ## Run all tests (Stagehand + Playwright)
+test-unit-all: ## Run all unit tests (including database-dependent)
+	@echo "$(BLUE)Running all unit tests...$(NC)"
+	bun run test:unit
+
+
+test-all: test-setup test-unit test-stagehand test-playwright ## Run all tests (Stagehand + Playwright)
 	@echo "$(GREEN)All tests completed!$(NC)"
+
+test-all-quick: ## Run quick tests (safe subset only)
+	@echo "$(BLUE)Running quick test suite...$(NC)"
+	bun run test:all:quick
 
 test-watch: ## Run tests in watch mode
 	@echo "$(BLUE)Running tests in watch mode...$(NC)"

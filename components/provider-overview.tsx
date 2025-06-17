@@ -138,7 +138,10 @@ export function ProviderOverview({
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
               <span className="text-2xl font-bold">
-                {availableModels.filter((m) => m.capabilities.supportsVision).length}
+                {
+                  availableModels.filter((m) => m.capabilities.supportsVision)
+                    .length
+                }
               </span>
             </div>
             <p className="text-xs text-muted-foreground">With Vision</p>
@@ -281,7 +284,7 @@ export function ProviderOverview({
               {/* Action Button */}
               {onProviderSelect && (
                 <Button
-                  variant={provider.isSelected ? "default" : "outline"}
+                  variant={provider.isSelected ? 'default' : 'outline'}
                   size="sm"
                   className="w-full"
                   onClick={(e) => {
@@ -289,7 +292,9 @@ export function ProviderOverview({
                     onProviderSelect(provider.id);
                   }}
                 >
-                  {provider.isSelected ? 'Currently Selected' : `Switch to ${provider.name}`}
+                  {provider.isSelected
+                    ? 'Currently Selected'
+                    : `Switch to ${provider.name}`}
                 </Button>
               )}
             </CardContent>
@@ -317,7 +322,9 @@ export function ProviderOverview({
               <div className="text-2xl font-bold text-blue-600">
                 {availableModels.filter((m) => m.tier === 'premium').length}
               </div>
-              <div className="text-sm text-muted-foreground">Premium Models</div>
+              <div className="text-sm text-muted-foreground">
+                Premium Models
+              </div>
             </div>
             <div>
               <div className="text-2xl font-bold text-purple-600">

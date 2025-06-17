@@ -66,9 +66,9 @@ export default defineConfig({
   },
 
   /* Configure global timeout for each test */
-  timeout: 120 * 1000, // 120 seconds - increased for complex E2E operations
+  timeout: 60 * 1000, // 60 seconds - reduced from 120s to prevent hanging
   expect: {
-    timeout: 45 * 1000, // 45 seconds - increased for slow operations
+    timeout: 20 * 1000, // 20 seconds - reduced from 45s for faster failure detection
   },
 
   /* Configure projects */
@@ -123,11 +123,17 @@ export default defineConfig({
   webServer: {
     command: 'bun run dev',
     url: `${baseURL}`,
-    timeout: 120 * 1000, // Increased to 120s for slow startup
+    timeout: 60 * 1000, // Reduced to 60s to fail faster if server won't start
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',
     stderr: 'pipe',
     // Add health check endpoint
     ignoreHTTPSErrors: true,
+    // Additional options for faster startup detection
+    port: Number(PORT),
+    env: {
+      NODE_ENV: 'test',
+      PLAYWRIGHT: 'true',
+    },
   },
 });

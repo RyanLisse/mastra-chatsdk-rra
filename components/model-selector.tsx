@@ -256,12 +256,20 @@ export function ModelSelector({
 
         <div className="px-3 py-2 text-xs text-muted-foreground border-t bg-muted/20">
           <div className="flex items-center justify-between mb-1">
-            <span className="font-medium">Available models: {availableChatModels.length}</span>
+            <span className="font-medium">
+              Available models: {availableChatModels.length}
+            </span>
             <span className="capitalize font-medium">{userType} tier</span>
           </div>
           <div className="flex items-center justify-between text-xs">
             <span>Providers: {Object.keys(modelsByProvider).length}</span>
-            <span>Free: {availableChatModels.filter(m => m.tier === 'free').length} • Premium: {availableChatModels.filter(m => m.tier === 'premium').length} • Pro: {availableChatModels.filter(m => m.tier === 'pro').length}</span>
+            <span>
+              Free:{' '}
+              {availableChatModels.filter((m) => m.tier === 'free').length} •
+              Premium:{' '}
+              {availableChatModels.filter((m) => m.tier === 'premium').length} •
+              Pro: {availableChatModels.filter((m) => m.tier === 'pro').length}
+            </span>
           </div>
         </div>
       </DropdownMenuContent>

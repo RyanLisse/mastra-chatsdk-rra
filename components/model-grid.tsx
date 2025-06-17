@@ -32,7 +32,6 @@ import {
   Crown,
   Search,
   Filter,
-  SortAsc,
   CheckCircle,
 } from 'lucide-react';
 
@@ -73,8 +72,12 @@ export function ModelGrid({
 }: ModelGridProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterProvider, setFilterProvider] = useState<Provider | 'all'>('all');
-  const [filterTier, setFilterTier] = useState<'free' | 'premium' | 'pro' | 'all'>('all');
-  const [sortBy, setSortBy] = useState<'name' | 'tier' | 'provider' | 'context'>('provider');
+  const [filterTier, setFilterTier] = useState<
+    'free' | 'premium' | 'pro' | 'all'
+  >('all');
+  const [sortBy, setSortBy] = useState<
+    'name' | 'tier' | 'provider' | 'context'
+  >('provider');
 
   const userType = session.user.type;
   const { availableChatModelIds } = entitlementsByUserType[userType];
@@ -92,7 +95,9 @@ export function ModelGrid({
         (model) =>
           model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           model.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          providers[model.provider].name.toLowerCase().includes(searchTerm.toLowerCase()),
+          providers[model.provider].name
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -111,11 +116,17 @@ export function ModelGrid({
       switch (sortBy) {
         case 'name':
           return a.name.localeCompare(b.name);
-        case 'tier':
+        case 'tier': {
           const tierOrder = { free: 0, premium: 1, pro: 2 };
-          return (tierOrder[a.tier || 'free'] || 0) - (tierOrder[b.tier || 'free'] || 0);
+          return (
+            (tierOrder[a.tier || 'free'] || 0) -
+            (tierOrder[b.tier || 'free'] || 0)
+          );
+        }
         case 'provider':
-          return providers[a.provider].name.localeCompare(providers[b.provider].name);
+          return providers[a.provider].name.localeCompare(
+            providers[b.provider].name,
+          );
         case 'context':
           return b.capabilities.contextWindow - a.capabilities.contextWindow;
         default:
@@ -155,7 +166,8 @@ export function ModelGrid({
               AI Models ({filteredAndSortedModels.length})
             </h2>
             <p className="text-sm text-muted-foreground">
-              Choose from {availableModels.length} available models across {Object.keys(providers).length} providers
+              Choose from {availableModels.length} available models across{' '}
+              {Object.keys(providers).length} providers
             </p>
           </div>
         </div>
@@ -173,7 +185,12 @@ export function ModelGrid({
           </div>
 
           <div className="flex gap-2">
-            <Select value={filterProvider} onValueChange={(value) => setFilterProvider(value as Provider | 'all')}>
+            <Select
+              value={filterProvider}
+              onValueChange={(value) =>
+                setFilterProvider(value as Provider | 'all')
+              }
+            >
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Provider" />
               </SelectTrigger>
@@ -187,7 +204,10 @@ export function ModelGrid({
               </SelectContent>
             </Select>
 
-            <Select value={filterTier} onValueChange={(value) => setFilterTier(value as any)}>
+            <Select
+              value={filterTier}
+              onValueChange={(value) => setFilterTier(value as any)}
+            >
               <SelectTrigger className="w-24">
                 <SelectValue placeholder="Tier" />
               </SelectTrigger>
@@ -199,7 +219,10 @@ export function ModelGrid({
               </SelectContent>
             </Select>
 
-            <Select value={sortBy} onValueChange={(value) => setSortBy(value as any)}>
+            <Select
+              value={sortBy}
+              onValueChange={(value) => setSortBy(value as any)}
+            >
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
@@ -215,15 +238,17 @@ export function ModelGrid({
       </div>
 
       {/* Model Grid */}
-      <div className={cn(
-        'grid gap-4',
-        compact 
-          ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-          : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
-      )}>
+      <div
+        className={cn(
+          'grid gap-4',
+          compact
+            ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+            : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3',
+        )}
+      >
         {filteredAndSortedModels.map((model) => {
           const isSelected = selectedModelId === model.id;
-          
+
           return (
             <Card
               key={model.id}
@@ -246,7 +271,12 @@ export function ModelGrid({
                       {providerIcons[model.provider]}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <CardTitle className={cn('text-base truncate', compact && 'text-sm')}>
+                      <CardTitle
+                        className={cn(
+                          'text-base truncate',
+                          compact && 'text-sm',
+                        )}
+                      >
                         {model.name}
                       </CardTitle>
                       <div className="flex items-center gap-1 mt-1">
@@ -258,7 +288,9 @@ export function ModelGrid({
                             variant="secondary"
                             className={cn('text-xs', tierColors[model.tier])}
                           >
-                            {model.tier === 'pro' && <Crown className="h-2 w-2 mr-1" />}
+                            {model.tier === 'pro' && (
+                              <Crown className="h-2 w-2 mr-1" />
+                            )}
                             {model.tier.toUpperCase()}
                           </Badge>
                         )}
@@ -272,26 +304,37 @@ export function ModelGrid({
               </CardHeader>
 
               <CardContent className={cn('space-y-3', compact && 'space-y-2')}>
-                <CardDescription className={cn('text-sm line-clamp-2', compact && 'text-xs')}>
+                <CardDescription
+                  className={cn('text-sm line-clamp-2', compact && 'text-xs')}
+                >
                   {model.description}
                 </CardDescription>
 
                 {/* Capabilities */}
                 <div className="flex flex-wrap gap-1">
                   {model.capabilities.supportsVision && (
-                    <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs px-1.5 py-0.5"
+                    >
                       <Eye className="h-2 w-2 mr-1" />
                       Vision
                     </Badge>
                   )}
                   {model.capabilities.supportsReeasoning && (
-                    <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs px-1.5 py-0.5"
+                    >
                       <Brain className="h-2 w-2 mr-1" />
                       Reasoning
                     </Badge>
                   )}
                   {model.capabilities.supportsTools && (
-                    <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs px-1.5 py-0.5"
+                    >
                       <Wrench className="h-2 w-2 mr-1" />
                       Tools
                     </Badge>
@@ -303,14 +346,16 @@ export function ModelGrid({
                   <div className="flex justify-between">
                     <span>Context Window:</span>
                     <span className="font-medium">
-                      {formatContextWindow(model.capabilities.contextWindow)} tokens
+                      {formatContextWindow(model.capabilities.contextWindow)}{' '}
+                      tokens
                     </span>
                   </div>
                   {model.capabilities.maxTokens && (
                     <div className="flex justify-between">
                       <span>Max Output:</span>
                       <span className="font-medium">
-                        {formatContextWindow(model.capabilities.maxTokens)} tokens
+                        {formatContextWindow(model.capabilities.maxTokens)}{' '}
+                        tokens
                       </span>
                     </div>
                   )}
@@ -327,7 +372,7 @@ export function ModelGrid({
                 {/* Action Button */}
                 {onModelSelect && (
                   <Button
-                    variant={isSelected ? "default" : "outline"}
+                    variant={isSelected ? 'default' : 'outline'}
                     size="sm"
                     className="w-full"
                     onClick={(e) => {
@@ -358,7 +403,10 @@ export function ModelGrid({
       {/* Model Count Summary */}
       <div className="flex justify-center">
         <div className="flex items-center gap-4 text-sm text-muted-foreground bg-muted/30 px-4 py-2 rounded-lg">
-          <span>Showing {filteredAndSortedModels.length} of {availableModels.length} models</span>
+          <span>
+            Showing {filteredAndSortedModels.length} of {availableModels.length}{' '}
+            models
+          </span>
           <span>•</span>
           <span>{Object.keys(providers).length} providers</span>
           <span>•</span>

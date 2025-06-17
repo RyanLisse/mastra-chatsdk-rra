@@ -260,7 +260,10 @@ export async function POST(request: Request) {
                         role: assistantMessage.role,
                         // Transform AI SDK message format to database schema
                         parts: assistantMessage.parts || [
-                          { type: 'text', text: assistantMessage.content || '' }
+                          {
+                            type: 'text',
+                            text: assistantMessage.content || '',
+                          },
                         ],
                         attachments:
                           assistantMessage.experimental_attachments ?? [],
