@@ -98,12 +98,13 @@ export function setupGracefulShutdown(): void {
   applicationSignalHandlersRegistered = true;
   console.log('🔧 Setting up application graceful shutdown handlers...');
 
-  const shutdown = async (signal: string, exitCode = 0) => {
+  const shutdown = async (signal: string, initialExitCode = 0) => {
     if (applicationIsShuttingDown) {
       console.log(`⚠️  Application already shutting down, ignoring ${signal}`);
       return;
     }
 
+    let exitCode = initialExitCode;
     applicationIsShuttingDown = true;
     console.log(`🛑 Application received ${signal}, cleaning up database connections...`);
     

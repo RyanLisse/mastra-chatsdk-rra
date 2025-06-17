@@ -13,12 +13,13 @@ let signalHandlersRegistered = false;
 /**
  * Graceful shutdown handler for Playwright global teardown
  */
-async function gracefulPlaywrightTeardownShutdown(signal: string, exitCode = 0): Promise<void> {
+async function gracefulPlaywrightTeardownShutdown(signal: string, initialExitCode = 0): Promise<void> {
   if (isShuttingDown) {
     console.log(`⚠️  Already shutting down, ignoring ${signal}`);
     return;
   }
 
+  let exitCode = initialExitCode;
   isShuttingDown = true;
   console.log(`\n🛑 Playwright global-teardown received ${signal} - cleaning up...`);
 

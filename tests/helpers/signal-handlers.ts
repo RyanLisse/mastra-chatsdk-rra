@@ -76,7 +76,7 @@ async function executeShutdownCallbacks(): Promise<void> {
  */
 export async function gracefulShutdown(
   signal: string, 
-  exitCode = 0,
+  initialExitCode = 0,
   context = 'test'
 ): Promise<void> {
   if (isShuttingDown) {
@@ -84,6 +84,7 @@ export async function gracefulShutdown(
     return;
   }
 
+  let exitCode = initialExitCode;
   isShuttingDown = true;
   const shutdownStartTime = Date.now();
   const maxShutdownTime = 15000; // 15 seconds max shutdown time

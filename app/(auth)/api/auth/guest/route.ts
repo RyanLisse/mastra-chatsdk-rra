@@ -5,10 +5,34 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const redirectUrl = searchParams.get('redirectUrl') || '/';
+  let redirectUrl = searchParams.get('redirectUrl') || '/';
+
+  // Prevent infinite redirect loops by checking if redirectUrl points back to this endpoint
+  const currentPath = '/api/auth/guest';
+  if (redirectUrl.includes(currentPath)) {
+    console.log('Detected potential infinite redirect, defaulting to home page');
+    redirectUrl = '/';
+  }
+
+  // Ensure redirectUrl is a valid path and not a full URL that could cause issues
+  try {
+    const url = new URL(redirectUrl, request.url);
+    // Only allow same-origin redirects to prevent open redirect vulnerabilities
+    if (url.origin !== new URL(request.url).origin) {
+      console.log('Cross-origin redirect detected, defaulting to home page');
+      redirectUrl = '/';
+    }
+  } catch {
+    // If redirectUrl is not a valid URL, treat it as a relative path
+    // But ensure it starts with / to be a valid path
+    if (!redirectUrl.startsWith('/')) {
+      redirectUrl = `/${redirectUrl}`;
+    }
+  }
 
   console.log('Guest auth route called with:', {
-    redirectUrl,
+    originalRedirectUrl: searchParams.get('redirectUrl'),
+    sanitizedRedirectUrl: redirectUrl,
     isTestEnvironment,
   });
 

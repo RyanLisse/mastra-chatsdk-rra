@@ -18,11 +18,11 @@ import { test, expect } from '@playwright/test';
 import { z } from 'zod';
 
 // Import Stagehand conditionally to handle potential import issues
-let Stagehand: any;
+let stagehand: any;
 let stagehandAvailable = false;
 
 try {
-  Stagehand = require('stagehand').Stagehand;
+  stagehand = require('stagehand');
   stagehandAvailable = true;
 } catch (error) {
   console.warn(
@@ -237,7 +237,7 @@ test.describe(stagehandAvailable
   test.beforeAll(async () => {
     if (stagehandAvailable) {
       try {
-        stagehand = new Stagehand({
+        stagehand = await stagehand.launch({
           env: 'LOCAL',
           verbose: 0, // Reduce verbosity for tests
           debugDom: false,

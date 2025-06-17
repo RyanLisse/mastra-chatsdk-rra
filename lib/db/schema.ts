@@ -10,6 +10,7 @@ import {
   foreignKey,
   boolean,
   serial,
+  integer,
   vector,
 } from 'drizzle-orm/pg-core';
 
@@ -208,8 +209,8 @@ export const documentProcessing = pgTable('DocumentProcessing', {
   })
     .notNull()
     .default('upload'),
-  progress: serial('progress').default(0), // 0-100
-  chunkCount: serial('chunkCount').default(0),
+  progress: integer('progress').default(0), // 0-100
+  chunkCount: integer('chunkCount').default(0),
   errorMessage: text('errorMessage'),
   metadata: json('metadata'), // File metadata, processing settings, etc.
   userId: uuid('userId')

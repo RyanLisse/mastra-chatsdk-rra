@@ -20,12 +20,13 @@ config({ path: '.env.test' });
 /**
  * Graceful shutdown handler for Playwright global setup
  */
-async function gracefulPlaywrightShutdown(signal: string, exitCode = 0): Promise<void> {
+async function gracefulPlaywrightShutdown(signal: string, initialExitCode = 0): Promise<void> {
   if (isShuttingDown) {
     console.log(`⚠️  Already shutting down, ignoring ${signal}`);
     return;
   }
 
+  let exitCode = initialExitCode;
   isShuttingDown = true;
   console.log(`\n🛑 Playwright global-setup received ${signal} - cleaning up...`);
 
