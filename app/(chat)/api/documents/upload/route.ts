@@ -12,8 +12,8 @@ import {
 import { DocumentProcessor } from '@/lib/rag/processor';
 import { progressTracker } from '@/lib/rag/progress';
 
-// Configure for larger file uploads (50MB)
-export const maxDuration = 300; // 5 minutes timeout
+// Configure for larger file uploads (50MB) - reduced for Vercel hobby plan
+export const maxDuration = 60; // 60 seconds timeout (Vercel hobby plan limit)
 
 export async function POST(request: Request) {
   try {
