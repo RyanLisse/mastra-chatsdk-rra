@@ -1,3 +1,19 @@
+/**
+ * Stagehand Chat Tests with Robust Browser Process Cleanup
+ * 
+ * This test suite includes comprehensive browser process management to prevent hanging:
+ * - Force browser process termination after 4-second timeout
+ * - SIGTERM/SIGKILL process handling for stubborn browser processes
+ * - Emergency cleanup on test failures
+ * - Process signal handlers for graceful shutdown
+ * - Per-test cleanup to prevent resource leaks
+ * 
+ * The cleanup system uses a layered approach:
+ * 1. Graceful cleanup (page.close() → browser.close() → stagehand.close())
+ * 2. Force termination with SIGTERM after 4s timeout
+ * 3. SIGKILL as last resort after additional 1s delay
+ * 4. Emergency cleanup on any test failure
+ */
 import { test, expect } from '@playwright/test';
 import { z } from 'zod';
 
@@ -22,11 +38,201 @@ if (!isPlaywrightEnv) {
   stagehandAvailable = false;
 }
 
+/**
+ * Force cleanup Stagehand browser processes with proper termination
+ */
+async function forceCleanupStagehand(stagehand: any): Promise<void> {
+  console.log('🧹 Starting Stagehand cleanup process...');
+  
+  let cleanupComplete = false;
+  let browserProcess: any = null;
+  
+  try {
+    // Extract browser process if available from multiple potential sources
+    if (stagehand.page?.browser) {
+      browserProcess = stagehand.page.browser().process();
+    } else if (stagehand.browser) {
+      browserProcess = stagehand.browser.process();
+    } else if (stagehand._browser) {
+      // Some Stagehand versions might use _browser
+      browserProcess = stagehand._browser.process();
+    }
+    
+    // Attempt graceful cleanup first
+    const gracefulCleanup = async (): Promise<void> => {
+      console.log('⏳ Attempting graceful Stagehand cleanup...');
+      
+      // Close pages first
+      if (stagehand.page && !stagehand.page.isClosed()) {
+        await stagehand.page.close();
+        console.log('  📄 Page closed');
+      }
+      
+      // Close all browser contexts if available
+      if (stagehand.browser && !stagehand.browser.isClosed()) {
+        const contexts = stagehand.browser.contexts();
+        for (const context of contexts) {
+          await context.close();
+        }
+        console.log('  🔗 Browser contexts closed');
+      }
+      
+      // Then close the browser
+      if (stagehand.browser && !stagehand.browser.isClosed()) {
+        await stagehand.browser.close();
+        console.log('  🌐 Browser closed');
+      }
+      
+      // Finally close stagehand itself
+      if (stagehand.close) {
+        await stagehand.close();
+        console.log('  🎭 Stagehand instance closed');
+      }
+      
+      cleanupComplete = true;
+      console.log('✅ Graceful Stagehand cleanup completed');
+    };
+    
+    // Create timeout for force termination
+    const forceTermination = new Promise<void>((resolve, reject) => {
+      const timeoutId = setTimeout(async () => {
+        if (!cleanupComplete) {
+          console.log('⚠️  Graceful cleanup timed out, forcing termination...');
+          
+          try {
+            // Force kill browser process if it exists
+            if (browserProcess?.pid) {
+              console.log(`🔥 Force killing browser process PID: ${browserProcess.pid}`);
+              
+              // Try SIGTERM first
+              process.kill(browserProcess.pid, 'SIGTERM');
+              
+              // Wait briefly, then use SIGKILL if still alive
+              setTimeout(() => {
+                try {
+                  process.kill(browserProcess.pid, 'SIGKILL');
+                  console.log(`💀 Force killed browser process with SIGKILL`);
+                } catch (killError) {
+                  // Process might already be dead
+                  console.log('🔇 Browser process already terminated');
+                }
+              }, 1000);
+            }
+            
+            // Force close any remaining handles
+            if (stagehand.browser) {
+              try {
+                await stagehand.browser.close();
+              } catch (error) {
+                console.warn('Failed to close browser handle:', error);
+              }
+            }
+            
+            console.log('💥 Force termination completed');
+            resolve();
+          } catch (error) {
+            console.error('Error during force termination:', error);
+            reject(error);
+          }
+        } else {
+          resolve();
+        }
+      }, 4000); // 4 second timeout for force termination
+      
+      // Clear timeout if graceful cleanup succeeds
+      gracefulCleanup().then(() => {
+        clearTimeout(timeoutId);
+        resolve();
+      }).catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+    });
+    
+    // Wait for either graceful cleanup or force termination
+    await forceTermination;
+    
+  } catch (error) {
+    console.error('❌ Error during Stagehand cleanup:', error);
+    
+    // Last resort: try to kill any remaining browser processes
+    if (browserProcess?.pid) {
+      try {
+        process.kill(browserProcess.pid, 'SIGKILL');
+        console.log('🗡️  Emergency kill of browser process completed');
+      } catch (killError) {
+        console.warn('Failed emergency kill:', killError);
+      }
+    }
+    
+    // Don't throw the error to prevent test failures from cleanup issues
+    console.warn('⚠️  Cleanup completed with errors, continuing...');
+  }
+}
+
+// Global registry for tracking active stagehand instances
+const activeStagehandInstances = new Set<any>();
+
+/**
+ * Handle process termination signals to ensure proper cleanup
+ */
+function setupProcessSignalHandlers(): void {
+  const signals = ['SIGTERM', 'SIGINT', 'SIGQUIT'] as const;
+  
+  signals.forEach(signal => {
+    process.on(signal, async () => {
+      console.log(`📡 Received ${signal}, cleaning up Stagehand processes...`);
+      
+      // Force cleanup all active stagehand instances
+      const cleanupPromises = Array.from(activeStagehandInstances).map(stagehandInstance => 
+        forceCleanupStagehand(stagehandInstance).catch(error => 
+          console.warn('Failed to cleanup stagehand instance:', error)
+        )
+      );
+      
+      await Promise.allSettled(cleanupPromises);
+      
+      // Exit after cleanup
+      process.exit(0);
+    });
+  });
+}
+
+/**
+ * Wrapper for test execution with automatic cleanup on failure
+ */
+async function runTestWithCleanup(testFn: () => Promise<void>, stagehandInstance?: any): Promise<void> {
+  try {
+    await testFn();
+  } catch (error) {
+    console.error('❌ Test failed, attempting emergency cleanup before re-throwing:', error);
+    
+    // Attempt emergency cleanup on test failure
+    if (stagehandInstance) {
+      try {
+        console.log('🚨 Running emergency cleanup due to test failure...');
+        await forceCleanupStagehand(stagehandInstance);
+      } catch (cleanupError) {
+        console.warn('Emergency cleanup failed:', cleanupError);
+      }
+    }
+    
+    // Re-throw the original test error
+    throw error;
+  }
+}
+
+// Setup signal handlers
+setupProcessSignalHandlers();
+
 test.describe(stagehandAvailable
   ? 'RoboRail Assistant Chat Tests'
   : 'RoboRail Assistant Chat Tests (Skipped)', () => {
   test.skip(!stagehandAvailable, 'Stagehand not available');
   let stagehand: any;
+  
+  // Track cleanup status to prevent multiple cleanup attempts
+  let cleanupInProgress = false;
 
   test.beforeAll(async () => {
     if (stagehandAvailable) {
@@ -60,6 +266,9 @@ test.describe(stagehandAvailable
             ),
           ),
         ]);
+        
+        // Register stagehand instance for global cleanup
+        activeStagehandInstances.add(stagehand);
       } catch (error) {
         console.error('Failed to initialize Stagehand:', error);
         stagehandAvailable = false;
@@ -69,14 +278,36 @@ test.describe(stagehandAvailable
   });
 
   test.afterAll(async () => {
-    if (stagehand) {
+    if (stagehand && !cleanupInProgress) {
+      cleanupInProgress = true;
+      console.log('🏁 Running final cleanup in afterAll...');
+      await forceCleanupStagehand(stagehand);
+      
+      // Unregister from global cleanup
+      activeStagehandInstances.delete(stagehand);
+    }
+  });
+
+  // Add afterEach hook for cleanup in case individual tests fail
+  test.afterEach(async () => {
+    if (stagehand?.page && !cleanupInProgress) {
       try {
-        await Promise.race([
-          stagehand.close(),
-          new Promise((resolve) => setTimeout(resolve, 5_000)), // Force close after 5s
-        ]);
+        // Close any open pages that might prevent proper cleanup
+        console.log('🔄 Closing page in afterEach...');
+        await stagehand.page.close();
+        
+        // Create a new page for the next test
+        if (stagehand.browser && !stagehand.browser.isClosed()) {
+          stagehand.page = await stagehand.browser.newPage();
+        }
       } catch (error) {
-        console.warn('Error closing Stagehand:', error);
+        console.warn('Error closing page in afterEach:', error);
+        
+        // If page cleanup fails, mark for full cleanup
+        if (!cleanupInProgress) {
+          cleanupInProgress = true;
+          await forceCleanupStagehand(stagehand);
+        }
       }
     }
   });
@@ -90,7 +321,7 @@ test.describe(stagehandAvailable
         return;
       }
 
-      try {
+      await runTestWithCleanup(async () => {
         await stagehand.page.goto('http://localhost:3000', {
           timeout: 10000,
           waitUntil: 'domcontentloaded',
@@ -104,59 +335,63 @@ test.describe(stagehandAvailable
         // Verify the page title or key elements
         const title = await stagehand.page.title();
         expect(title).toContain('Chat');
-      } catch (error) {
-        console.warn('Chat interface test failed:', error);
-        // Skip instead of failing to prevent hanging
-        test.skip();
-      }
+      }, stagehand);
     });
 
     test('should send a message and receive an AI response', async () => {
       test.setTimeout(60000);
-      await stagehand.page.goto('http://localhost:3000');
+      
+      if (!stagehand) {
+        test.skip();
+        return;
+      }
 
-      // Wait for the chat interface to be ready
-      await stagehand.page.waitForSelector('[data-testid="chat-input"]', {
-        timeout: 15000,
-      });
+      await runTestWithCleanup(async () => {
+        await stagehand.page.goto('http://localhost:3000');
 
-      const testMessage = 'Hello, what can you help me with?';
+        // Wait for the chat interface to be ready
+        await stagehand.page.waitForSelector('[data-testid="chat-input"]', {
+          timeout: 15000,
+        });
 
-      // Use Stagehand's AI-powered actions
-      await stagehand.act(`Type "${testMessage}" in the chat input field`);
-      await stagehand.act('Click the send button to submit the message');
+        const testMessage = 'Hello, what can you help me with?';
 
-      // Wait for AI response
-      await stagehand.page.waitForSelector('[data-testid="message-content"]', {
-        timeout: 20000,
-      });
+        // Use Stagehand's AI-powered actions
+        await stagehand.act(`Type "${testMessage}" in the chat input field`);
+        await stagehand.act('Click the send button to submit the message');
 
-      // Extract the conversation using Stagehand's AI extraction
-      const messages = await stagehand.extract(
-        'Get all messages in the conversation with their roles and content',
-        {
-          schema: z.array(
-            z.object({
-              content: z.string(),
-              role: z.enum(['user', 'assistant']),
-            }),
-          ),
-        },
-      );
+        // Wait for AI response
+        await stagehand.page.waitForSelector('[data-testid="message-content"]', {
+          timeout: 20000,
+        });
 
-      // Verify we have user message and assistant response
-      expect(messages.length).toBeGreaterThanOrEqual(2);
+        // Extract the conversation using Stagehand's AI extraction
+        const messages = await stagehand.extract(
+          'Get all messages in the conversation with their roles and content',
+          {
+            schema: z.array(
+              z.object({
+                content: z.string(),
+                role: z.enum(['user', 'assistant']),
+              }),
+            ),
+          },
+        );
 
-      const userMessage = messages.find((msg: any) => msg.role === 'user');
-      const assistantMessage = messages.find(
-        (msg: any) => msg.role === 'assistant',
-      );
+        // Verify we have user message and assistant response
+        expect(messages.length).toBeGreaterThanOrEqual(2);
 
-      expect(userMessage).toBeDefined();
-      expect(userMessage?.content).toContain(testMessage);
+        const userMessage = messages.find((msg: any) => msg.role === 'user');
+        const assistantMessage = messages.find(
+          (msg: any) => msg.role === 'assistant',
+        );
 
-      expect(assistantMessage).toBeDefined();
-      expect(assistantMessage?.content.length).toBeGreaterThan(0);
+        expect(userMessage).toBeDefined();
+        expect(userMessage?.content).toContain(testMessage);
+
+        expect(assistantMessage).toBeDefined();
+        expect(assistantMessage?.content.length).toBeGreaterThan(0);
+      }, stagehand);
     });
 
     test('should handle multi-turn conversation correctly', async () => {

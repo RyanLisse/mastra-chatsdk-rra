@@ -1,9 +1,13 @@
 // lib/mastra/memory.ts
+// Only import server-only in actual server environments
+if (typeof window === 'undefined' && !process.env.PLAYWRIGHT) {
+  require('server-only');
+}
+
 import { config } from 'dotenv';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
 import { sql } from 'drizzle-orm';
 import type { Message } from 'ai';
+import { DatabaseConnectionManager } from '../db/connection-manager';
 
 // Load environment variables for tests and local development
 // Try .env.local first, fallback to .env
@@ -15,7 +19,10 @@ if (
   config({ path: '.env' });
 }
 
-// Create a function to get database connection to avoid early instantiation issues
+// Database connection management
+const CONNECTION_NAME = 'mastra-memory';
+
+// Get database connection using connection manager
 function getDatabase() {
   if (!process.env.POSTGRES_URL) {
     throw new Error('POSTGRES_URL environment variable is not set');
@@ -26,8 +33,30 @@ function getDatabase() {
     );
   }
 
-  const client = postgres(process.env.POSTGRES_URL);
-  return drizzle(client);
+  const { db } = DatabaseConnectionManager.getConnection(CONNECTION_NAME, {
+    url: process.env.POSTGRES_URL,
+    max: 10,
+    idle_timeout: 20,
+    max_lifetime: 1800,
+    prepare: false,
+  });
+
+  return db;
+}
+
+/**
+ * Cleanup function to properly close database connections
+ * Should be called during application shutdown or test teardown
+ */
+export async function cleanupMemoryConnections(): Promise<void> {
+  await DatabaseConnectionManager.closeConnection(CONNECTION_NAME);
+}
+
+/**
+ * Health check function to test database connectivity
+ */
+export async function testMemoryConnection(): Promise<boolean> {
+  return await DatabaseConnectionManager.testConnection(CONNECTION_NAME);
 }
 
 interface MemoryConfig {

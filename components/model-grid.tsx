@@ -79,7 +79,7 @@ export function ModelGrid({
     'name' | 'tier' | 'provider' | 'context'
   >('provider');
 
-  const userType = session.user.type;
+  const userType = session?.user?.type || 'free';
   const { availableChatModelIds } = entitlementsByUserType[userType];
 
   const availableModels = chatModels.filter((model) =>

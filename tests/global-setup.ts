@@ -5,9 +5,80 @@ import {
   runTestMigrations,
   createTestDatabase,
 } from '../lib/db/test-config';
+import { 
+  cleanupAllConnections, 
+  forceCleanupAllConnections 
+} from '../lib/db/cleanup';
+
+// Global flag to prevent multiple signal handler executions
+let isShuttingDown = false;
+let signalHandlersRegistered = false;
 
 // Load test environment
 config({ path: '.env.test' });
+
+/**
+ * Graceful shutdown handler for Playwright global setup
+ */
+async function gracefulPlaywrightShutdown(signal: string, exitCode = 0): Promise<void> {
+  if (isShuttingDown) {
+    console.log(`⚠️  Already shutting down, ignoring ${signal}`);
+    return;
+  }
+
+  isShuttingDown = true;
+  console.log(`\n🛑 Playwright global-setup received ${signal} - cleaning up...`);
+
+  try {
+    await cleanupAllConnections();
+    console.log('✅ Playwright global-setup cleanup completed');
+  } catch (error) {
+    console.error('❌ Error during Playwright global-setup cleanup:', error);
+    try {
+      await forceCleanupAllConnections();
+    } catch (forceError) {
+      console.error('❌ Force cleanup failed:', forceError);
+      exitCode = 1;
+    }
+  }
+
+  process.exit(exitCode);
+}
+
+/**
+ * Register signal handlers for Playwright global setup
+ */
+function registerPlaywrightSetupSignalHandlers(): void {
+  if (signalHandlersRegistered) {
+    return;
+  }
+
+  signalHandlersRegistered = true;
+  console.log('🔧 Registering Playwright global-setup signal handlers...');
+
+  process.on('SIGTERM', () => gracefulPlaywrightShutdown('SIGTERM', 0));
+  process.on('SIGINT', () => gracefulPlaywrightShutdown('SIGINT', 130));
+  process.on('SIGQUIT', () => gracefulPlaywrightShutdown('SIGQUIT', 131));
+
+  process.on('uncaughtException', async (error) => {
+    console.error('💥 Uncaught Exception in Playwright global-setup:', error);
+    if (!isShuttingDown) {
+      await gracefulPlaywrightShutdown('uncaughtException', 1);
+    }
+  });
+
+  process.on('unhandledRejection', async (reason) => {
+    console.error('💥 Unhandled Rejection in Playwright global-setup:', reason);
+    if (!isShuttingDown) {
+      await gracefulPlaywrightShutdown('unhandledRejection', 1);
+    }
+  });
+
+  console.log('✅ Playwright global-setup signal handlers registered');
+}
+
+// Register signal handlers
+registerPlaywrightSetupSignalHandlers();
 
 async function globalSetup(config: FullConfig) {
   console.log('🚀 Starting Playwright global setup...');
@@ -78,6 +149,13 @@ async function globalSetup(config: FullConfig) {
     console.log('📋 Test environment is ready for E2E testing\n');
   } catch (error) {
     console.error('❌ Global setup failed:', error);
+
+    // Cleanup connections before exiting
+    try {
+      await cleanupAllConnections();
+    } catch (cleanupError) {
+      console.error('❌ Failed to cleanup connections after setup error:', cleanupError);
+    }
 
     // Provide helpful error messages
     if (error instanceof Error && error.message?.includes('connect')) {

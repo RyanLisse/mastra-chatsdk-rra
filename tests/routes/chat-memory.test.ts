@@ -1,5 +1,5 @@
 // tests/routes/chat-memory.test.ts
-import { expect, test, describe, beforeAll, afterEach } from 'bun:test';
+import { expect, test, describe, beforeAll, afterEach } from '@playwright/test';
 import { config } from 'dotenv';
 import { randomUUID } from 'node:crypto';
 

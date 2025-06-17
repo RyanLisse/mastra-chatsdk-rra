@@ -1,7 +1,7 @@
 # RoboRail Assistant Makefile
 # Built with Bun for improved performance
 
-.PHONY: help install dev build test clean lint format setup db-setup db-migrate db-studio test-setup test-all test-stagehand test-playwright commit-check deploy-check kill-port kill-all-dev-ports show-ports dev-clean
+.PHONY: help install dev build test clean lint format setup db-setup db-migrate db-studio test-setup test-all test-stagehand test-playwright commit-check deploy-check kill-port kill-all-dev-ports show-ports dev-clean neon-setup neon-validate test-branch-create test-branch-cleanup test-branch-cleanup-dry test-branch-cleanup-ci test-branch-list test-branch-status test-branch-connection neon-ci-setup neon-ci-cleanup test-with-neon-branch neon-branch-manager-test
 
 # Default target
 .DEFAULT_GOAL := help
@@ -9,6 +9,8 @@
 # Variables
 NODE_ENV ?= development
 DATABASE_URL ?= $(shell grep "^DATABASE_URL" .env.local 2>/dev/null | cut -d'=' -f2-)
+NEON_API_KEY ?= $(shell grep "^NEON_API_KEY" .env.local 2>/dev/null | cut -d'=' -f2-)
+NEON_PROJECT_ID ?= $(shell echo "$(DATABASE_URL)" | sed -n 's/.*@\([^.]*\)\..*\.neon\.tech.*/\1/p' | sed 's/.*-\([^-]*-[^-]*\)$$/\1/')
 COMMIT_MSG ?= "feat: automated commit"
 DEV_PORT ?= 3000
 
@@ -197,15 +199,156 @@ commit-and-push: commit push ## Commit and push changes
 	@echo "$(GREEN)Commit and push completed!$(NC)"
 
 ## Neon Database Branching (for advanced testing)
-test-branch-create: ## Create a new Neon test branch
-	@echo "$(BLUE)Creating Neon test branch...$(NC)"
-	@BRANCH_NAME="test/$$(git branch --show-current)-$$(date +%Y%m%d-%H%M%S)"; \
-	neonctl branches create --name "$$BRANCH_NAME" && \
-	echo "Test branch created: $$BRANCH_NAME"
+neon-setup: ## Validate Neon CLI installation and API key
+	@echo "$(BLUE)Validating Neon setup...$(NC)"
+	@if [ -z "$(NEON_API_KEY)" ]; then \
+		echo "$(RED)❌ NEON_API_KEY not found in .env.local$(NC)"; \
+		echo "$(YELLOW)Please add NEON_API_KEY=your-api-key to .env.local$(NC)"; \
+		echo "$(YELLOW)Get your API key at: https://console.neon.tech/app/settings/api-keys$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(GREEN)✅ Neon API Key found$(NC)"
+	@if ! npx neonctl --version >/dev/null 2>&1; then \
+		echo "$(RED)❌ neonctl CLI not found$(NC)"; \
+		echo "$(YELLOW)Installing neonctl...$(NC)"; \
+		bun install; \
+	fi
+	@echo "$(GREEN)✅ neonctl CLI available: $$(npx neonctl --version)$(NC)"
+	@echo "$(BLUE)Testing API connection...$(NC)"
+	@if npx neonctl projects list --api-key "$(NEON_API_KEY)" >/dev/null 2>&1; then \
+		echo "$(GREEN)✅ Neon API connection successful$(NC)"; \
+	else \
+		echo "$(RED)❌ Neon API connection failed$(NC)"; \
+		echo "$(YELLOW)Please verify your NEON_API_KEY$(NC)"; \
+		exit 1; \
+	fi
 
-test-branch-cleanup: ## Clean up old test branches
-	@echo "$(BLUE)Cleaning up old test branches...$(NC)"
-	@neonctl branches list --output json | bunx jq -r '.[] | select(.name | startswith("test/")) | select(.created_at < (now - 86400)) | .name' | xargs -I {} neonctl branches delete --name {}
+neon-validate: ## Validate Neon configuration using NeonBranchManager
+	@echo "$(BLUE)Validating Neon configuration...$(NC)"
+	@bun run -e "import { createNeonBranchManager } from './lib/db/neon-branch-manager.ts'; const manager = createNeonBranchManager(); await manager.validateSetup(); console.log('✅ Neon configuration valid');"
+
+test-branch-create: neon-setup ## Create a new Neon test branch
+	@echo "$(BLUE)Creating Neon test branch...$(NC)"
+	@if [ -z "$(NEON_PROJECT_ID)" ]; then \
+		echo "$(RED)❌ Could not detect Neon project ID from DATABASE_URL$(NC)"; \
+		echo "$(YELLOW)Please ensure DATABASE_URL is set correctly in .env.local$(NC)"; \
+		exit 1; \
+	fi
+	@BRANCH_NAME="test-$$(git branch --show-current | sed 's/[^a-zA-Z0-9-]/-/g')-$$(date +%Y%m%d-%H%M%S)"; \
+	echo "$(BLUE)Creating branch: $$BRANCH_NAME$(NC)"; \
+	npx neonctl branches create "$$BRANCH_NAME" \
+		--project-id "$(NEON_PROJECT_ID)" \
+		--api-key "$(NEON_API_KEY)" && \
+	echo "$(GREEN)✅ Test branch created: $$BRANCH_NAME$(NC)" && \
+	echo "$(YELLOW)💡 To get connection string: make test-branch-connection BRANCH=$$BRANCH_NAME$(NC)"
+
+test-branch-list: neon-setup ## List all branches in the project
+	@echo "$(BLUE)Listing Neon branches...$(NC)"
+	@if [ -z "$(NEON_PROJECT_ID)" ]; then \
+		echo "$(RED)❌ Could not detect Neon project ID$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(CYAN)Project ID: $(NEON_PROJECT_ID)$(NC)"
+	@npx neonctl branches list \
+		--project-id "$(NEON_PROJECT_ID)" \
+		--api-key "$(NEON_API_KEY)" \
+		--output table
+
+test-branch-status: neon-setup ## Show status of test branches
+	@echo "$(BLUE)Checking test branch status...$(NC)"
+	@if [ -z "$(NEON_PROJECT_ID)" ]; then \
+		echo "$(RED)❌ Could not detect Neon project ID$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(CYAN)Test branches in project $(NEON_PROJECT_ID):$(NC)"
+	@npx neonctl branches list \
+		--project-id "$(NEON_PROJECT_ID)" \
+		--api-key "$(NEON_API_KEY)" \
+		--output json | \
+	bunx jq -r '.branches[] | select(.name | test("test")) | "🌿 \(.name) - \(.current_state) - Created: \(.created_at | split("T")[0])"' || \
+	echo "$(YELLOW)No test branches found$(NC)"
+
+test-branch-cleanup: neon-setup ## Clean up old test branches (older than 1 day)
+	@echo "$(BLUE)Cleaning up old test branches using NeonBranchManager...$(NC)"
+	@bun run scripts/cleanup-neon-test-branches.ts
+
+test-branch-cleanup-dry: neon-setup ## Show what test branches would be cleaned up (dry run)
+	@echo "$(BLUE)Dry run - showing test branches that would be cleaned up...$(NC)"
+	@bun run scripts/cleanup-neon-test-branches.ts --dry-run
+
+test-branch-cleanup-ci: neon-setup ## Clean up CI test branches only
+	@echo "$(BLUE)Cleaning up CI test branches...$(NC)"
+	@bun run scripts/cleanup-neon-test-branches.ts --ci-only
+
+test-branch-connection: neon-setup ## Get connection string for a test branch (usage: make test-branch-connection BRANCH=branch-name)
+	@if [ -z "$(BRANCH)" ]; then \
+		echo "$(RED)❌ Please specify BRANCH name: make test-branch-connection BRANCH=your-branch-name$(NC)"; \
+		exit 1; \
+	fi
+	@if [ -z "$(NEON_PROJECT_ID)" ]; then \
+		echo "$(RED)❌ Could not detect Neon project ID$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)Getting connection string for branch: $(BRANCH)$(NC)"
+	@CONNECTION_STRING=$$(npx neonctl connection-string "$(BRANCH)" \
+		--project-id "$(NEON_PROJECT_ID)" \
+		--api-key "$(NEON_API_KEY)" 2>/dev/null); \
+	if [ $$? -eq 0 ]; then \
+		echo "$(GREEN)✅ Connection string:$(NC)"; \
+		echo "$$CONNECTION_STRING"; \
+		echo ""; \
+		echo "$(YELLOW)💡 To use this in tests, set DATABASE_URL_TEST=$$CONNECTION_STRING$(NC)"; \
+	else \
+		echo "$(RED)❌ Failed to get connection string for branch: $(BRANCH)$(NC)"; \
+		echo "$(YELLOW)💡 Check if branch exists with: make test-branch-list$(NC)"; \
+		exit 1; \
+	fi
+
+neon-ci-setup: neon-setup ## Set up test branch for CI/CD pipeline
+	@echo "$(BLUE)Setting up CI/CD test branch using setup script...$(NC)"
+	@bun run scripts/setup-neon-test-branch.ts --ci-mode --write-env
+
+neon-ci-cleanup: ## Clean up CI test branches
+	@echo "$(BLUE)Cleaning up CI test branches using cleanup script...$(NC)"
+	@bun run scripts/cleanup-neon-test-branches.ts --ci-only --max-age 1
+	@rm -f .ci-database-url .env.ci
+
+test-with-neon-branch: ## Run tests with a fresh Neon test branch
+	@echo "$(BLUE)Running tests with fresh Neon test branch...$(NC)"
+	@BRANCH_INFO=$$(bun run scripts/setup-neon-test-branch.ts --write-env 2>/dev/null | tail -2); \
+	TEST_CONNECTION_STRING=$$(echo "$$BRANCH_INFO" | grep "CONNECTION_STRING=" | cut -d'=' -f2-); \
+	TEST_BRANCH_NAME=$$(echo "$$BRANCH_INFO" | grep "BRANCH_NAME=" | cut -d'=' -f2-); \
+	if [ -n "$$TEST_CONNECTION_STRING" ] && [ -n "$$TEST_BRANCH_NAME" ]; then \
+		echo "$(GREEN)✅ Test branch created: $$TEST_BRANCH_NAME$(NC)"; \
+		echo "$(BLUE)Running tests with test database...$(NC)"; \
+		DATABASE_URL_TEST="$$TEST_CONNECTION_STRING" bun run test:unit || TEST_RESULT=$$?; \
+		echo "$(BLUE)Cleaning up test branch...$(NC)"; \
+		bun run scripts/cleanup-neon-test-branches.ts --pattern "$$TEST_BRANCH_NAME" --max-age 0 >/dev/null 2>&1 || \
+		echo "$(YELLOW)⚠️  Failed to delete test branch$(NC)"; \
+		if [ "$$TEST_RESULT" -eq 0 ]; then \
+			echo "$(GREEN)✅ Tests passed with Neon test branch$(NC)"; \
+		else \
+			echo "$(RED)❌ Tests failed$(NC)"; \
+			exit $$TEST_RESULT; \
+		fi; \
+	else \
+		echo "$(RED)❌ Failed to create test branch$(NC)"; \
+		exit 1; \
+	fi
+
+neon-branch-manager-test: ## Test NeonBranchManager functionality
+	@echo "$(BLUE)Testing NeonBranchManager...$(NC)"
+	@bun run -e "import { createNeonBranchManager } from './lib/db/neon-branch-manager.ts'; \
+		const manager = createNeonBranchManager(); \
+		console.log('🔍 Validating setup...'); \
+		await manager.validateSetup(); \
+		console.log('📋 Listing projects...'); \
+		const projects = await manager.listProjects(); \
+		console.log('✅ Found', projects.length, 'projects'); \
+		console.log('📋 Listing branches...'); \
+		const branches = await manager.listBranches(); \
+		console.log('✅ Found', branches.length, 'branches'); \
+		console.log('🧪 NeonBranchManager test completed successfully');"
 
 ## Development Workflow
 workflow-new-feature: ## Start new feature development
@@ -236,12 +379,15 @@ env-check: ## Check environment variables
 	@echo "NODE_ENV: $(NODE_ENV)"
 	@echo "Database URL: $(if $(DATABASE_URL),✅ Set,❌ Not set)"
 	@echo "OpenAI API Key: $(if $(shell grep OPENAI_API_KEY .env.local 2>/dev/null),✅ Set,❌ Not set)"
+	@echo "Neon API Key: $(if $(NEON_API_KEY),✅ Set,❌ Not set)"
+	@echo "Neon Project ID: $(if $(NEON_PROJECT_ID),✅ $(NEON_PROJECT_ID),❌ Not detected)"
 
 env-template: ## Create environment template
 	@echo "$(BLUE)Creating environment template...$(NC)"
 	@echo "# Copy this to .env.local and fill in your values" > .env.template
 	@echo "OPENAI_API_KEY=your-openai-api-key-here" >> .env.template
 	@echo "DATABASE_URL=your-database-url-here" >> .env.template
+	@echo "NEON_API_KEY=your-neon-api-key-here" >> .env.template
 	@echo "AUTH_SECRET=your-auth-secret-here" >> .env.template
 	@echo "$(GREEN)Environment template created: .env.template$(NC)"
 

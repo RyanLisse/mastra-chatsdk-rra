@@ -6,6 +6,7 @@ import {
   getGlobalTestDatabase,
   type DatabaseTestSetup,
 } from '../../lib/db/test-config';
+import { cleanupTestConnections } from '../../lib/db/cleanup';
 import * as schema from '../../lib/db/schema';
 
 // Load test environment
@@ -83,6 +84,9 @@ export class DatabaseTestHelper {
       this.testDb = null;
     }
     DatabaseTestHelper.instance = null;
+    
+    // Use centralized cleanup to ensure all connections are closed
+    await cleanupTestConnections();
   }
 
   /**
@@ -307,8 +311,14 @@ export async function setupTestSuite(): Promise<DatabaseTestHelper> {
  * Cleanup database after a test suite (call in afterAll)
  */
 export async function cleanupTestSuite(): Promise<void> {
-  const helper = await DatabaseTestHelper.getInstance();
-  await helper.cleanup();
+  try {
+    const helper = await DatabaseTestHelper.getInstance();
+    await helper.cleanup();
+  } catch (error) {
+    console.error('Error during test suite cleanup:', error);
+    // Ensure cleanup still happens even if helper fails
+    await cleanupTestConnections();
+  }
 }
 
 /**

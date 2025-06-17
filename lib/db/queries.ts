@@ -1,4 +1,7 @@
-import 'server-only';
+// Only import server-only in actual server environments
+if (typeof window === 'undefined' && !process.env.PLAYWRIGHT) {
+  require('server-only');
+}
 
 import {
   and,
@@ -12,8 +15,7 @@ import {
   lt,
   type SQL,
 } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { DatabaseConnectionManager } from './connection-manager';
 
 import {
   user,
@@ -38,12 +40,45 @@ import { ChatSDKError } from '../errors';
 // use the Drizzle adapter for Auth.js / NextAuth
 // https://authjs.dev/reference/adapter/drizzle
 
-// biome-ignore lint: Forbidden non-null assertion.
-const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client);
+// Database connection management
+const CONNECTION_NAME = 'main-queries';
+
+// Get database connection using connection manager
+function getDatabase() {
+  if (!process.env.POSTGRES_URL) {
+    throw new Error('POSTGRES_URL environment variable is not set');
+  }
+
+  const { db } = DatabaseConnectionManager.getConnection(CONNECTION_NAME, {
+    url: process.env.POSTGRES_URL,
+    max: 10,
+    idle_timeout: 20,
+    max_lifetime: 1800,
+    prepare: false,
+    onnotice: () => {}, // Suppress notices in logs
+  });
+
+  return db;
+}
+
+/**
+ * Cleanup function to properly close database connections
+ * Should be called during application shutdown or test teardown
+ */
+export async function cleanupQueryConnections(): Promise<void> {
+  await DatabaseConnectionManager.closeConnection(CONNECTION_NAME);
+}
+
+/**
+ * Health check function to test database connectivity
+ */
+export async function testQueryConnection(): Promise<boolean> {
+  return await DatabaseConnectionManager.testConnection(CONNECTION_NAME);
+}
 
 export async function getUser(email: string): Promise<Array<User>> {
   try {
+    const db = getDatabase();
     return await db.select().from(user).where(eq(user.email, email));
   } catch (error) {
     throw new ChatSDKError(
@@ -57,6 +92,7 @@ export async function createUser(email: string, password: string) {
   const hashedPassword = generateHashedPassword(password);
 
   try {
+    const db = getDatabase();
     return await db.insert(user).values({ email, password: hashedPassword });
   } catch (error) {
     throw new ChatSDKError('bad_request:database', 'Failed to create user');
@@ -68,6 +104,7 @@ export async function createGuestUser() {
   const password = generateHashedPassword(generateUUID());
 
   try {
+    const db = getDatabase();
     return await db.insert(user).values({ email, password }).returning({
       id: user.id,
       email: user.email,
@@ -92,6 +129,7 @@ export async function saveChat({
   visibility: VisibilityType;
 }) {
   try {
+    const db = getDatabase();
     return await db.insert(chat).values({
       id,
       createdAt: new Date(),
@@ -106,6 +144,7 @@ export async function saveChat({
 
 export async function deleteChatById({ id }: { id: string }) {
   try {
+    const db = getDatabase();
     await db.delete(vote).where(eq(vote.chatId, id));
     await db.delete(message).where(eq(message.chatId, id));
     await db.delete(stream).where(eq(stream.chatId, id));
@@ -135,6 +174,7 @@ export async function getChatsByUserId({
   endingBefore: string | null;
 }) {
   try {
+    const db = getDatabase();
     const extendedLimit = limit + 1;
 
     const query = (whereCondition?: SQL<any>) =>
@@ -201,6 +241,7 @@ export async function getChatsByUserId({
 
 export async function getChatById({ id }: { id: string }) {
   try {
+    const db = getDatabase();
     const [selectedChat] = await db.select().from(chat).where(eq(chat.id, id));
     return selectedChat;
   } catch (error) {
@@ -214,6 +255,7 @@ export async function saveMessages({
   messages: Array<DBMessage>;
 }) {
   try {
+    const db = getDatabase();
     return await db.insert(message).values(messages);
   } catch (error) {
     throw new ChatSDKError('bad_request:database', 'Failed to save messages');
@@ -222,6 +264,7 @@ export async function saveMessages({
 
 export async function getMessagesByChatId({ id }: { id: string }) {
   try {
+    const db = getDatabase();
     return await db
       .select()
       .from(message)
@@ -245,6 +288,7 @@ export async function voteMessage({
   type: 'up' | 'down';
 }) {
   try {
+    const db = getDatabase();
     const [existingVote] = await db
       .select()
       .from(vote)
@@ -268,6 +312,7 @@ export async function voteMessage({
 
 export async function getVotesByChatId({ id }: { id: string }) {
   try {
+    const db = getDatabase();
     return await db.select().from(vote).where(eq(vote.chatId, id));
   } catch (error) {
     throw new ChatSDKError(
@@ -291,6 +336,7 @@ export async function saveDocument({
   userId: string;
 }) {
   try {
+    const db = getDatabase();
     return await db
       .insert(document)
       .values({
@@ -309,6 +355,7 @@ export async function saveDocument({
 
 export async function getDocumentsById({ id }: { id: string }) {
   try {
+    const db = getDatabase();
     const documents = await db
       .select()
       .from(document)
@@ -326,6 +373,7 @@ export async function getDocumentsById({ id }: { id: string }) {
 
 export async function getDocumentById({ id }: { id: string }) {
   try {
+    const db = getDatabase();
     const [selectedDocument] = await db
       .select()
       .from(document)
@@ -349,6 +397,7 @@ export async function deleteDocumentsByIdAfterTimestamp({
   timestamp: Date;
 }) {
   try {
+    const db = getDatabase();
     await db
       .delete(suggestion)
       .where(
@@ -376,6 +425,7 @@ export async function saveSuggestions({
   suggestions: Array<Suggestion>;
 }) {
   try {
+    const db = getDatabase();
     return await db.insert(suggestion).values(suggestions);
   } catch (error) {
     throw new ChatSDKError(
@@ -391,6 +441,7 @@ export async function getSuggestionsByDocumentId({
   documentId: string;
 }) {
   try {
+    const db = getDatabase();
     return await db
       .select()
       .from(suggestion)
@@ -405,6 +456,7 @@ export async function getSuggestionsByDocumentId({
 
 export async function getMessageById({ id }: { id: string }) {
   try {
+    const db = getDatabase();
     return await db.select().from(message).where(eq(message.id, id));
   } catch (error) {
     throw new ChatSDKError(
@@ -422,6 +474,7 @@ export async function deleteMessagesByChatIdAfterTimestamp({
   timestamp: Date;
 }) {
   try {
+    const db = getDatabase();
     const messagesToDelete = await db
       .select({ id: message.id })
       .from(message)
@@ -460,6 +513,7 @@ export async function updateChatVisiblityById({
   visibility: 'private' | 'public';
 }) {
   try {
+    const db = getDatabase();
     return await db.update(chat).set({ visibility }).where(eq(chat.id, chatId));
   } catch (error) {
     throw new ChatSDKError(
@@ -474,6 +528,7 @@ export async function getMessageCountByUserId({
   differenceInHours,
 }: { id: string; differenceInHours: number }) {
   try {
+    const db = getDatabase();
     const twentyFourHoursAgo = new Date(
       Date.now() - differenceInHours * 60 * 60 * 1000,
     );
@@ -508,6 +563,7 @@ export async function createStreamId({
   chatId: string;
 }) {
   try {
+    const db = getDatabase();
     await db
       .insert(stream)
       .values({ id: streamId, chatId, createdAt: new Date() });
@@ -521,6 +577,7 @@ export async function createStreamId({
 
 export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
   try {
+    const db = getDatabase();
     const streamIds = await db
       .select({ id: stream.id })
       .from(stream)

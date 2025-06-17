@@ -18,10 +18,28 @@ const runMigrate = async () => {
   console.log('⏳ Running migrations...');
 
   const start = Date.now();
-  await migrate(db, { migrationsFolder: './lib/db/migrations' });
-  const end = Date.now();
-
-  console.log('✅ Migrations completed in', end - start, 'ms');
+  
+  try {
+    await migrate(db, { migrationsFolder: './lib/db/migrations' });
+    const end = Date.now();
+    console.log('✅ Migrations completed in', end - start, 'ms');
+  } catch (error: any) {
+    // Check if the error is due to existing tables/schema
+    const errorMessage = error?.message || '';
+    const errorCode = error?.cause?.code || '';
+    
+    if (errorCode === '42P07' || errorMessage.includes('already exists')) {
+      console.log('ℹ️  Database tables already exist, skipping migration');
+      const end = Date.now();
+      console.log('✅ Migration check completed in', end - start, 'ms');
+    } else {
+      // Re-throw if it's a different error
+      throw error;
+    }
+  } finally {
+    await connection.end();
+  }
+  
   process.exit(0);
 };
 

@@ -1,20 +1,38 @@
+// Only import server-only in actual server environments
+if (typeof window === 'undefined' && !process.env.PLAYWRIGHT) {
+  require('server-only');
+}
+
 import { config } from 'dotenv';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import { sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { DatabaseConnectionManager } from './connection-manager';
+import { 
+  type NeonBranchManager, 
+  createNeonBranchManager, 
+  extractProjectIdFromConnectionString,
+  extractBranchNameFromConnectionString,
+  type NeonBranch 
+} from './neon-branch-manager';
+import { initializeTestEnvironment } from './env-manager';
 
-// Load test environment configuration
-config({
-  path: process.env.NODE_ENV === 'test' ? '.env.test' : '.env.local',
-});
+// Load test environment configuration with branch-specific overrides
+if (process.env.NODE_ENV === 'test') {
+  initializeTestEnvironment();
+} else {
+  config({ path: '.env.local' });
+}
 
 export interface TestDatabaseConfig {
   url: string;
   isTestBranch: boolean;
   branchName?: string;
   projectId?: string;
+  neonBranchManager?: NeonBranchManager;
+  isTemporaryBranch?: boolean;
 }
 
 export interface DatabaseTestSetup {
@@ -23,6 +41,9 @@ export interface DatabaseTestSetup {
   cleanup: () => Promise<void>;
   reset: () => Promise<void>;
   seed: () => Promise<void>;
+  config: TestDatabaseConfig;
+  createTestBranch?: (testName: string) => Promise<{ branch: NeonBranch; connectionString: string; cleanup: () => Promise<void> }>;
+  cleanupTestBranches?: (dryRun?: boolean) => Promise<string[]>;
 }
 
 /**
@@ -46,29 +67,38 @@ export function validateTestDatabaseConfig(): TestDatabaseConfig {
     );
   }
 
+  // Check if this is a Neon database URL
+  const isNeonDatabase = postgresUrl.includes('neon.tech') || postgresUrl.includes('.neon.tech');
+  
   // Check if this is a Neon test branch URL
   const isNeonTestBranch =
-    postgresUrl.includes('neon.tech') &&
+    isNeonDatabase &&
     (postgresUrl.includes('-test-') ||
       postgresUrl.includes('test.') ||
       postgresUrl.includes('/test'));
 
-  // Extract branch name if available
+  // Extract branch name and project ID using helper functions
   let branchName: string | undefined;
   let projectId: string | undefined;
+  let neonBranchManager: NeonBranchManager | undefined;
 
-  if (isNeonTestBranch) {
-    const url = new URL(postgresUrl);
-    const hostParts = url.hostname.split('.');
+  if (isNeonDatabase) {
+    branchName = extractBranchNameFromConnectionString(postgresUrl) || undefined;
+    projectId = extractProjectIdFromConnectionString(postgresUrl) || undefined;
 
-    // Neon URLs typically follow: branch-name-project-id.region.neon.tech
-    if (hostParts.length >= 4 && hostParts[hostParts.length - 2] === 'neon') {
-      const branchProject = hostParts[0];
-      const parts = branchProject.split('-');
-      if (parts.length >= 3) {
-        branchName = parts.slice(0, -2).join('-'); // Everything except last 2 parts
-        projectId = parts.slice(-2).join('-'); // Last 2 parts
+    // Initialize Neon branch manager if API key is available
+    const neonApiKey = process.env.NEON_API_KEY;
+    if (neonApiKey) {
+      try {
+        neonBranchManager = createNeonBranchManager({
+          apiKey: neonApiKey,
+          defaultProjectId: projectId,
+        });
+      } catch (error) {
+        console.warn('⚠️  Could not initialize Neon branch manager:', error);
       }
+    } else if (isNeonDatabase) {
+      console.log('💡 NEON_API_KEY not set. Branch management features will be unavailable.');
     }
   }
 
@@ -88,6 +118,8 @@ export function validateTestDatabaseConfig(): TestDatabaseConfig {
     isTestBranch: isNeonTestBranch,
     branchName,
     projectId,
+    neonBranchManager,
+    isTemporaryBranch: false,
   };
 }
 
@@ -101,11 +133,22 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
     `🔧 Setting up test database${config.isTestBranch ? ` (Neon branch: ${config.branchName})` : ''}`,
   );
 
+  // Validate Neon setup if available
+  if (config.neonBranchManager) {
+    try {
+      await config.neonBranchManager.validateSetup();
+      console.log('✅ Neon branch manager validated successfully');
+    } catch (error) {
+      console.warn('⚠️  Neon branch manager validation failed:', error);
+      // Continue without branch management features
+    }
+  }
+
   // Create connection with test-specific settings
   const connection = postgres(config.url, {
     max: 10, // Limit connections for testing
     idle_timeout: 20, // Close idle connections quickly
-    max_lifetime: 60 * 30, // 30 minutes max connection lifetime
+    max_lifetime: 1800, // 30 minutes max connection lifetime
     prepare: false, // Disable prepared statements for better test isolation
     debug: process.env.DEBUG_SQL === 'true',
   });
@@ -122,7 +165,18 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
 
   const cleanup = async () => {
     console.log('🧹 Cleaning up test database connection');
-    await connection.end();
+    try {
+      // Graceful shutdown with timeout
+      await connection.end({ timeout: 10 });
+    } catch (error) {
+      console.error('Error during connection cleanup:', error);
+      // Force close if graceful shutdown fails
+      try {
+        await connection.end({ timeout: 1 });
+      } catch (forceError) {
+        console.error('Error during forced connection cleanup:', forceError);
+      }
+    }
   };
 
   const reset = async () => {
@@ -348,12 +402,34 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
     console.log('✅ Test database seeded with RoboRail sample data');
   };
 
+  // Branch management functions (only available if Neon branch manager is configured)
+  const createTestBranch = config.neonBranchManager
+    ? async (testName: string) => {
+        if (!config.neonBranchManager) {
+          throw new Error('Neon branch manager not available');
+        }
+        return config.neonBranchManager.createTempTestDatabase(testName, config.projectId);
+      }
+    : undefined;
+
+  const cleanupTestBranches = config.neonBranchManager
+    ? async (dryRun = false) => {
+        if (!config.neonBranchManager) {
+          throw new Error('Neon branch manager not available');
+        }
+        return config.neonBranchManager.cleanupTestBranches(config.projectId, dryRun);
+      }
+    : undefined;
+
   return {
     db,
     connection,
     cleanup,
     reset,
     seed,
+    config,
+    createTestBranch,
+    cleanupTestBranches,
   };
 }
 
@@ -365,7 +441,12 @@ export async function runTestMigrations(): Promise<void> {
 
   console.log('⏳ Running test database migrations...');
 
-  const connection = postgres(config.url, { max: 1 });
+  const connection = postgres(config.url, { 
+    max: 1,
+    idle_timeout: 20,
+    max_lifetime: 1800,
+    prepare: false
+  });
   const db = drizzle(connection);
 
   try {
@@ -386,16 +467,31 @@ export async function runTestMigrations(): Promise<void> {
  * Global test database setup for use in test files
  */
 let globalTestDb: DatabaseTestSetup | null = null;
+let isInitializing = false;
+const TEST_CONNECTION_NAME = 'global-test';
 
 export async function getGlobalTestDatabase(): Promise<DatabaseTestSetup> {
+  // Prevent multiple concurrent initializations
+  if (isInitializing) {
+    // Wait for initialization to complete
+    while (isInitializing && !globalTestDb) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+
   if (!globalTestDb) {
-    globalTestDb = await createTestDatabase();
+    isInitializing = true;
+    try {
+      globalTestDb = await createTestDatabase();
 
-    // Ensure migrations are run
-    await runTestMigrations();
+      // Ensure migrations are run
+      await runTestMigrations();
 
-    // Seed with initial data
-    await globalTestDb.seed();
+      // Seed with initial data
+      await globalTestDb.seed();
+    } finally {
+      isInitializing = false;
+    }
   }
 
   return globalTestDb;
@@ -403,7 +499,69 @@ export async function getGlobalTestDatabase(): Promise<DatabaseTestSetup> {
 
 export async function cleanupGlobalTestDatabase(): Promise<void> {
   if (globalTestDb) {
-    await globalTestDb.cleanup();
-    globalTestDb = null;
+    try {
+      await globalTestDb.cleanup();
+    } catch (error) {
+      console.error('Error during global test database cleanup:', error);
+    } finally {
+      globalTestDb = null;
+      isInitializing = false;
+    }
+  }
+  
+  // Also cleanup via connection manager
+  await DatabaseConnectionManager.closeConnection(TEST_CONNECTION_NAME);
+}
+
+/**
+ * Force cleanup of global test database (useful for emergency cleanup)
+ */
+export async function forceCleanupGlobalTestDatabase(): Promise<void> {
+  isInitializing = false;
+  if (globalTestDb) {
+    try {
+      // Force close connections without waiting for graceful shutdown
+      if (globalTestDb.connection) {
+        await globalTestDb.connection.end({ timeout: 5 });
+      }
+    } catch (error) {
+      console.error('Error during force cleanup:', error);
+    } finally {
+      globalTestDb = null;
+    }
+  }
+  
+  // Force cleanup via connection manager
+  await DatabaseConnectionManager.closeConnection(TEST_CONNECTION_NAME);
+}
+
+/**
+ * Check if global test database is initialized
+ */
+export function isGlobalTestDatabaseInitialized(): boolean {
+  return globalTestDb !== null;
+}
+
+/**
+ * Get connection stats for monitoring
+ */
+export async function getConnectionStats(): Promise<{
+  isConnected: boolean;
+  totalConnections?: number;
+  idleConnections?: number;
+}> {
+  if (!globalTestDb?.connection) {
+    return { isConnected: false };
+  }
+
+  try {
+    await globalTestDb.connection`SELECT 1`;
+    return {
+      isConnected: true,
+      // Note: postgres-js doesn't expose detailed connection pool stats
+      // but we can at least verify connectivity
+    };
+  } catch (error) {
+    return { isConnected: false };
   }
 }

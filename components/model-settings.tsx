@@ -69,7 +69,7 @@ export function ModelSettings({
   const [selectedProvider, setSelectedProvider] = useState<Provider>('openai');
   const [filterByProvider, setFilterByProvider] = useState(false);
 
-  const userType = session.user.type;
+  const userType = session?.user?.type || 'free';
   const { availableChatModelIds } = entitlementsByUserType[userType];
 
   const availableChatModels = chatModels.filter((chatModel) =>

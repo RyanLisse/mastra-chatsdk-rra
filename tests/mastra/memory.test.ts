@@ -1,4 +1,5 @@
 // tests/mastra/memory.test.ts
+import '../setup'; // Import global test setup
 import {
   expect,
   test,
@@ -8,7 +9,7 @@ import {
   beforeEach,
 } from 'bun:test';
 import { config } from 'dotenv';
-import { PostgresMemory } from '../../lib/mastra/memory';
+import { PostgresMemory, } from '../../lib/mastra/memory';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { sql } from 'drizzle-orm';
@@ -25,8 +26,16 @@ if (
   config({ path: '.env' });
 }
 
+// Singleton connection management for tests
+let testDbInstance: ReturnType<typeof drizzle> | null = null;
+let testConnectionInstance: postgres.Sql | null = null;
+
 // Create a function to get database connection to avoid early instantiation issues
 function getDatabase() {
+  if (testDbInstance && testConnectionInstance) {
+    return testDbInstance;
+  }
+
   if (!process.env.POSTGRES_URL) {
     throw new Error('POSTGRES_URL environment variable is not set');
   }
@@ -36,8 +45,28 @@ function getDatabase() {
     );
   }
 
-  const client = postgres(process.env.POSTGRES_URL);
-  return drizzle(client);
+  testConnectionInstance = postgres(process.env.POSTGRES_URL, {
+    max: 10,
+    idle_timeout: 20,
+    max_lifetime: 1800,
+    prepare: false,
+  });
+  testDbInstance = drizzle(testConnectionInstance);
+  return testDbInstance;
+}
+
+// Cleanup function for test connections
+async function cleanupTestConnections() {
+  if (testConnectionInstance) {
+    try {
+      await testConnectionInstance.end();
+    } catch (error) {
+      console.error('Error closing test database connection:', error);
+    } finally {
+      testConnectionInstance = null;
+      testDbInstance = null;
+    }
+  }
 }
 
 describe('PostgresMemory', () => {
@@ -78,6 +107,9 @@ describe('PostgresMemory', () => {
       `);
     } catch (error) {
       console.error('Failed to clean up test data:', error);
+    } finally {
+      // Clean up test connections using centralized cleanup
+      await cleanupTestConnections();
     }
   });
 

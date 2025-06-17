@@ -6,10 +6,48 @@ import { defineConfig, devices } from '@playwright/test';
  */
 import { config } from 'dotenv';
 
+// Flag to track if we've set up Playwright-level signal handlers
+let playwrightSignalHandlersRegistered = false;
+
 // Always use .env.test for Playwright tests
 config({
   path: '.env.test',
 });
+
+/**
+ * Register Playwright-level signal handlers
+ * These ensure cleanup happens even if individual test processes don't handle signals
+ */
+function registerPlaywrightSignalHandlers(): void {
+  if (playwrightSignalHandlersRegistered) {
+    return;
+  }
+
+  playwrightSignalHandlersRegistered = true;
+  console.log('🔧 Registering Playwright config signal handlers...');
+
+  const gracefulShutdown = async (signal: string) => {
+    console.log(`\n🛑 Playwright config received ${signal} - cleaning up...`);
+    
+    try {
+      // Cleanup handled by global setup/teardown to avoid server-only import issues
+      console.log('✅ Playwright config cleanup completed');
+    } catch (error) {
+      console.error('❌ Error during Playwright config cleanup:', error);
+    }
+    
+    process.exit(0);
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGQUIT', () => gracefulShutdown('SIGQUIT'));
+
+  console.log('✅ Playwright config signal handlers registered');
+}
+
+// Register signal handlers
+registerPlaywrightSignalHandlers();
 
 // Validate test database is configured
 if (
@@ -66,9 +104,9 @@ export default defineConfig({
   },
 
   /* Configure global timeout for each test */
-  timeout: 60 * 1000, // 60 seconds - reduced from 120s to prevent hanging
+  timeout: 30 * 1000, // 30 seconds - aggressive timeout to prevent hanging
   expect: {
-    timeout: 20 * 1000, // 20 seconds - reduced from 45s for faster failure detection
+    timeout: 10 * 1000, // 10 seconds - fast failure detection
   },
 
   /* Configure projects */
@@ -86,6 +124,27 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
       },
+    },
+    {
+      name: 'stagehand',
+      testMatch: /stagehand\/.*.test.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        // Stagehand-specific settings for better reliability
+        launchOptions: {
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--disable-web-security',
+            '--disable-features=TranslateUI',
+            '--disable-ipc-flooding-protection',
+          ],
+        },
+      },
+      // Stagehand tests run longer due to AI processing
+      timeout: 60 * 1000, // 60 seconds per test
     },
 
     // {
@@ -129,8 +188,6 @@ export default defineConfig({
     stderr: 'pipe',
     // Add health check endpoint
     ignoreHTTPSErrors: true,
-    // Additional options for faster startup detection
-    port: Number(PORT),
     env: {
       NODE_ENV: 'test',
       PLAYWRIGHT: 'true',
