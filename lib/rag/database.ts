@@ -11,7 +11,9 @@ if (process.env.NODE_ENV !== 'test' && process.env.PLAYWRIGHT !== 'true') {
     const { drizzle } = require('drizzle-orm/vercel-postgres');
     dbClient = drizzle(db);
   } catch (error) {
-    console.warn('Vercel Postgres not available, RAG database will use fallback');
+    console.warn(
+      'Vercel Postgres not available, RAG database will use fallback',
+    );
   }
 }
 

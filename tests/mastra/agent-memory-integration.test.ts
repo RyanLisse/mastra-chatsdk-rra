@@ -465,8 +465,9 @@ describe('RoboRail Agent Memory Integration', () => {
       expect(history[2].content).toContain('step 2');
 
       // Previous context should be available for the agent to reference
-      const maintenanceMessage = history.find((msg) =>
-        msg.role === 'assistant' && msg.content.includes('Check oil levels'),
+      const maintenanceMessage = history.find(
+        (msg) =>
+          msg.role === 'assistant' && msg.content.includes('Check oil levels'),
       );
       expect(maintenanceMessage).toBeDefined();
       expect(maintenanceMessage?.content).toContain('Check oil levels');

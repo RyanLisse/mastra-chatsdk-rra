@@ -33,7 +33,12 @@ export class PostgresMemory {
     sessionId,
     message,
   }: AddMessageConfig): Promise<void> {
-    if (!message.id || !message.role || message.content === undefined || message.content === null) {
+    if (
+      !message.id ||
+      !message.role ||
+      message.content === undefined ||
+      message.content === null
+    ) {
       throw new Error('Message must have id, role, and content properties');
     }
 

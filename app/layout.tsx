@@ -84,3 +84,4 @@ export default async function RootLayout({
     </html>
   );
 }
+// Test comment for hot reload

@@ -1,6 +1,7 @@
 // Only import server-only in actual server environments (not in tests)
 // Skip server-only import entirely in test/Playwright environments
-const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'true';
+const isTestEnvironment =
+  process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'true';
 const isClientSide = typeof window !== 'undefined';
 
 if (!isTestEnvironment && !isClientSide) {

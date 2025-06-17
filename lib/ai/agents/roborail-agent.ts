@@ -13,9 +13,11 @@ let ragTool: any;
 
 // Use real implementations for integration tests that have actual database connectivity
 // Only use mocks for unit tests that should not depend on external services
-const useRealImplementations = process.env.INTEGRATION_TEST === 'true' || 
-                               (process.env.NODE_ENV === 'test' && process.env.USE_REAL_DB === 'true') ||
-                               (!process.env.NODE_ENV || process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production');
+const useRealImplementations =
+  process.env.INTEGRATION_TEST === 'true' ||
+  (process.env.NODE_ENV === 'test' && process.env.USE_REAL_DB === 'true') ||
+  !process.env.NODE_ENV || process.env.NODE_ENV === 'development' ||
+  process.env.NODE_ENV === 'production';
 
 if (useRealImplementations) {
   // Use real implementations

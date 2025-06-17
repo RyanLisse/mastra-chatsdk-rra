@@ -19,9 +19,9 @@ class SimpleMockModel {
     return {
       stream: new ReadableStream({
         start(controller) {
-          controller.enqueue({ 
-            type: 'text-delta' as const, 
-            textDelta: 'Hello, world!' 
+          controller.enqueue({
+            type: 'text-delta' as const,
+            textDelta: 'Hello, world!',
           });
           controller.enqueue({
             type: 'finish' as const,

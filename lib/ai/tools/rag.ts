@@ -31,7 +31,9 @@ export const ragTool = tool({
         });
 
         if (!db) {
-          return { error: 'Database connection not available in test environment.' };
+          return {
+            error: 'Database connection not available in test environment.',
+          };
         }
 
         const client = await db.connect();

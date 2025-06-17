@@ -127,7 +127,7 @@ test-unit-all: ## Run all unit tests (including database-dependent)
 	bun run test:unit
 
 
-test-all: test-setup test-unit test-stagehand test-playwright ## Run all tests (Stagehand + Playwright)
+test-all: test-setup test-unit-all test-stagehand test-playwright ## Run all tests (Stagehand + Playwright)
 	@echo "$(GREEN)All tests completed!$(NC)"
 
 test-all-quick: ## Run quick tests (safe subset only)

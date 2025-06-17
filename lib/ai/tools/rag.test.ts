@@ -5,8 +5,7 @@ import { tool } from 'ai';
 import { z } from 'zod';
 
 export const ragTool = tool({
-  description:
-    'Mock RAG tool for testing - searches technical documentation',
+  description: 'Mock RAG tool for testing - searches technical documentation',
   parameters: z.object({
     query: z.string().describe('The question to ask the knowledge base.'),
   }),
