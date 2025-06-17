@@ -28,14 +28,14 @@ function registerPlaywrightSignalHandlers(): void {
 
   const gracefulShutdown = async (signal: string) => {
     console.log(`\n🛑 Playwright config received ${signal} - cleaning up...`);
-    
+
     try {
       // Cleanup handled by global setup/teardown to avoid server-only import issues
       console.log('✅ Playwright config cleanup completed');
     } catch (error) {
       console.error('❌ Error during Playwright config cleanup:', error);
     }
-    
+
     process.exit(0);
   };
 

@@ -1,5 +1,9 @@
-// Only import server-only in actual server environments
-if (typeof window === 'undefined' && !process.env.PLAYWRIGHT) {
+// Only import server-only in actual server environments (not in Playwright tests)
+if (
+  typeof window === 'undefined' &&
+  process.env.PLAYWRIGHT !== 'true' &&
+  process.env.NODE_ENV !== 'test'
+) {
   require('server-only');
 }
 

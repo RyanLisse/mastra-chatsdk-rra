@@ -1,10 +1,19 @@
-import { db } from '@vercel/postgres';
 import type { DocumentChunk, DocumentProcessing } from '@/lib/db/schema';
-import { drizzle } from 'drizzle-orm/vercel-postgres';
 import type { ProcessingStatus, ProcessingStage } from './progress/types';
 
-// Create drizzle instance for database operations
-const dbClient = drizzle(db);
+// Conditional import for @vercel/postgres to avoid test environment issues
+let db: any;
+let dbClient: any;
+if (process.env.NODE_ENV !== 'test' && process.env.PLAYWRIGHT !== 'true') {
+  try {
+    const vercelPostgres = require('@vercel/postgres');
+    db = vercelPostgres.db;
+    const { drizzle } = require('drizzle-orm/vercel-postgres');
+    dbClient = drizzle(db);
+  } catch (error) {
+    console.warn('Vercel Postgres not available, RAG database will use fallback');
+  }
+}
 
 export interface StoreChunkParams {
   documentId: string;
@@ -30,6 +39,14 @@ export interface UpdateProcessingStatusParams {
  */
 export class RAGDatabase {
   /**
+   * Check if database is available (for test environments)
+   */
+  private checkDatabase(): void {
+    if (!db) {
+      throw new Error('Database not available in test environment');
+    }
+  }
+  /**
    * Create a new document processing record
    */
   async createProcessingRecord(
@@ -38,6 +55,7 @@ export class RAGDatabase {
     userId: string,
     metadata?: Record<string, unknown>,
   ): Promise<DocumentProcessing> {
+    this.checkDatabase();
     const client = await db.connect();
 
     try {
@@ -67,6 +85,7 @@ export class RAGDatabase {
   async updateProcessingStatus(
     params: UpdateProcessingStatusParams,
   ): Promise<DocumentProcessing | null> {
+    this.checkDatabase();
     const client = await db.connect();
 
     try {
@@ -100,6 +119,7 @@ export class RAGDatabase {
   async getProcessingStatus(
     documentId: string,
   ): Promise<DocumentProcessing | null> {
+    this.checkDatabase();
     const client = await db.connect();
 
     try {
@@ -119,6 +139,7 @@ export class RAGDatabase {
    * Store document chunks in database
    */
   async storeChunks(chunks: StoreChunkParams[]): Promise<void> {
+    this.checkDatabase();
     const client = await db.connect();
 
     try {
@@ -170,6 +191,7 @@ export class RAGDatabase {
    * Get all chunks for a document
    */
   async getDocumentChunks(documentId: string): Promise<DocumentChunk[]> {
+    this.checkDatabase();
     const client = await db.connect();
 
     try {
@@ -192,6 +214,7 @@ export class RAGDatabase {
     userId: string,
     limit = 10,
   ): Promise<DocumentProcessing[]> {
+    this.checkDatabase();
     const client = await db.connect();
 
     try {
@@ -212,6 +235,7 @@ export class RAGDatabase {
    * Delete document and its chunks
    */
   async deleteDocument(documentId: string, userId: string): Promise<boolean> {
+    this.checkDatabase();
     const client = await db.connect();
 
     try {
@@ -247,6 +271,7 @@ export class RAGDatabase {
     queryEmbedding: number[],
     limit = 5,
   ): Promise<DocumentChunk[]> {
+    this.checkDatabase();
     const client = await db.connect();
 
     try {
@@ -272,6 +297,7 @@ export class RAGDatabase {
     completed: number;
     failed: number;
   }> {
+    this.checkDatabase();
     const client = await db.connect();
 
     try {

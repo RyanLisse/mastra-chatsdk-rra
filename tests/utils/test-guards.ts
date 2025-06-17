@@ -27,7 +27,10 @@ export const skipIfPlaywrightUnavailable = (test: any) => {
 
 export const skipIfStagehandUnavailable = (test: any) => {
   try {
-    require('stagehand');
+    const { Stagehand } = require('@browserbasehq/stagehand');
+    if (typeof Stagehand !== 'function') {
+      throw new Error('Stagehand class not available');
+    }
     return false;
   } catch {
     test.skip('Stagehand not available');

@@ -1,5 +1,5 @@
 // tests/routes/chat-memory.test.ts
-import { expect, test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { config } from 'dotenv';
 import { randomUUID } from 'node:crypto';
 
@@ -37,7 +37,7 @@ test.describe('Chat API Route with Memory Integration', () => {
     testSessionId = `test-chat-${randomUUID()}`;
   });
 
-  describe('Request Schema Validation', () => {
+  test.describe('Request Schema Validation', () => {
     test('should accept request with sessionId parameter', () => {
       const validRequest = {
         id: randomUUID(),

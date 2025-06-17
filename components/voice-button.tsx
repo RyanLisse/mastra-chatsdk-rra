@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -37,7 +37,7 @@ export function VoiceButton({
   const [isPressed, setIsPressed] = useState(false);
 
   // Handle press and hold for recording
-  const handleMouseDown = () => {
+  const handleMouseDown = useCallback(() => {
     if (disabled || state === 'error') return;
 
     if (!isConnected) {
@@ -49,14 +49,14 @@ export function VoiceButton({
       setIsPressed(true);
       onStartRecording();
     }
-  };
+  }, [disabled, state, isConnected, isRecording, onConnect, onStartRecording]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     if (isPressed && isRecording) {
       setIsPressed(false);
       onStopRecording();
     }
-  };
+  }, [isPressed, isRecording, onStopRecording]);
 
   // Reset pressed state when recording stops externally
   useEffect(() => {
@@ -106,7 +106,7 @@ export function VoiceButton({
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
     };
-  }, [isPressed]);
+  }, [isPressed, handleMouseDown, handleMouseUp]);
 
   // Get button appearance based on state
   const getButtonAppearance = () => {

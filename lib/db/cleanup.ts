@@ -1,19 +1,29 @@
 /**
  * Database cleanup utilities for tests and application shutdown
- * 
+ *
  * This module provides centralized cleanup functions to ensure all database
  * connections are properly closed to prevent test hanging and resource leaks.
  */
 
-// Only import server-only in actual server environments
-if (typeof window === 'undefined' && !process.env.PLAYWRIGHT) {
+// Only import server-only in actual server environments (not in Playwright tests)
+if (
+  typeof window === 'undefined' &&
+  process.env.PLAYWRIGHT !== 'true' &&
+  process.env.NODE_ENV !== 'test'
+) {
   require('server-only');
 }
 
 import { cleanupMemoryConnections } from '../mastra/memory';
 import { cleanupQueryConnections } from './queries';
-import { cleanupGlobalTestDatabase, forceCleanupGlobalTestDatabase } from './test-config';
-import { cleanupAllDatabaseConnections, forceCleanupAllDatabaseConnections, DatabaseConnectionManager } from './connection-manager';
+import {
+  cleanupGlobalTestDatabase,
+  forceCleanupGlobalTestDatabase,
+} from './test-config';
+import {
+  cleanupAllDatabaseConnections,
+  forceCleanupAllDatabaseConnections,
+} from './connection-manager';
 
 /**
  * Cleanup all database connections for graceful shutdown
@@ -64,14 +74,14 @@ export async function cleanupTestConnections(): Promise<void> {
   try {
     // Clean up test-specific connections
     await cleanupGlobalTestDatabase();
-    
+
     // Clean up any remaining connections via connection manager
     await cleanupAllDatabaseConnections();
-    
+
     console.log('✅ Test database connections cleaned up');
   } catch (error) {
     console.error('❌ Error during test cleanup:', error);
-    
+
     // Try force cleanup if graceful cleanup fails
     try {
       await forceCleanupAllConnections();
@@ -106,15 +116,19 @@ export function setupGracefulShutdown(): void {
 
     let exitCode = initialExitCode;
     applicationIsShuttingDown = true;
-    console.log(`🛑 Application received ${signal}, cleaning up database connections...`);
-    
+    console.log(
+      `🛑 Application received ${signal}, cleaning up database connections...`,
+    );
+
     const shutdownStartTime = Date.now();
-    
+
     try {
       await cleanupAllConnections();
-      
+
       const shutdownTime = Date.now() - shutdownStartTime;
-      console.log(`✅ Application graceful shutdown completed in ${shutdownTime}ms`);
+      console.log(
+        `✅ Application graceful shutdown completed in ${shutdownTime}ms`,
+      );
     } catch (error) {
       console.error('❌ Error during application graceful shutdown:', error);
       try {
@@ -125,7 +139,7 @@ export function setupGracefulShutdown(): void {
         exitCode = 1;
       }
     }
-    
+
     console.log(`🏁 Application exiting with code ${exitCode}...`);
     process.exit(exitCode);
   };
@@ -134,12 +148,12 @@ export function setupGracefulShutdown(): void {
   process.on('SIGINT', () => shutdown('SIGINT', 130));
   process.on('SIGTERM', () => shutdown('SIGTERM', 0));
   process.on('SIGQUIT', () => shutdown('SIGQUIT', 131));
-  
+
   // Handle uncaught exceptions and unhandled rejections
   process.on('uncaughtException', async (error) => {
     console.error('💥 Application Uncaught Exception:', error);
     console.error('Stack trace:', error.stack);
-    
+
     if (!applicationIsShuttingDown) {
       applicationIsShuttingDown = true;
       try {
@@ -148,13 +162,18 @@ export function setupGracefulShutdown(): void {
         console.error('❌ Emergency cleanup failed:', cleanupError);
       }
     }
-    
+
     process.exit(1);
   });
-  
+
   process.on('unhandledRejection', async (reason, promise) => {
-    console.error('💥 Application Unhandled Rejection at:', promise, 'reason:', reason);
-    
+    console.error(
+      '💥 Application Unhandled Rejection at:',
+      promise,
+      'reason:',
+      reason,
+    );
+
     if (!applicationIsShuttingDown) {
       applicationIsShuttingDown = true;
       try {
@@ -163,7 +182,7 @@ export function setupGracefulShutdown(): void {
         console.error('❌ Emergency cleanup failed:', cleanupError);
       }
     }
-    
+
     process.exit(1);
   });
 
@@ -182,21 +201,14 @@ export async function checkConnectionHealth(): Promise<{
   };
 }> {
   try {
-    // Check if DatabaseConnectionManager is properly available
-    if (!DatabaseConnectionManager || typeof DatabaseConnectionManager.getConnectionStats !== 'function') {
-      console.warn('DatabaseConnectionManager not available, assuming no active connections');
-      return {
-        healthy: true,
-        details: {
-          connections: 0,
-          names: [],
-        },
-      };
-    }
-    
+    const { cleanupAllDatabaseConnections } = await import(
+      './connection-manager'
+    );
+    const { DatabaseConnectionManager } = await import('./connection-manager');
+
     const stats = DatabaseConnectionManager.getConnectionStats();
     const health = await DatabaseConnectionManager.healthCheck();
-    
+
     return {
       healthy: health.unhealthy.length === 0,
       details: {

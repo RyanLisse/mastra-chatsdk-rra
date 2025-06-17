@@ -1,9 +1,9 @@
 import type { FullConfig } from '@playwright/test';
 import { cleanupGlobalTestDatabase } from '../lib/db/test-config';
-import { 
-  cleanupAllConnections, 
+import {
+  cleanupAllConnections,
   forceCleanupAllConnections,
-  checkConnectionHealth 
+  checkConnectionHealth,
 } from '../lib/db/cleanup';
 
 // Global flag to prevent multiple signal handler executions
@@ -13,7 +13,10 @@ let signalHandlersRegistered = false;
 /**
  * Graceful shutdown handler for Playwright global teardown
  */
-async function gracefulPlaywrightTeardownShutdown(signal: string, initialExitCode = 0): Promise<void> {
+async function gracefulPlaywrightTeardownShutdown(
+  signal: string,
+  initialExitCode = 0,
+): Promise<void> {
   if (isShuttingDown) {
     console.log(`⚠️  Already shutting down, ignoring ${signal}`);
     return;
@@ -21,7 +24,9 @@ async function gracefulPlaywrightTeardownShutdown(signal: string, initialExitCod
 
   let exitCode = initialExitCode;
   isShuttingDown = true;
-  console.log(`\n🛑 Playwright global-teardown received ${signal} - cleaning up...`);
+  console.log(
+    `\n🛑 Playwright global-teardown received ${signal} - cleaning up...`,
+  );
 
   try {
     await cleanupAllConnections();
@@ -52,17 +57,25 @@ function registerPlaywrightTeardownSignalHandlers(): void {
 
   process.on('SIGTERM', () => gracefulPlaywrightTeardownShutdown('SIGTERM', 0));
   process.on('SIGINT', () => gracefulPlaywrightTeardownShutdown('SIGINT', 130));
-  process.on('SIGQUIT', () => gracefulPlaywrightTeardownShutdown('SIGQUIT', 131));
+  process.on('SIGQUIT', () =>
+    gracefulPlaywrightTeardownShutdown('SIGQUIT', 131),
+  );
 
   process.on('uncaughtException', async (error) => {
-    console.error('💥 Uncaught Exception in Playwright global-teardown:', error);
+    console.error(
+      '💥 Uncaught Exception in Playwright global-teardown:',
+      error,
+    );
     if (!isShuttingDown) {
       await gracefulPlaywrightTeardownShutdown('uncaughtException', 1);
     }
   });
 
   process.on('unhandledRejection', async (reason) => {
-    console.error('💥 Unhandled Rejection in Playwright global-teardown:', reason);
+    console.error(
+      '💥 Unhandled Rejection in Playwright global-teardown:',
+      reason,
+    );
     if (!isShuttingDown) {
       await gracefulPlaywrightTeardownShutdown('unhandledRejection', 1);
     }
@@ -82,7 +95,9 @@ async function globalTeardown(config: FullConfig) {
     console.log('1️⃣ Checking connection health...');
     const preHealth = await checkConnectionHealth();
     if (preHealth.details.connections > 0) {
-      console.log(`   📊 Found ${preHealth.details.connections} active connections: ${preHealth.details.names.join(', ')}`);
+      console.log(
+        `   📊 Found ${preHealth.details.connections} active connections: ${preHealth.details.names.join(', ')}`,
+      );
     }
 
     // Step 2: Clean up global test database connections
@@ -101,7 +116,9 @@ async function globalTeardown(config: FullConfig) {
     if (postHealth.details.connections === 0) {
       console.log('   ✅ All connections successfully closed');
     } else {
-      console.warn(`   ⚠️  ${postHealth.details.connections} connections still active: ${postHealth.details.names.join(', ')}`);
+      console.warn(
+        `   ⚠️  ${postHealth.details.connections} connections still active: ${postHealth.details.names.join(', ')}`,
+      );
     }
 
     // Step 5: Clean up any remaining test data if in CI or if specifically requested
@@ -114,7 +131,7 @@ async function globalTeardown(config: FullConfig) {
     console.log('🎉 Global teardown completed successfully!');
   } catch (error) {
     console.error('❌ Global teardown failed:', error);
-    
+
     // Attempt force cleanup if standard cleanup fails
     try {
       console.log('🚨 Attempting force cleanup in teardown...');
@@ -123,7 +140,7 @@ async function globalTeardown(config: FullConfig) {
     } catch (forceError) {
       console.error('❌ Force cleanup in teardown failed:', forceError);
     }
-    
+
     // Don't throw error in teardown as it might mask test failures
   }
 }

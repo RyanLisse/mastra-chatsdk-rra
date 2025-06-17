@@ -16,7 +16,6 @@ import { join } from 'node:path';
  */
 
 describe('Slice 1: Next.js Project with ChatSDK Setup', () => {
-  
   test('TDD: Project should have Next.js configuration', () => {
     // GIVEN: A Next.js project structure
     // WHEN: We check for essential Next.js files
@@ -33,9 +32,15 @@ describe('Slice 1: Next.js Project with ChatSDK Setup', () => {
   test('TDD: Chat interface components should exist', () => {
     // GIVEN: A chat application structure
     // WHEN: We check for chat-related components
-    const chatComponent = existsSync(join(process.cwd(), 'components/chat.tsx'));
-    const messagesComponent = existsSync(join(process.cwd(), 'components/messages.tsx'));
-    const multimodalInput = existsSync(join(process.cwd(), 'components/multimodal-input.tsx'));
+    const chatComponent = existsSync(
+      join(process.cwd(), 'components/chat.tsx'),
+    );
+    const messagesComponent = existsSync(
+      join(process.cwd(), 'components/messages.tsx'),
+    );
+    const multimodalInput = existsSync(
+      join(process.cwd(), 'components/multimodal-input.tsx'),
+    );
 
     // THEN: Chat components should be present
     expect(chatComponent).toBe(true);
@@ -46,8 +51,12 @@ describe('Slice 1: Next.js Project with ChatSDK Setup', () => {
   test('TDD: Chat API routes should be configured', () => {
     // GIVEN: A chat application with API endpoints
     // WHEN: We check for API route files (in chat route group)
-    const chatRoute = existsSync(join(process.cwd(), 'app/(chat)/api/chat/route.ts'));
-    const chatApiDirectory = existsSync(join(process.cwd(), 'app/(chat)/api/chat'));
+    const chatRoute = existsSync(
+      join(process.cwd(), 'app/(chat)/api/chat/route.ts'),
+    );
+    const chatApiDirectory = existsSync(
+      join(process.cwd(), 'app/(chat)/api/chat'),
+    );
 
     // THEN: Chat API routes should exist
     expect(chatRoute).toBe(true);

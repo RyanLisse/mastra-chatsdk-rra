@@ -1,0 +1,18 @@
+[test]
+# Configure test file pattern for unit tests
+# Exclude playwright test directories from unit test discovery
+exclude = [
+  "tests/e2e/**",
+  "tests/routes/**", 
+  "tests/stagehand/**",
+  "tests/pages/**",
+  "tests/fixtures.ts",
+  "tests/global-setup.ts",
+  "tests/global-teardown.ts",
+  "tests/helpers.ts",
+  "tests/setup.ts",
+  "tests/setup-dom.ts"
+]
+
+# Set timeout for unit tests  
+timeout = 10000

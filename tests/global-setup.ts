@@ -5,9 +5,9 @@ import {
   runTestMigrations,
   createTestDatabase,
 } from '../lib/db/test-config';
-import { 
-  cleanupAllConnections, 
-  forceCleanupAllConnections 
+import {
+  cleanupAllConnections,
+  forceCleanupAllConnections,
 } from '../lib/db/cleanup';
 
 // Global flag to prevent multiple signal handler executions
@@ -20,7 +20,10 @@ config({ path: '.env.test' });
 /**
  * Graceful shutdown handler for Playwright global setup
  */
-async function gracefulPlaywrightShutdown(signal: string, initialExitCode = 0): Promise<void> {
+async function gracefulPlaywrightShutdown(
+  signal: string,
+  initialExitCode = 0,
+): Promise<void> {
   if (isShuttingDown) {
     console.log(`⚠️  Already shutting down, ignoring ${signal}`);
     return;
@@ -28,7 +31,9 @@ async function gracefulPlaywrightShutdown(signal: string, initialExitCode = 0): 
 
   let exitCode = initialExitCode;
   isShuttingDown = true;
-  console.log(`\n🛑 Playwright global-setup received ${signal} - cleaning up...`);
+  console.log(
+    `\n🛑 Playwright global-setup received ${signal} - cleaning up...`,
+  );
 
   try {
     await cleanupAllConnections();
@@ -155,7 +160,10 @@ async function globalSetup(config: FullConfig) {
     try {
       await cleanupAllConnections();
     } catch (cleanupError) {
-      console.error('❌ Failed to cleanup connections after setup error:', cleanupError);
+      console.error(
+        '❌ Failed to cleanup connections after setup error:',
+        cleanupError,
+      );
     }
 
     // Provide helpful error messages

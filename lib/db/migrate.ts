@@ -18,7 +18,7 @@ const runMigrate = async () => {
   console.log('⏳ Running migrations...');
 
   const start = Date.now();
-  
+
   try {
     await migrate(db, { migrationsFolder: './lib/db/migrations' });
     const end = Date.now();
@@ -27,7 +27,7 @@ const runMigrate = async () => {
     // Check if the error is due to existing tables/schema
     const errorMessage = error?.message || '';
     const errorCode = error?.cause?.code || '';
-    
+
     if (errorCode === '42P07' || errorMessage.includes('already exists')) {
       console.log('ℹ️  Database tables already exist, skipping migration');
       const end = Date.now();
@@ -39,7 +39,7 @@ const runMigrate = async () => {
   } finally {
     await connection.end();
   }
-  
+
   process.exit(0);
 };
 

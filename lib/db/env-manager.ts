@@ -1,14 +1,18 @@
 /**
  * Environment Manager for Branch-Specific Configuration
- * 
+ *
  * Handles loading and managing environment files with branch-specific overrides:
  * - .env.test (base test configuration)
  * - .env.test.branch (branch-specific overrides)
  * - .env.test.local (local developer overrides)
  */
 
-// Only import server-only in actual server environments
-if (typeof window === 'undefined' && !process.env.PLAYWRIGHT) {
+// Only import server-only in actual server environments (not in Playwright tests)
+if (
+  typeof window === 'undefined' &&
+  process.env.PLAYWRIGHT !== 'true' &&
+  process.env.NODE_ENV !== 'test'
+) {
   require('server-only');
 }
 
@@ -38,25 +42,29 @@ export class EnvironmentManager {
    */
   loadEnvironment(basePath?: string): EnvironmentConfig {
     const rootPath = basePath || process.cwd();
-    
+
     // Load base test environment
     const baseEnvPath = join(rootPath, '.env.test');
     const branchEnvPath = join(rootPath, '.env.test.branch');
     const localEnvPath = join(rootPath, '.env.test.local');
 
     const base = this.loadEnvFile(baseEnvPath);
-    const branch = existsSync(branchEnvPath) ? this.loadEnvFile(branchEnvPath) : undefined;
-    const local = existsSync(localEnvPath) ? this.loadEnvFile(localEnvPath) : undefined;
+    const branch = existsSync(branchEnvPath)
+      ? this.loadEnvFile(branchEnvPath)
+      : undefined;
+    const local = existsSync(localEnvPath)
+      ? this.loadEnvFile(localEnvPath)
+      : undefined;
 
     // Merge configurations: base < branch < local
     const merged = {
       ...base,
       ...(branch || {}),
-      ...(local || {})
+      ...(local || {}),
     };
 
     this.config = { base, branch, local, merged };
-    
+
     // Apply to process.env
     Object.entries(merged).forEach(([key, value]) => {
       process.env[key] = value;
@@ -75,7 +83,7 @@ export class EnvironmentManager {
     parentBranch?: string;
   }): string {
     const branchEnvPath = join(process.cwd(), '.env.test.branch');
-    
+
     const content = [
       '# Branch-specific test environment',
       `# Generated for branch: ${branchConfig.branchName}`,
@@ -84,16 +92,20 @@ export class EnvironmentManager {
       `POSTGRES_URL=${branchConfig.databaseUrl}`,
       `DATABASE_URL=${branchConfig.databaseUrl}`,
       `TEST_BRANCH_NAME=${branchConfig.branchName}`,
-      ...(branchConfig.projectId ? [`NEON_PROJECT_ID=${branchConfig.projectId}`] : []),
-      ...(branchConfig.parentBranch ? [`TEST_BRANCH_PARENT=${branchConfig.parentBranch}`] : []),
+      ...(branchConfig.projectId
+        ? [`NEON_PROJECT_ID=${branchConfig.projectId}`]
+        : []),
+      ...(branchConfig.parentBranch
+        ? [`TEST_BRANCH_PARENT=${branchConfig.parentBranch}`]
+        : []),
       'NODE_ENV=test',
       'PLAYWRIGHT=true',
-      ''
+      '',
     ].join('\n');
 
     writeFileSync(branchEnvPath, content, 'utf-8');
     console.log(`✅ Created branch environment file: ${branchEnvPath}`);
-    
+
     return branchEnvPath;
   }
 
@@ -102,7 +114,7 @@ export class EnvironmentManager {
    */
   cleanupBranchEnvironment(): boolean {
     const branchEnvPath = join(process.cwd(), '.env.test.branch');
-    
+
     if (existsSync(branchEnvPath)) {
       try {
         require('node:fs').unlinkSync(branchEnvPath);
@@ -113,7 +125,7 @@ export class EnvironmentManager {
         return false;
       }
     }
-    
+
     return true;
   }
 
@@ -158,7 +170,7 @@ export class EnvironmentManager {
       branchName: this.get('TEST_BRANCH_NAME'),
       databaseUrl: this.get('POSTGRES_URL') || this.get('DATABASE_URL'),
       projectId: this.get('NEON_PROJECT_ID'),
-      parentBranch: this.get('TEST_BRANCH_PARENT')
+      parentBranch: this.get('TEST_BRANCH_PARENT'),
     };
   }
 
@@ -170,11 +182,11 @@ export class EnvironmentManager {
     try {
       const content = readFileSync(filePath, 'utf-8');
       const result: Record<string, string> = {};
-      
-      content.split('\n').forEach(line => {
-        line = line.trim();
-        if (line && !line.startsWith('#')) {
-          const [key, ...valueParts] = line.split('=');
+
+      content.split('\n').forEach((line) => {
+        const trimmedLine = line.trim();
+        if (trimmedLine && !trimmedLine.startsWith('#')) {
+          const [key, ...valueParts] = trimmedLine.split('=');
           if (key && valueParts.length > 0) {
             result[key.trim()] = valueParts.join('=').trim();
           }
@@ -183,7 +195,9 @@ export class EnvironmentManager {
 
       return result;
     } catch (error) {
-      console.warn(`Warning: Failed to load environment file ${filePath}: ${error}`);
+      console.warn(
+        `Warning: Failed to load environment file ${filePath}: ${error}`,
+      );
       return {};
     }
   }
@@ -197,7 +211,9 @@ export const envManager = EnvironmentManager.getInstance();
 /**
  * Initialize environment with branch-specific overrides
  */
-export function initializeTestEnvironment(basePath?: string): EnvironmentConfig {
+export function initializeTestEnvironment(
+  basePath?: string,
+): EnvironmentConfig {
   return envManager.loadEnvironment(basePath);
 }
 
@@ -211,20 +227,20 @@ export async function withBranchEnvironment<T>(
     projectId?: string;
     parentBranch?: string;
   },
-  callback: () => Promise<T>
+  callback: () => Promise<T>,
 ): Promise<T> {
   const originalEnv = { ...process.env };
-  
+
   try {
     // Create branch environment
     envManager.createBranchEnvironment(branchConfig);
     envManager.loadEnvironment();
-    
+
     // Execute callback with branch environment
     return await callback();
   } finally {
     // Restore original environment
-    Object.keys(process.env).forEach(key => {
+    Object.keys(process.env).forEach((key) => {
       if (!(key in originalEnv)) {
         delete process.env[key];
       }
@@ -232,7 +248,7 @@ export async function withBranchEnvironment<T>(
     Object.entries(originalEnv).forEach(([key, value]) => {
       process.env[key] = value;
     });
-    
+
     // Clean up branch file
     envManager.cleanupBranchEnvironment();
   }
@@ -247,11 +263,11 @@ export const envUtils = {
    */
   validateTestEnvironment(): { valid: boolean; missing: string[] } {
     const required = ['POSTGRES_URL', 'DATABASE_URL'];
-    const missing = required.filter(key => !envManager.get(key));
-    
+    const missing = required.filter((key) => !envManager.get(key));
+
     return {
       valid: missing.length === 0,
-      missing
+      missing,
     };
   },
 
@@ -264,15 +280,18 @@ export const envUtils = {
     branchName?: string;
     projectId?: string;
   } {
-    const url = envManager.get('POSTGRES_URL') || envManager.get('DATABASE_URL');
+    const url =
+      envManager.get('POSTGRES_URL') || envManager.get('DATABASE_URL');
     const branchName = envManager.get('TEST_BRANCH_NAME');
     const projectId = envManager.get('NEON_PROJECT_ID');
-    
+
     return {
       url,
-      isBranch: !!branchName || !!(url?.includes('.pooler.neon.tech') && url.includes('-')),
+      isBranch:
+        !!branchName ||
+        !!(url?.includes('.pooler.neon.tech') && url.includes('-')),
       branchName,
-      projectId
+      projectId,
     };
   },
 
@@ -298,7 +317,7 @@ export const envUtils = {
         '',
         '# Optional: Sample data seeding',
         '# TEST_DB_SEED_SAMPLE_DATA=true',
-        ''
+        '',
       ].join('\n'),
 
       '.env.test.branch.example': [
@@ -318,8 +337,8 @@ export const envUtils = {
         '# Test Environment',
         'NODE_ENV=test',
         'PLAYWRIGHT=true',
-        ''
-      ].join('\n')
+        '',
+      ].join('\n'),
     };
 
     Object.entries(templates).forEach(([filename, content]) => {
@@ -329,5 +348,5 @@ export const envUtils = {
         console.log(`✅ Created template: ${filename}`);
       }
     });
-  }
+  },
 };

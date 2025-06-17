@@ -2,14 +2,30 @@
 import { streamText, generateText } from 'ai';
 import { myProvider } from '../providers';
 import { roboRailPrompt } from '../prompts';
-import { PostgresMemory } from '../../mastra/memory';
-import { ragTool } from '../tools/rag';
 import type { Message } from 'ai';
 import { generateUUID } from '../../utils';
-import {
-  traceAgentGeneration,
-  traceMemoryOperation,
-} from '../../mastra/langsmith';
+
+// Conditional imports based on environment to avoid test issues
+let PostgresMemory: any;
+let traceAgentGeneration: any;
+let traceMemoryOperation: any;
+let ragTool: any;
+
+if (process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'true') {
+  // Use test mocks to avoid database and external service dependencies
+  PostgresMemory = require('../../mastra/memory.test').PostgresMemory;
+  const langsmithTest = require('../../mastra/langsmith.test');
+  traceAgentGeneration = langsmithTest.traceAgentGeneration;
+  traceMemoryOperation = langsmithTest.traceMemoryOperation;
+  ragTool = require('../tools/rag.test').ragTool;
+} else {
+  // Use real implementations
+  PostgresMemory = require('../../mastra/memory').PostgresMemory;
+  const langsmith = require('../../mastra/langsmith');
+  traceAgentGeneration = langsmith.traceAgentGeneration;
+  traceMemoryOperation = langsmith.traceMemoryOperation;
+  ragTool = require('../tools/rag').ragTool;
+}
 
 export interface RoboRailAgentConfig {
   sessionId?: string;

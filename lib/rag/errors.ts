@@ -401,6 +401,17 @@ export async function checkDatabaseHealth(): Promise<HealthCheck> {
   const start = Date.now();
 
   try {
+    // Skip database health check in test environment
+    if (process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'true') {
+      return {
+        service: 'postgres',
+        status: 'degraded',
+        responseTime: Date.now() - start,
+        error: 'Database health check skipped in test environment',
+        lastChecked: new Date().toISOString(),
+      };
+    }
+
     const { db } = await import('@vercel/postgres');
     const client = await db.connect();
 

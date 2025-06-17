@@ -1,5 +1,9 @@
-// Only import server-only in actual server environments
-if (typeof window === 'undefined' && !process.env.PLAYWRIGHT) {
+// Only import server-only in actual server environments (not in Playwright tests)
+if (
+  typeof window === 'undefined' &&
+  process.env.PLAYWRIGHT !== 'true' &&
+  process.env.NODE_ENV !== 'test'
+) {
   require('server-only');
 }
 
@@ -10,12 +14,12 @@ import postgres from 'postgres';
 import { sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DatabaseConnectionManager } from './connection-manager';
-import { 
-  type NeonBranchManager, 
-  createNeonBranchManager, 
+import {
+  type NeonBranchManager,
+  createNeonBranchManager,
   extractProjectIdFromConnectionString,
   extractBranchNameFromConnectionString,
-  type NeonBranch 
+  type NeonBranch,
 } from './neon-branch-manager';
 import { initializeTestEnvironment } from './env-manager';
 
@@ -42,7 +46,11 @@ export interface DatabaseTestSetup {
   reset: () => Promise<void>;
   seed: () => Promise<void>;
   config: TestDatabaseConfig;
-  createTestBranch?: (testName: string) => Promise<{ branch: NeonBranch; connectionString: string; cleanup: () => Promise<void> }>;
+  createTestBranch?: (testName: string) => Promise<{
+    branch: NeonBranch;
+    connectionString: string;
+    cleanup: () => Promise<void>;
+  }>;
   cleanupTestBranches?: (dryRun?: boolean) => Promise<string[]>;
 }
 
@@ -68,8 +76,9 @@ export function validateTestDatabaseConfig(): TestDatabaseConfig {
   }
 
   // Check if this is a Neon database URL
-  const isNeonDatabase = postgresUrl.includes('neon.tech') || postgresUrl.includes('.neon.tech');
-  
+  const isNeonDatabase =
+    postgresUrl.includes('neon.tech') || postgresUrl.includes('.neon.tech');
+
   // Check if this is a Neon test branch URL
   const isNeonTestBranch =
     isNeonDatabase &&
@@ -83,7 +92,8 @@ export function validateTestDatabaseConfig(): TestDatabaseConfig {
   let neonBranchManager: NeonBranchManager | undefined;
 
   if (isNeonDatabase) {
-    branchName = extractBranchNameFromConnectionString(postgresUrl) || undefined;
+    branchName =
+      extractBranchNameFromConnectionString(postgresUrl) || undefined;
     projectId = extractProjectIdFromConnectionString(postgresUrl) || undefined;
 
     // Initialize Neon branch manager if API key is available
@@ -98,7 +108,9 @@ export function validateTestDatabaseConfig(): TestDatabaseConfig {
         console.warn('⚠️  Could not initialize Neon branch manager:', error);
       }
     } else if (isNeonDatabase) {
-      console.log('💡 NEON_API_KEY not set. Branch management features will be unavailable.');
+      console.log(
+        '💡 NEON_API_KEY not set. Branch management features will be unavailable.',
+      );
     }
   }
 
@@ -408,7 +420,10 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
         if (!config.neonBranchManager) {
           throw new Error('Neon branch manager not available');
         }
-        return config.neonBranchManager.createTempTestDatabase(testName, config.projectId);
+        return config.neonBranchManager.createTempTestDatabase(
+          testName,
+          config.projectId,
+        );
       }
     : undefined;
 
@@ -417,7 +432,10 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
         if (!config.neonBranchManager) {
           throw new Error('Neon branch manager not available');
         }
-        return config.neonBranchManager.cleanupTestBranches(config.projectId, dryRun);
+        return config.neonBranchManager.cleanupTestBranches(
+          config.projectId,
+          dryRun,
+        );
       }
     : undefined;
 
@@ -441,11 +459,11 @@ export async function runTestMigrations(): Promise<void> {
 
   console.log('⏳ Running test database migrations...');
 
-  const connection = postgres(config.url, { 
+  const connection = postgres(config.url, {
     max: 1,
     idle_timeout: 20,
     max_lifetime: 1800,
-    prepare: false
+    prepare: false,
   });
   const db = drizzle(connection);
 
@@ -475,7 +493,7 @@ export async function getGlobalTestDatabase(): Promise<DatabaseTestSetup> {
   if (isInitializing) {
     // Wait for initialization to complete
     while (isInitializing && !globalTestDb) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
 
@@ -508,7 +526,7 @@ export async function cleanupGlobalTestDatabase(): Promise<void> {
       isInitializing = false;
     }
   }
-  
+
   // Also cleanup via connection manager
   await DatabaseConnectionManager.closeConnection(TEST_CONNECTION_NAME);
 }
@@ -530,7 +548,7 @@ export async function forceCleanupGlobalTestDatabase(): Promise<void> {
       globalTestDb = null;
     }
   }
-  
+
   // Force cleanup via connection manager
   await DatabaseConnectionManager.closeConnection(TEST_CONNECTION_NAME);
 }

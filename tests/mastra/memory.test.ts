@@ -9,7 +9,7 @@ import {
   beforeEach,
 } from 'bun:test';
 import { config } from 'dotenv';
-import { PostgresMemory, } from '../../lib/mastra/memory';
+import { PostgresMemory } from '../../lib/mastra/memory';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { sql } from 'drizzle-orm';
@@ -17,7 +17,10 @@ import type { Message } from 'ai';
 import { randomUUID } from 'node:crypto';
 
 // Load environment variables for testing
-// Try .env.local first, fallback to .env
+// In test environment, prioritize .env.test, then .env.local, then .env
+if (process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'false') {
+  config({ path: '.env.test' });
+}
 config({ path: '.env.local' });
 if (
   !process.env.POSTGRES_URL ||

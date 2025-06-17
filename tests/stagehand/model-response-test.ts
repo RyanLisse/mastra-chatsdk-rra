@@ -1,22 +1,19 @@
 import { test, expect } from '@playwright/test';
 
 // Import Stagehand conditionally to handle potential import issues
-let stagehandModule: any;
+let StagehandClass: any;
 let stagehandAvailable = false;
 
-// Temporarily disable Stagehand tests due to library compatibility issues
-stagehandAvailable = false;
-console.log('⚠️  Stagehand tests temporarily disabled due to compatibility issues');
-
-// try {
-//   stagehandModule = require('stagehand');
-//   stagehandAvailable = true;
-// } catch (error) {
-//   console.warn(
-//     'Stagehand not available, skipping Stagehand tests:',
-//     (error as Error).message,
-//   );
-// }
+try {
+  const { Stagehand } = require('@browserbasehq/stagehand');
+  StagehandClass = Stagehand;
+  stagehandAvailable = true;
+} catch (error) {
+  console.warn(
+    'Stagehand not available, skipping Stagehand tests:',
+    (error as Error).message,
+  );
+}
 
 const TEST_PROMPT =
   "Hello! Please respond with just 'Model working' to confirm you're functioning.";
@@ -37,13 +34,15 @@ test.describe(stagehandAvailable
   test.beforeAll(async () => {
     if (stagehandAvailable) {
       // Initialize Stagehand
-      stagehand = await stagehandModule.launch({
+      stagehand = new StagehandClass({
         env: 'LOCAL',
         verbose: 1,
         debugDom: true,
         headless: process.env.CI === 'true',
         domSettleTimeoutMs: 30_000,
       });
+
+      await stagehand.init();
 
       console.log('🚀 Stagehand initialized for model testing');
     }
@@ -85,11 +84,14 @@ test.describe(stagehandAvailable
   });
 
   test('should navigate to the chat application', async () => {
-    await stagehand.page.goto('http://localhost:3000');
+    await stagehand.page.goto('http://localhost:3000', {
+      timeout: 30000,
+      waitUntil: 'domcontentloaded',
+    });
     await stagehand.page.waitForTimeout(3000);
 
     // Take initial screenshot
-    await stagehand.screenshot({ name: 'initial-page-load' });
+    await stagehand.page.screenshot({ path: 'initial-page-load.png' });
 
     // Check if we need to sign in or if we're already in chat
     const hasSignIn = await stagehand.page
@@ -99,16 +101,16 @@ test.describe(stagehandAvailable
 
     if (hasSignIn) {
       console.log('🔐 Signing in as guest...');
-      await stagehand.act({
-        action: 'Click the "Continue as Guest" button or sign in option',
-      });
+      await stagehand.page.act(
+        'Click the "Continue as Guest" button or sign in option',
+      );
       await stagehand.page.waitForTimeout(2000);
     }
 
     // Verify we're on the chat page
     const hasChatInput = await stagehand.page
       .locator(
-        '[data-testid="chat-input"], textarea, input[placeholder*="message"]',
+        '[data-testid="multimodal-input"], textarea, input[placeholder*="message"]',
       )
       .isVisible()
       .catch(() => false);
@@ -120,13 +122,11 @@ test.describe(stagehandAvailable
   test('should test all available models for responses', async () => {
     // Find and click the model selector
     console.log('🎯 Looking for model selector...');
-    await stagehand.act({
-      action: 'Click the model selector button or dropdown',
-    });
+    await stagehand.page.act('Click the model selector button or dropdown');
     await stagehand.page.waitForTimeout(2000);
 
     // Take screenshot of model selector
-    await stagehand.screenshot({ name: 'model-selector-open' });
+    await stagehand.page.screenshot({ path: 'model-selector-open.png' });
 
     // Get all available model options
     let modelElements = await stagehand.page
@@ -161,9 +161,9 @@ test.describe(stagehandAvailable
           .isVisible()
           .catch(() => false);
         if (!selectorVisible) {
-          await stagehand.act({
-            action: 'Click the model selector button to open the dropdown',
-          });
+          await stagehand.page.act(
+            'Click the model selector button to open the dropdown',
+          );
           await stagehand.page.waitForTimeout(1000);
         }
 
@@ -185,15 +185,15 @@ test.describe(stagehandAvailable
 
         // Send test message
         console.log(`📝 Sending test message to ${modelName}...`);
-        await stagehand.act({
-          action: `Type "${TEST_PROMPT}" in the chat input field`,
-        });
+        await stagehand.page.act(
+          `Type "${TEST_PROMPT}" in the text area with placeholder about RoboRail`,
+        );
         await stagehand.page.waitForTimeout(1000);
 
         // Send the message
-        await stagehand.act({
-          action: 'Press Enter or click the send button to send the message',
-        });
+        await stagehand.page.act(
+          'Press Enter or click the send button (arrow up icon) to send the message',
+        );
 
         // Wait for response with timeout
         console.log(`⏳ Waiting for response from ${modelName}...`);
@@ -206,7 +206,9 @@ test.describe(stagehandAvailable
 
           // Look for assistant response
           const responses = await stagehand.page
-            .locator('.message, [data-role="assistant"], .assistant-message')
+            .locator(
+              '[data-testid="message-assistant"], [data-role="assistant"], .assistant-message',
+            )
             .all();
           if (responses.length > 0) {
             const lastResponse = responses[responses.length - 1];
@@ -237,8 +239,8 @@ test.describe(stagehandAvailable
         }
 
         // Take screenshot of the chat with response
-        await stagehand.screenshot({
-          name: `model-test-${i + 1}-${modelName.replace(/[^a-zA-Z0-9]/g, '-')}`,
+        await stagehand.page.screenshot({
+          path: `model-test-${i + 1}-${modelName.replace(/[^a-zA-Z0-9]/g, '-')}.png`,
         });
 
         // Wait a bit before next test
@@ -275,25 +277,27 @@ test.describe(stagehandAvailable
         console.log(`\n🧪 Testing ${provider} - ${model}...`);
 
         // Open model selector
-        await stagehand.act({
-          action: 'Click the model selector to open the dropdown',
-        });
+        await stagehand.page.act(
+          'Click the model selector to open the dropdown',
+        );
         await stagehand.page.waitForTimeout(2000);
 
         // Look for the specific model
-        await stagehand.act({
-          action: `Click on the ${model} model option from ${provider}`,
-        });
+        await stagehand.page.act(
+          `Click on the ${model} model option from ${provider}`,
+        );
         await stagehand.page.waitForTimeout(2000);
 
         // Send a provider-specific test
         const testMessage = `Hello ${provider}! Please respond with "I am ${model} and I'm working correctly."`;
-        await stagehand.act({
-          action: `Type "${testMessage}" in the chat input`,
-        });
+        await stagehand.page.act(
+          `Type "${testMessage}" in the text area with placeholder about RoboRail`,
+        );
         await stagehand.page.waitForTimeout(1000);
 
-        await stagehand.act({ action: 'Send the message' });
+        await stagehand.page.act(
+          'Click the send button or press Enter to send the message',
+        );
 
         // Wait for response
         let responseReceived = false;
@@ -301,7 +305,9 @@ test.describe(stagehandAvailable
           await stagehand.page.waitForTimeout(1500);
 
           const responses = await stagehand.page
-            .locator('.message, [data-role="assistant"]')
+            .locator(
+              '[data-testid="message-assistant"], [data-role="assistant"]',
+            )
             .all();
           if (responses.length > 0) {
             const responseText =
@@ -318,8 +324,8 @@ test.describe(stagehandAvailable
           console.log(`❌ ${provider} ${model}: No response received`);
         }
 
-        await stagehand.screenshot({
-          name: `provider-test-${provider.toLowerCase()}-${model.replace(/[^a-zA-Z0-9]/g, '-')}`,
+        await stagehand.page.screenshot({
+          path: `provider-test-${provider.toLowerCase()}-${model.replace(/[^a-zA-Z0-9]/g, '-')}.png`,
         });
       } catch (error) {
         console.log(`❌ Error testing ${provider} ${model}: ${error}`);

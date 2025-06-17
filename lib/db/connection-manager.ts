@@ -1,13 +1,22 @@
 /**
  * Centralized database connection management for the application
- * 
+ *
  * This module provides a unified approach to managing PostgreSQL connections
  * across different parts of the application with proper pooling and cleanup.
  */
 
-// Only import server-only in actual server environments (not in tests)
-if (typeof window === 'undefined' && !process.env.PLAYWRIGHT && process.env.NODE_ENV !== 'test') {
-  require('server-only');
+// Only import server-only in actual server environments (not in Playwright tests)
+// Skip server-only for Playwright tests completely
+if (
+  typeof window === 'undefined' &&
+  process.env.PLAYWRIGHT !== 'true' &&
+  process.env.NODE_ENV !== 'test'
+) {
+  try {
+    require('server-only');
+  } catch (e) {
+    // Ignore if server-only fails to load in test environments
+  }
 }
 
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -25,17 +34,24 @@ export interface ConnectionConfig {
   onnotice?: () => void;
 }
 
+// biome-ignore lint/complexity/noStaticOnlyClass: Connection manager singleton pattern
 export class DatabaseConnectionManager {
-  private static instances: Map<string, {
-    db: PostgresJsDatabase;
-    connection: postgres.Sql;
-    config: ConnectionConfig;
-  }> = new Map();
+  private static instances: Map<
+    string,
+    {
+      db: PostgresJsDatabase;
+      connection: postgres.Sql;
+      config: ConnectionConfig;
+    }
+  > = new Map();
 
   /**
    * Get or create a database connection with the specified configuration
    */
-  static getConnection(name: string, config: ConnectionConfig): {
+  static getConnection(
+    name: string,
+    config: ConnectionConfig,
+  ): {
     db: PostgresJsDatabase;
     connection: postgres.Sql;
   } {
@@ -101,9 +117,9 @@ export class DatabaseConnectionManager {
    * Close all connections
    */
   static async closeAllConnections(): Promise<void> {
-    const closePromises = Array.from(DatabaseConnectionManager.instances.keys()).map(name =>
-      DatabaseConnectionManager.closeConnection(name)
-    );
+    const closePromises = Array.from(
+      DatabaseConnectionManager.instances.keys(),
+    ).map((name) => DatabaseConnectionManager.closeConnection(name));
 
     await Promise.all(closePromises);
   }
@@ -125,15 +141,15 @@ export class DatabaseConnectionManager {
    * Force cleanup all connections (useful for emergency cleanup)
    */
   static async forceCleanup(): Promise<void> {
-    const forceClosePromises = Array.from(DatabaseConnectionManager.instances.entries()).map(
-      async ([name, instance]) => {
-        try {
-          await instance.connection.end({ timeout: 5 });
-        } catch (error) {
-          console.error(`Error during force cleanup of ${name}:`, error);
-        }
+    const forceClosePromises = Array.from(
+      DatabaseConnectionManager.instances.entries(),
+    ).map(async ([name, instance]) => {
+      try {
+        await instance.connection.end({ timeout: 5 });
+      } catch (error) {
+        console.error(`Error during force cleanup of ${name}:`, error);
       }
-    );
+    });
 
     await Promise.all(forceClosePromises);
     DatabaseConnectionManager.instances.clear();
@@ -147,16 +163,18 @@ export class DatabaseConnectionManager {
     unhealthy: string[];
   }> {
     const results = await Promise.allSettled(
-      Array.from(DatabaseConnectionManager.instances.keys()).map(async name => ({
-        name,
-        healthy: await DatabaseConnectionManager.testConnection(name),
-      }))
+      Array.from(DatabaseConnectionManager.instances.keys()).map(
+        async (name) => ({
+          name,
+          healthy: await DatabaseConnectionManager.testConnection(name),
+        }),
+      ),
     );
 
     const healthy: string[] = [];
     const unhealthy: string[] = [];
 
-    results.forEach(result => {
+    results.forEach((result) => {
       if (result.status === 'fulfilled') {
         if (result.value.healthy) {
           healthy.push(result.value.name);

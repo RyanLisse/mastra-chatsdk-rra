@@ -1,6 +1,10 @@
 // lib/mastra/memory.ts
-// Only import server-only in actual server environments
-if (typeof window === 'undefined' && !process.env.PLAYWRIGHT) {
+// Only import server-only in actual server environments (not in Playwright tests)
+if (
+  typeof window === 'undefined' &&
+  process.env.PLAYWRIGHT !== 'true' &&
+  process.env.NODE_ENV !== 'test'
+) {
   require('server-only');
 }
 
@@ -10,7 +14,10 @@ import type { Message } from 'ai';
 import { DatabaseConnectionManager } from '../db/connection-manager';
 
 // Load environment variables for tests and local development
-// Try .env.local first, fallback to .env
+// In test environment, prioritize .env.test, then .env.local, then .env
+if (process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'false') {
+  config({ path: '.env.test' });
+}
 config({ path: '.env.local' });
 if (
   !process.env.POSTGRES_URL ||
