@@ -48,7 +48,7 @@ describe('Signal Handler Integration', () => {
     const signalTypes = ['SIGTERM', 'SIGINT', 'SIGQUIT'];
     
     for (const signal of signalTypes) {
-      const listeners = process.listeners(signal);
+      const listeners = process.listeners(signal as NodeJS.Signals);
       expect(listeners.length).toBeGreaterThan(0);
     }
   });

@@ -1,5 +1,5 @@
 // tests/routes/chat-memory.test.ts
-import { expect, test, describe, beforeAll, afterEach } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { config } from 'dotenv';
 import { randomUUID } from 'node:crypto';
 
@@ -18,10 +18,10 @@ if (
   }
 }
 
-describe('Chat API Route with Memory Integration', () => {
+test.describe('Chat API Route with Memory Integration', () => {
   let testSessionId: string;
 
-  beforeAll(() => {
+  test.beforeAll(() => {
     // Skip tests if database is not configured
     if (
       !process.env.POSTGRES_URL ||
@@ -32,7 +32,7 @@ describe('Chat API Route with Memory Integration', () => {
     }
   });
 
-  afterEach(() => {
+  test.afterEach(() => {
     // Generate fresh session ID for next test
     testSessionId = `test-chat-${randomUUID()}`;
   });

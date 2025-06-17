@@ -5,8 +5,8 @@
  * across different parts of the application with proper pooling and cleanup.
  */
 
-// Only import server-only in actual server environments
-if (typeof window === 'undefined' && !process.env.PLAYWRIGHT) {
+// Only import server-only in actual server environments (not in tests)
+if (typeof window === 'undefined' && !process.env.PLAYWRIGHT && process.env.NODE_ENV !== 'test') {
   require('server-only');
 }
 
