@@ -221,3 +221,13 @@ export const documentProcessing = pgTable('DocumentProcessing', {
 });
 
 export type DocumentProcessing = InferSelectModel<typeof documentProcessing>;
+
+// Chat sessions table for PostgresMemory
+export const chatSessions = pgTable('chat_sessions', {
+  id: serial('id').primaryKey(),
+  sessionId: text('session_id').notNull(),
+  message: json('message').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export type ChatSession = InferSelectModel<typeof chatSessions>;

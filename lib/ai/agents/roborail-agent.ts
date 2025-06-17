@@ -11,20 +11,26 @@ let traceAgentGeneration: any;
 let traceMemoryOperation: any;
 let ragTool: any;
 
-if (process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'true') {
-  // Use test mocks to avoid database and external service dependencies
-  PostgresMemory = require('../../mastra/memory.test').PostgresMemory;
-  const langsmithTest = require('../../mastra/langsmith.test');
-  traceAgentGeneration = langsmithTest.traceAgentGeneration;
-  traceMemoryOperation = langsmithTest.traceMemoryOperation;
-  ragTool = require('../tools/rag.test').ragTool;
-} else {
+// Use real implementations for integration tests that have actual database connectivity
+// Only use mocks for unit tests that should not depend on external services
+const useRealImplementations = process.env.INTEGRATION_TEST === 'true' || 
+                               (process.env.NODE_ENV === 'test' && process.env.USE_REAL_DB === 'true') ||
+                               (!process.env.NODE_ENV || process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production');
+
+if (useRealImplementations) {
   // Use real implementations
   PostgresMemory = require('../../mastra/memory').PostgresMemory;
   const langsmith = require('../../mastra/langsmith');
   traceAgentGeneration = langsmith.traceAgentGeneration;
   traceMemoryOperation = langsmith.traceMemoryOperation;
   ragTool = require('../tools/rag').ragTool;
+} else {
+  // Use test mocks to avoid database and external service dependencies
+  PostgresMemory = require('../../mastra/memory.test').PostgresMemory;
+  const langsmithTest = require('../../mastra/langsmith.test');
+  traceAgentGeneration = langsmithTest.traceAgentGeneration;
+  traceMemoryOperation = langsmithTest.traceMemoryOperation;
+  ragTool = require('../tools/rag.test').ragTool;
 }
 
 export interface RoboRailAgentConfig {
