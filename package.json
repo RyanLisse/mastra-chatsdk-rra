@@ -53,7 +53,6 @@
     "@codemirror/state": "^6.5.2",
     "@codemirror/theme-one-dark": "^6.1.2",
     "@codemirror/view": "^6.37.2",
-    "@kinde-oss/kinde-auth-nextjs": "^2.7.0",
     "@mastra/core": "^0.10.5",
     "@mastra/node-audio": "^0.1.6",
     "@mastra/voice-openai-realtime": "^0.10.1",
