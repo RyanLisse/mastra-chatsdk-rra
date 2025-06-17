@@ -34,9 +34,8 @@ export interface ConnectionConfig {
   onnotice?: () => void;
 }
 
-// biome-ignore lint/complexity/noStaticOnlyClass: Connection manager singleton pattern
-export class DatabaseConnectionManager {
-  private static instances: Map<
+export namespace DatabaseConnectionManager {
+  const instances: Map<
     string,
     {
       db: PostgresJsDatabase;
@@ -48,14 +47,14 @@ export class DatabaseConnectionManager {
   /**
    * Get or create a database connection with the specified configuration
    */
-  static getConnection(
+  export function getConnection(
     name: string,
     config: ConnectionConfig,
   ): {
     db: PostgresJsDatabase;
     connection: postgres.Sql;
   } {
-    const existing = DatabaseConnectionManager.instances.get(name);
+    const existing = instances.get(name);
     if (existing) {
       return { db: existing.db, connection: existing.connection };
     }
@@ -72,7 +71,7 @@ export class DatabaseConnectionManager {
 
     const db = drizzle(connection);
 
-    DatabaseConnectionManager.instances.set(name, { db, connection, config });
+    instances.set(name, { db, connection, config });
 
     return { db, connection };
   }
@@ -80,8 +79,8 @@ export class DatabaseConnectionManager {
   /**
    * Test connectivity for a specific connection
    */
-  static async testConnection(name: string): Promise<boolean> {
-    const instance = DatabaseConnectionManager.instances.get(name);
+  export async function testConnection(name: string): Promise<boolean> {
+    const instance = instances.get(name);
     if (!instance) {
       return false;
     }
@@ -98,8 +97,8 @@ export class DatabaseConnectionManager {
   /**
    * Close a specific connection
    */
-  static async closeConnection(name: string): Promise<void> {
-    const instance = DatabaseConnectionManager.instances.get(name);
+  export async function closeConnection(name: string): Promise<void> {
+    const instance = instances.get(name);
     if (!instance) {
       return;
     }
@@ -109,17 +108,17 @@ export class DatabaseConnectionManager {
     } catch (error) {
       console.error(`Error closing connection ${name}:`, error);
     } finally {
-      DatabaseConnectionManager.instances.delete(name);
+      instances.delete(name);
     }
   }
 
   /**
    * Close all connections
    */
-  static async closeAllConnections(): Promise<void> {
-    const closePromises = Array.from(
-      DatabaseConnectionManager.instances.keys(),
-    ).map((name) => DatabaseConnectionManager.closeConnection(name));
+  export async function closeAllConnections(): Promise<void> {
+    const closePromises = Array.from(instances.keys()).map((name) =>
+      closeConnection(name),
+    );
 
     await Promise.all(closePromises);
   }
@@ -127,48 +126,46 @@ export class DatabaseConnectionManager {
   /**
    * Get statistics about active connections
    */
-  static getConnectionStats(): {
+  export function getConnectionStats(): {
     activeConnections: number;
     connectionNames: string[];
   } {
     return {
-      activeConnections: DatabaseConnectionManager.instances.size,
-      connectionNames: Array.from(DatabaseConnectionManager.instances.keys()),
+      activeConnections: instances.size,
+      connectionNames: Array.from(instances.keys()),
     };
   }
 
   /**
    * Force cleanup all connections (useful for emergency cleanup)
    */
-  static async forceCleanup(): Promise<void> {
-    const forceClosePromises = Array.from(
-      DatabaseConnectionManager.instances.entries(),
-    ).map(async ([name, instance]) => {
-      try {
-        await instance.connection.end({ timeout: 5 });
-      } catch (error) {
-        console.error(`Error during force cleanup of ${name}:`, error);
-      }
-    });
+  export async function forceCleanup(): Promise<void> {
+    const forceClosePromises = Array.from(instances.entries()).map(
+      async ([name, instance]) => {
+        try {
+          await instance.connection.end({ timeout: 5 });
+        } catch (error) {
+          console.error(`Error during force cleanup of ${name}:`, error);
+        }
+      },
+    );
 
     await Promise.all(forceClosePromises);
-    DatabaseConnectionManager.instances.clear();
+    instances.clear();
   }
 
   /**
    * Health check for all connections
    */
-  static async healthCheck(): Promise<{
+  export async function healthCheck(): Promise<{
     healthy: string[];
     unhealthy: string[];
   }> {
     const results = await Promise.allSettled(
-      Array.from(DatabaseConnectionManager.instances.keys()).map(
-        async (name) => ({
-          name,
-          healthy: await DatabaseConnectionManager.testConnection(name),
-        }),
-      ),
+      Array.from(instances.keys()).map(async (name) => ({
+        name,
+        healthy: await testConnection(name),
+      })),
     );
 
     const healthy: string[] = [];

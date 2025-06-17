@@ -44,7 +44,7 @@ describe('Signal Handler Integration', () => {
 
   it('should handle multiple signal types', () => {
     // Verify that all required signal types have listeners
-    const signalTypes = ['SIGTERM', 'SIGINT', 'SIGQUIT'] as const;
+    const signalTypes = ['SIGTERM', 'SIGINT', 'SIGQUIT'];
 
     for (const signal of signalTypes) {
       const listeners = process.listeners(signal as NodeJS.Signals);

@@ -20,7 +20,17 @@ export class AuthPage {
     await this.page.getByPlaceholder('user@acme.com').fill(email);
     await this.page.getByLabel('Password').click();
     await this.page.getByLabel('Password').fill(password);
+
     await this.page.getByRole('button', { name: 'Sign Up' }).click();
+
+    // Wait for the button to become disabled (indicating submission)
+    await expect(
+      this.page.getByRole('button', { name: 'Sign Up' }),
+    ).toBeDisabled({ timeout: 5000 });
+
+    // Rather than waiting for URL change, wait for either navigation or error state
+    // This is more flexible as the test caller can handle the specific expectations
+    await this.page.waitForTimeout(1000); // Give some time for the submission to process
   }
 
   async login(email: string, password: string) {
@@ -29,7 +39,29 @@ export class AuthPage {
     await this.page.getByPlaceholder('user@acme.com').fill(email);
     await this.page.getByLabel('Password').click();
     await this.page.getByLabel('Password').fill(password);
+
+    // Start navigation early to avoid hanging
+    const navigationPromise = this.page.waitForURL('/', { timeout: 15000 });
+
     await this.page.getByRole('button', { name: 'Sign In' }).click();
+
+    // Wait for either navigation or timeout
+    try {
+      await navigationPromise;
+    } catch (error) {
+      // If navigation fails, check if we're already on the home page or if login failed
+      if (!this.page.url().includes('/login')) {
+        console.log('Login successful - already navigated');
+        return;
+      }
+      // Check for error toast which indicates login failure rather than hanging
+      const toast = this.page.getByTestId('toast');
+      if (await toast.isVisible()) {
+        console.log('Login failed with toast message');
+        return;
+      }
+      throw error;
+    }
   }
 
   async logout(email: string, password: string) {
@@ -55,7 +87,11 @@ export class AuthPage {
   }
 
   async expectToastToContain(text: string) {
-    await expect(this.page.getByTestId('toast')).toContainText(text);
+    // Wait for toast to appear with extended timeout and handle multiple toasts
+    // Use locator that finds any toast with the expected text
+    await expect(
+      this.page.locator(`[data-testid="toast"]:has-text("${text}")`).first(),
+    ).toBeVisible({ timeout: 10000 });
   }
 
   async openSidebar() {

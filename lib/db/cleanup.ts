@@ -28,6 +28,7 @@ import {
 import {
   cleanupAllDatabaseConnections,
   forceCleanupAllDatabaseConnections,
+  DatabaseConnectionManager,
 } from './connection-manager';
 
 /**
@@ -206,10 +207,22 @@ export async function checkConnectionHealth(): Promise<{
   };
 }> {
   try {
-    const { cleanupAllDatabaseConnections } = await import(
-      './connection-manager'
-    );
-    const { DatabaseConnectionManager } = await import('./connection-manager');
+    // Check if DatabaseConnectionManager is properly available
+    if (
+      !DatabaseConnectionManager ||
+      typeof DatabaseConnectionManager.getConnectionStats !== 'function'
+    ) {
+      console.warn(
+        'DatabaseConnectionManager not available, assuming no active connections',
+      );
+      return {
+        healthy: true,
+        details: {
+          connections: 0,
+          names: [],
+        },
+      };
+    }
 
     const stats = DatabaseConnectionManager.getConnectionStats();
     const health = await DatabaseConnectionManager.healthCheck();

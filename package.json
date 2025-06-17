@@ -27,7 +27,6 @@
     "db:test:validate": "tsx scripts/validate-test-db.ts",
     "db:test:clean": "tsx scripts/reset-test-db.ts && echo 'Test database cleaned'",
     "validate:providers": "tsx scripts/validate-providers.ts",
-    "test:neon-setup": "tsx scripts/test-neon-setup.ts",
     "test": "export PLAYWRIGHT=true && bun run playwright test",
     "test:stagehand": "export PLAYWRIGHT=true && npx playwright test tests/stagehand/ --max-failures=1",
     "test:unit": "USE_REAL_DB=true PLAYWRIGHT=false bun test tests/tdd-slices.test.ts tests/ui-enhancements.test.ts tests/voice-slice4-validation.test.ts tests/mastra/ tests/rag/ tests/signal-handlers.test.ts tests/signal-integration.test.ts tests/db-neon-branch-manager.test.ts --timeout 10000",
@@ -35,7 +34,6 @@
     "test:e2e": "export PLAYWRIGHT=true && bun run playwright test tests/e2e/ --max-failures=1",
     "test:routes": "export PLAYWRIGHT=true && bun run playwright test tests/routes/ --max-failures=1",
     "test:all": "bun run test:unit:safe && bun run test:stagehand && bun run test:e2e",
-    "test:all:quick": "bun run test:unit:safe && echo 'Quick test completed - database-dependent tests skipped'",
     "test:watch": "bun test --watch --timeout 10000",
     "test:tdd": "export PLAYWRIGHT=true && npx playwright test tests/stagehand/ --ui",
     "dev:mastra": "bunx mastra dev"

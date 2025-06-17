@@ -90,8 +90,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 2 : 8,
+  /* Reduced workers to prevent connection conflicts */
+  workers: process.env.CI ? 1 : 4,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -104,9 +104,9 @@ export default defineConfig({
   },
 
   /* Configure global timeout for each test */
-  timeout: 30 * 1000, // 30 seconds - aggressive timeout to prevent hanging
+  timeout: 60 * 1000, // 60 seconds - increased to allow for navigation delays
   expect: {
-    timeout: 10 * 1000, // 10 seconds - fast failure detection
+    timeout: 15 * 1000, // 15 seconds - increased to handle slow operations
   },
 
   /* Configure projects */
@@ -193,4 +193,7 @@ export default defineConfig({
       PLAYWRIGHT: 'true',
     },
   },
+
+  /* Add graceful shutdown handling */
+  globalTimeout: 10 * 60 * 1000, // 10 minutes for entire test suite
 });

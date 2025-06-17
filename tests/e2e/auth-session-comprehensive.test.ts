@@ -17,7 +17,11 @@ test.describe('Authentication & Session Management E2E', () => {
       await page.goto('/');
 
       // Should be able to access chat as guest
-      await expect(page.getByPlaceholder('Send a message...')).toBeVisible();
+      await expect(
+        page.getByPlaceholder(
+          'Ask about RoboRail operations, maintenance, or troubleshooting...',
+        ),
+      ).toBeVisible();
 
       // Check user indicator shows guest status
       const sidebarToggle = page.getByTestId('sidebar-toggle-button');
@@ -87,12 +91,23 @@ test.describe('Authentication & Session Management E2E', () => {
 
     test('should register new user successfully', async () => {
       await authPage.register(testUser.email, testUser.password);
+
+      // Wait for toast with timeout
       await authPage.expectToastToContain('Account created successfully!');
 
+      // Wait for navigation to happen (window.location.href change takes time)
+      await authPage.page.waitForURL('/', { timeout: 10000 });
+
       // Should redirect to main chat page after registration
+      // Wait for chat interface to be visible
       await expect(
-        authPage.page.getByPlaceholder('Send a message...'),
-      ).toBeVisible();
+        authPage.page.getByPlaceholder(
+          'Ask about RoboRail operations, maintenance, or troubleshooting...',
+        ),
+      ).toBeVisible({ timeout: 15000 });
+
+      // Additional verification that we're actually on the chat page
+      await expect(authPage.page.getByText('Mastra Chat')).toBeVisible();
     });
 
     test('should reject registration with existing email', async () => {
@@ -146,7 +161,11 @@ test.describe('Authentication & Session Management E2E', () => {
       await authPage.login(testUser.email, testUser.password);
 
       await page.waitForURL('/');
-      await expect(page.getByPlaceholder('Send a message...')).toBeVisible();
+      await expect(
+        page.getByPlaceholder(
+          'Ask about RoboRail operations, maintenance, or troubleshooting...',
+        ),
+      ).toBeVisible();
 
       // Check user email is displayed
       const sidebarToggle = page.getByTestId('sidebar-toggle-button');
@@ -205,7 +224,11 @@ test.describe('Authentication & Session Management E2E', () => {
       await page.reload();
 
       // Should still be logged in
-      await expect(page.getByPlaceholder('Send a message...')).toBeVisible();
+      await expect(
+        page.getByPlaceholder(
+          'Ask about RoboRail operations, maintenance, or troubleshooting...',
+        ),
+      ).toBeVisible();
       await sidebarToggle.click();
       userEmail = page.getByTestId('user-email');
       await expect(userEmail).toHaveText(testUser.email);
@@ -225,7 +248,11 @@ test.describe('Authentication & Session Management E2E', () => {
       await page2.goto('/');
 
       // Should be logged in on new tab
-      await expect(page2.getByPlaceholder('Send a message...')).toBeVisible();
+      await expect(
+        page2.getByPlaceholder(
+          'Ask about RoboRail operations, maintenance, or troubleshooting...',
+        ),
+      ).toBeVisible();
 
       const sidebarToggle = page2.getByTestId('sidebar-toggle-button');
       await sidebarToggle.click();
@@ -292,7 +319,11 @@ test.describe('Authentication & Session Management E2E', () => {
       // The behavior depends on implementation:
       // - Chat history may be preserved in database
       // - Session-specific data should be cleared
-      await expect(page.getByPlaceholder('Send a message...')).toBeVisible();
+      await expect(
+        page.getByPlaceholder(
+          'Ask about RoboRail operations, maintenance, or troubleshooting...',
+        ),
+      ).toBeVisible();
     });
   });
 

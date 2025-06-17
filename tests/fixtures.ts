@@ -1,6 +1,7 @@
 import { expect as baseExpected, test as baseTest } from '@playwright/test';
 import { createAuthenticatedContext, type UserContext } from './helpers';
 import { getUnixTime } from 'date-fns';
+import { cleanupTestConnections } from '../lib/db/cleanup';
 
 // Validate test environment
 if (process.env.NODE_ENV !== 'test' && process.env.PLAYWRIGHT !== 'true') {
@@ -8,6 +9,15 @@ if (process.env.NODE_ENV !== 'test' && process.env.PLAYWRIGHT !== 'true') {
     '⚠️  Test environment not properly configured. Set NODE_ENV=test or PLAYWRIGHT=true',
   );
 }
+
+// Add test isolation cleanup
+baseTest.afterEach(async () => {
+  try {
+    await cleanupTestConnections();
+  } catch (error) {
+    console.warn('Warning: Test cleanup failed:', error);
+  }
+});
 
 const baseExpect = baseExpected;
 

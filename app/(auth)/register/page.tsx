@@ -16,6 +16,7 @@ export default function Page() {
 
   const [email, setEmail] = useState('');
   const [isSuccessful, setIsSuccessful] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [state, formAction] = useActionState<RegisterActionState, FormData>(
     register,
@@ -29,23 +30,52 @@ export default function Page() {
   useEffect(() => {
     if (state.status === 'user_exists') {
       toast({ type: 'error', description: 'Account already exists!' });
+      setIsSubmitting(false);
+      setIsSuccessful(false);
     } else if (state.status === 'failed') {
       toast({ type: 'error', description: 'Failed to create account!' });
+      setIsSubmitting(false);
+      setIsSuccessful(false);
     } else if (state.status === 'invalid_data') {
       toast({
         type: 'error',
         description: 'Failed validating your submission!',
       });
+      setIsSubmitting(false);
+      setIsSuccessful(false);
     } else if (state.status === 'success') {
-      toast({ type: 'success', description: 'Account created successfully!' });
+      if (!isSuccessful) {
+        // Prevent duplicate toasts
+        toast({
+          type: 'success',
+          description: 'Account created successfully!',
+        });
+        setIsSuccessful(true);
+        setIsSubmitting(false);
 
-      setIsSuccessful(true);
-      updateSession();
-      router.refresh();
+        // Use a timeout to allow the toast to display before navigation
+        const navigateTimeout = setTimeout(async () => {
+          try {
+            await updateSession();
+            // Use direct navigation for more reliability in tests
+            window.location.href = '/';
+          } catch (error) {
+            console.error('Navigation error:', error);
+            // Fallback navigation
+            window.location.href = '/';
+          }
+        }, 500);
+
+        return () => clearTimeout(navigateTimeout);
+      }
     }
-  }, [state, router, updateSession]);
+  }, [state, updateSession, router, isSuccessful]);
 
   const handleSubmit = (formData: FormData) => {
+    if (isSubmitting || isSuccessful) {
+      return; // Prevent double submission
+    }
+    setIsSubmitting(true);
     setEmail(formData.get('email') as string);
     formAction(formData);
   };
@@ -60,7 +90,9 @@ export default function Page() {
           </p>
         </div>
         <AuthForm action={handleSubmit} defaultEmail={email}>
-          <SubmitButton isSuccessful={isSuccessful}>Sign Up</SubmitButton>
+          <SubmitButton isSuccessful={isSuccessful || isSubmitting}>
+            Sign Up
+          </SubmitButton>
           <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
             {'Already have an account? '}
             <Link

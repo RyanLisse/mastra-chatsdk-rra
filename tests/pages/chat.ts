@@ -4,7 +4,7 @@ import { chatModels } from '../../lib/ai/models';
 import { expect, type Page } from '@playwright/test';
 
 export class ChatPage {
-  constructor(private page: Page) {}
+  constructor(public page: Page) {}
 
   public get sendButton() {
     return this.page.getByTestId('send-button');
@@ -136,7 +136,16 @@ export class ChatPage {
     const messageElements = await this.page
       .getByTestId('message-assistant')
       .all();
+    
+    if (messageElements.length === 0) {
+      throw new Error('No assistant messages found');
+    }
+    
     const lastMessageElement = messageElements[messageElements.length - 1];
+
+    if (!lastMessageElement) {
+      throw new Error('No assistant message element found');
+    }
 
     const content = await lastMessageElement
       .getByTestId('message-content')
