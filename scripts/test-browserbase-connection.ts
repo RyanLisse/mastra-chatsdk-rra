@@ -2,14 +2,15 @@
 
 /**
  * Test Browserbase Connection Script
- * 
+ *
  * This script tests the connection to Browserbase using your API keys
  * and verifies that Stagehand can work with your configuration.
  */
 
-import { config } from 'dotenv';
 import { Browserbase } from '@browserbasehq/sdk';
 import { Stagehand } from '@browserbasehq/stagehand';
+import { config } from 'dotenv';
+import { z } from 'zod';
 
 // Load environment variables
 config({ path: '.env.local' });
@@ -30,7 +31,8 @@ async function testBrowserbaseConnection(): Promise<TestResult> {
       return {
         test: 'Browserbase Connection',
         success: false,
-        message: 'Missing BROWSERBASE_API_KEY or BROWSERBASE_PROJECT_ID environment variables',
+        message:
+          'Missing BROWSERBASE_API_KEY or BROWSERBASE_PROJECT_ID environment variables',
       };
     }
 
@@ -39,7 +41,7 @@ async function testBrowserbaseConnection(): Promise<TestResult> {
     console.log(`   Project ID: ${projectId}`);
 
     const browserbase = new Browserbase();
-    
+
     // Test creating a session
     const session = await browserbase.sessions.create({
       projectId,
@@ -52,13 +54,17 @@ async function testBrowserbaseConnection(): Promise<TestResult> {
     console.log(`✅ Session details retrieved: ${sessionDetails.status}`);
 
     // Clean up - end the session
-    await browserbase.sessions.update(session.id, { status: 'REQUEST_RELEASE' });
+    await browserbase.sessions.update(session.id, {
+      projectId,
+      status: 'REQUEST_RELEASE',
+    });
     console.log(`✅ Session ended: ${session.id}`);
 
     return {
       test: 'Browserbase Connection',
       success: true,
-      message: 'Successfully connected to Browserbase and created/managed session',
+      message:
+        'Successfully connected to Browserbase and created/managed session',
       data: {
         sessionId: session.id,
         status: sessionDetails.status,
@@ -83,7 +89,8 @@ async function testStagehandWithBrowserbase(): Promise<TestResult> {
       return {
         test: 'Stagehand with Browserbase',
         success: false,
-        message: 'Missing required environment variables (BROWSERBASE_API_KEY, BROWSERBASE_PROJECT_ID, OPENAI_API_KEY)',
+        message:
+          'Missing required environment variables (BROWSERBASE_API_KEY, BROWSERBASE_PROJECT_ID, OPENAI_API_KEY)',
       };
     }
 
@@ -94,7 +101,6 @@ async function testStagehandWithBrowserbase(): Promise<TestResult> {
       apiKey,
       projectId,
       verbose: 1,
-      headless: true,
       domSettleTimeoutMs: 30000,
     });
 
@@ -108,9 +114,9 @@ async function testStagehandWithBrowserbase(): Promise<TestResult> {
     // Test extraction
     const result = await stagehand.page.extract({
       instruction: 'extract the main heading of the page',
-      schema: {
-        title: 'string',
-      },
+      schema: z.object({
+        title: z.string(),
+      }),
     });
 
     console.log(`✅ Successfully extracted data: ${JSON.stringify(result)}`);
@@ -122,7 +128,8 @@ async function testStagehandWithBrowserbase(): Promise<TestResult> {
     return {
       test: 'Stagehand with Browserbase',
       success: true,
-      message: 'Successfully used Stagehand with Browserbase for web automation',
+      message:
+        'Successfully used Stagehand with Browserbase for web automation',
       data: result,
     };
   } catch (error) {
@@ -151,7 +158,6 @@ async function testLocalStagehand(): Promise<TestResult> {
     const stagehand = new Stagehand({
       env: 'LOCAL',
       verbose: 1,
-      headless: true,
       domSettleTimeoutMs: 30000,
     });
 
@@ -203,7 +209,7 @@ async function main(): Promise<void> {
       console.log(`\n${'='.repeat(60)}`);
       const result = await test();
       results.push(result);
-      
+
       if (result.success) {
         console.log(`✅ ${result.test}: ${result.message}`);
       } else {
@@ -224,34 +230,42 @@ async function main(): Promise<void> {
   console.log('📋 TEST SUMMARY');
   console.log('='.repeat(60));
 
-  const successful = results.filter(r => r.success);
-  const failed = results.filter(r => !r.success);
+  const successful = results.filter((r) => r.success);
+  const failed = results.filter((r) => !r.success);
 
   console.log(`✅ Successful tests: ${successful.length}/${results.length}`);
   console.log(`❌ Failed tests: ${failed.length}/${results.length}`);
 
   if (successful.length > 0) {
     console.log('\n✅ Working configurations:');
-    successful.forEach(result => {
+    successful.forEach((result) => {
       console.log(`  • ${result.test}`);
     });
   }
 
   if (failed.length > 0) {
     console.log('\n❌ Failed configurations:');
-    failed.forEach(result => {
+    failed.forEach((result) => {
       console.log(`  • ${result.test}: ${result.message}`);
     });
   }
 
   console.log('\n💡 Next steps:');
   if (successful.length === results.length) {
-    console.log('  • All tests passed! Your configuration is working correctly.');
-    console.log('  • You can now use Stagehand in both LOCAL and BROWSERBASE modes.');
-    console.log('  • Run `npm run setup:mcp` to configure Claude Desktop integration.');
+    console.log(
+      '  • All tests passed! Your configuration is working correctly.',
+    );
+    console.log(
+      '  • You can now use Stagehand in both LOCAL and BROWSERBASE modes.',
+    );
+    console.log(
+      '  • Run `npm run setup:mcp` to configure Claude Desktop integration.',
+    );
   } else {
     console.log('  • Fix the failed configurations above.');
-    console.log('  • Ensure all required environment variables are set in .env.local');
+    console.log(
+      '  • Ensure all required environment variables are set in .env.local',
+    );
     console.log('  • Check your API keys and project IDs are correct.');
   }
 }

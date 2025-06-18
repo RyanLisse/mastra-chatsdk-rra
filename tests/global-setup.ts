@@ -53,38 +53,36 @@ async function gracefulPlaywrightShutdown(
 
 /**
  * Register signal handlers for Playwright global setup
+ * Only register in non-CI environments to prevent conflicts
  */
 function registerPlaywrightSetupSignalHandlers(): void {
-  if (signalHandlersRegistered) {
+  if (signalHandlersRegistered || process.env.CI === 'true') {
     return;
   }
 
   signalHandlersRegistered = true;
   console.log('🔧 Registering Playwright global-setup signal handlers...');
 
-  process.on('SIGTERM', () => gracefulPlaywrightShutdown('SIGTERM', 0));
-  process.on('SIGINT', () => gracefulPlaywrightShutdown('SIGINT', 130));
-  process.on('SIGQUIT', () => gracefulPlaywrightShutdown('SIGQUIT', 131));
+  // Use once() to prevent multiple registrations
+  process.once('SIGTERM', () => gracefulPlaywrightShutdown('SIGTERM', 0));
+  process.once('SIGINT', () => gracefulPlaywrightShutdown('SIGINT', 130));
+  process.once('SIGQUIT', () => gracefulPlaywrightShutdown('SIGQUIT', 131));
 
-  process.on('uncaughtException', async (error) => {
+  // Only handle critical errors
+  process.once('uncaughtException', async (error) => {
     console.error('💥 Uncaught Exception in Playwright global-setup:', error);
     if (!isShuttingDown) {
       await gracefulPlaywrightShutdown('uncaughtException', 1);
     }
   });
 
-  process.on('unhandledRejection', async (reason) => {
-    console.error('💥 Unhandled Rejection in Playwright global-setup:', reason);
-    if (!isShuttingDown) {
-      await gracefulPlaywrightShutdown('unhandledRejection', 1);
-    }
-  });
-
   console.log('✅ Playwright global-setup signal handlers registered');
 }
 
-// Register signal handlers
-registerPlaywrightSetupSignalHandlers();
+// Register signal handlers only if needed
+if (process.env.PLAYWRIGHT_NO_SIGNAL_HANDLERS !== 'true') {
+  registerPlaywrightSetupSignalHandlers();
+}
 
 async function globalSetup(config: FullConfig) {
   console.log('🚀 Starting Playwright global setup...');

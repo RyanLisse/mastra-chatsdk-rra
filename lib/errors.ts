@@ -5,7 +5,9 @@ export type ErrorType =
   | 'not_found'
   | 'rate_limit'
   | 'offline'
-  | 'internal_error';
+  | 'internal_error'
+  | 'too_many_sessions'
+  | 'session_expired';
 
 export type Surface =
   | 'chat'
@@ -33,7 +35,10 @@ export type Surface =
   | 'memory_save_failed'
   | 'memory_read_failed'
   | 'memory_clear_failed'
-  | 'session_id_required';
+  | 'session_id_required'
+  | 'invalid_audio_data'
+  | 'invalid_audio_format'
+  | 'audio_processing_failed';
 
 export type ErrorCode = `${ErrorType}:${Surface}`;
 
@@ -66,6 +71,9 @@ export const visibilityBySurface: Record<Surface, ErrorVisibility> = {
   memory_read_failed: 'log',
   memory_clear_failed: 'log',
   session_id_required: 'response',
+  invalid_audio_data: 'response',
+  invalid_audio_format: 'response',
+  audio_processing_failed: 'response',
 };
 
 export class ChatSDKError extends Error {
@@ -157,6 +165,16 @@ export function getMessageByErrorCode(errorCode: ErrorCode): string {
       return 'Audio data is required for this voice operation.';
     case 'bad_request:invalid_action':
       return 'The requested voice action is invalid. Please check the action parameter.';
+    case 'too_many_sessions:voice':
+      return 'You have reached the maximum number of active voice sessions. Please disconnect an existing session and try again.';
+    case 'session_expired:voice':
+      return 'This voice session has expired. Please create a new session to continue.';
+    case 'bad_request:invalid_audio_data':
+      return 'The audio data provided is invalid or empty. Please check your audio input.';
+    case 'bad_request:invalid_audio_format':
+      return 'The audio format is invalid. Audio data must be properly formatted for processing.';
+    case 'bad_request:audio_processing_failed':
+      return 'Failed to process the audio data. Please try again with valid audio input.';
 
     // Save-message API error messages
     case 'unauthorized:save_message':
@@ -185,6 +203,10 @@ function getStatusCodeByType(type: ErrorType) {
       return 404;
     case 'rate_limit':
       return 429;
+    case 'too_many_sessions':
+      return 429;
+    case 'session_expired':
+      return 410;
     case 'offline':
       return 503;
     case 'internal_error':

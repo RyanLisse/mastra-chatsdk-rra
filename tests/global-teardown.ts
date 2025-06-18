@@ -46,22 +46,25 @@ async function gracefulPlaywrightTeardownShutdown(
 
 /**
  * Register signal handlers for Playwright global teardown
+ * Only register in non-CI environments to prevent conflicts
  */
 function registerPlaywrightTeardownSignalHandlers(): void {
-  if (signalHandlersRegistered) {
+  if (signalHandlersRegistered || process.env.CI === 'true') {
     return;
   }
 
   signalHandlersRegistered = true;
   console.log('🔧 Registering Playwright global-teardown signal handlers...');
 
-  process.on('SIGTERM', () => gracefulPlaywrightTeardownShutdown('SIGTERM', 0));
-  process.on('SIGINT', () => gracefulPlaywrightTeardownShutdown('SIGINT', 130));
-  process.on('SIGQUIT', () =>
+  // Use once() to prevent multiple registrations
+  process.once('SIGTERM', () => gracefulPlaywrightTeardownShutdown('SIGTERM', 0));
+  process.once('SIGINT', () => gracefulPlaywrightTeardownShutdown('SIGINT', 130));
+  process.once('SIGQUIT', () =>
     gracefulPlaywrightTeardownShutdown('SIGQUIT', 131),
   );
 
-  process.on('uncaughtException', async (error) => {
+  // Only handle critical errors
+  process.once('uncaughtException', async (error) => {
     console.error(
       '💥 Uncaught Exception in Playwright global-teardown:',
       error,
@@ -71,21 +74,13 @@ function registerPlaywrightTeardownSignalHandlers(): void {
     }
   });
 
-  process.on('unhandledRejection', async (reason) => {
-    console.error(
-      '💥 Unhandled Rejection in Playwright global-teardown:',
-      reason,
-    );
-    if (!isShuttingDown) {
-      await gracefulPlaywrightTeardownShutdown('unhandledRejection', 1);
-    }
-  });
-
   console.log('✅ Playwright global-teardown signal handlers registered');
 }
 
-// Register signal handlers
-registerPlaywrightTeardownSignalHandlers();
+// Register signal handlers only if needed
+if (process.env.PLAYWRIGHT_NO_SIGNAL_HANDLERS !== 'true') {
+  registerPlaywrightTeardownSignalHandlers();
+}
 
 async function globalTeardown(config: FullConfig) {
   console.log('🧹 Starting Playwright global teardown...');

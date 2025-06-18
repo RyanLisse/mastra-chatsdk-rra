@@ -231,3 +231,21 @@ export const chatSessions = pgTable('chat_sessions', {
 });
 
 export type ChatSession = InferSelectModel<typeof chatSessions>;
+
+// Voice sessions table for managing voice chat sessions
+export const voiceSessions = pgTable('voice_sessions', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  sessionId: varchar('session_id', { length: 255 }).notNull().unique(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => user.id),
+  model: varchar('model', { length: 255 }).notNull(),
+  speaker: varchar('speaker', { length: 255 }).notNull(),
+  status: varchar('status', { length: 50 }).notNull().default('active'),
+  metadata: json('metadata'),
+  lastActivity: timestamp('last_activity').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export type VoiceSession = InferSelectModel<typeof voiceSessions>;
