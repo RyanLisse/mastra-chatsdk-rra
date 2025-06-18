@@ -32,7 +32,7 @@ test.describe
 
     test('Log out is not available for guest users', async ({ page }) => {
       await page.goto('/');
-      
+
       // Wait for the page to fully load and session to be established
       await page.waitForLoadState('networkidle');
 
@@ -92,9 +92,12 @@ test.describe
 
       const sidebarToggleButton = page.getByTestId('sidebar-toggle-button');
       await sidebarToggleButton.click();
-      
+
       // Wait for sidebar to open and user nav to be visible
-      await page.waitForSelector('[data-testid="user-email"]', { state: 'visible', timeout: 5000 });
+      await page.waitForSelector('[data-testid="user-email"]', {
+        state: 'visible',
+        timeout: 5000,
+      });
 
       const userEmail = page.getByTestId('user-email');
       // In test environment, guest users show the test email
@@ -126,21 +129,32 @@ test.describe
       await authPage.login(testUser.email, testUser.password);
 
       await page.waitForURL('/');
-      await expect(page.getByPlaceholder('Ask about RoboRail operations, maintenance, or troubleshooting...')).toBeVisible();
+      await expect(
+        page.getByPlaceholder(
+          'Ask about RoboRail operations, maintenance, or troubleshooting...',
+        ),
+      ).toBeVisible();
     });
 
     test('Display user email in user menu', async ({ page }) => {
       await authPage.login(testUser.email, testUser.password);
 
       await page.waitForURL('/');
-      await expect(page.getByPlaceholder('Ask about RoboRail operations, maintenance, or troubleshooting...')).toBeVisible();
+      await expect(
+        page.getByPlaceholder(
+          'Ask about RoboRail operations, maintenance, or troubleshooting...',
+        ),
+      ).toBeVisible();
 
       // Open sidebar to see user email
       const sidebarToggle = page.getByTestId('sidebar-toggle-button');
       await sidebarToggle.click();
-      
+
       // Wait for sidebar to open and user nav to be visible
-      await page.waitForSelector('[data-testid="user-email"]', { state: 'visible', timeout: 5000 });
+      await page.waitForSelector('[data-testid="user-email"]', {
+        state: 'visible',
+        timeout: 5000,
+      });
 
       const userEmail = page.getByTestId('user-email');
       await expect(userEmail).toHaveText(testUser.email);
@@ -159,9 +173,12 @@ test.describe
       // Open sidebar to see user email
       let sidebarToggle = page.getByTestId('sidebar-toggle-button');
       await sidebarToggle.click();
-      
+
       // Wait for sidebar to open and user nav to be visible
-      await page.waitForSelector('[data-testid="user-email"]', { state: 'visible', timeout: 5000 });
+      await page.waitForSelector('[data-testid="user-email"]', {
+        state: 'visible',
+        timeout: 5000,
+      });
 
       const userEmail = page.getByTestId('user-email');
       await expect(userEmail).toHaveText(testUser.email);
@@ -172,9 +189,12 @@ test.describe
       // Open sidebar again to check updated user email
       sidebarToggle = page.getByTestId('sidebar-toggle-button');
       await sidebarToggle.click();
-      
+
       // Wait for sidebar to open and user nav to be visible
-      await page.waitForSelector('[data-testid="user-email"]', { state: 'visible', timeout: 5000 });
+      await page.waitForSelector('[data-testid="user-email"]', {
+        state: 'visible',
+        timeout: 5000,
+      });
 
       const updatedUserEmail = page.getByTestId('user-email');
       await expect(updatedUserEmail).toHaveText(testUser.email);

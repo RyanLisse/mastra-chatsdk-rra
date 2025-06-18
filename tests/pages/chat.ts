@@ -136,11 +136,11 @@ export class ChatPage {
     const messageElements = await this.page
       .getByTestId('message-assistant')
       .all();
-    
+
     if (messageElements.length === 0) {
       throw new Error('No assistant messages found');
     }
-    
+
     const lastMessageElement = messageElements[messageElements.length - 1];
 
     if (!lastMessageElement) {
@@ -228,7 +228,7 @@ export class ChatPage {
   async openSideBar() {
     const sidebarToggleButton = this.page.getByTestId('sidebar-toggle-button');
     await sidebarToggleButton.click();
-    
+
     // Wait for sidebar animation to complete
     await this.page.waitForTimeout(300);
   }
@@ -340,7 +340,7 @@ export class ChatPage {
   async openSidebar() {
     const sidebarToggle = this.page.getByTestId('sidebar-toggle-button');
     await sidebarToggle.click();
-    
+
     // Wait for sidebar animation to complete
     await this.page.waitForTimeout(300);
   }
@@ -354,15 +354,15 @@ export class ChatPage {
     // Click toggle to open sidebar
     const sidebarToggle = this.page.getByTestId('sidebar-toggle-button');
     await sidebarToggle.click();
-    
+
     // Wait for sidebar animation to complete
     await this.page.waitForTimeout(300);
-    
+
     // Wait for the session to load - the loading state should disappear
     // and user-nav-button should appear
     const userNavButton = this.page.getByTestId('user-nav-button');
     await expect(userNavButton).toBeVisible({ timeout: 10000 });
-    
+
     // Now check if user-email is visible
     const userEmail = this.page.getByTestId('user-email');
     await expect(userEmail).toBeVisible({ timeout: 5000 });

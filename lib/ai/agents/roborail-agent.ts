@@ -16,7 +16,8 @@ let ragTool: any;
 const useRealImplementations =
   process.env.INTEGRATION_TEST === 'true' ||
   (process.env.NODE_ENV === 'test' && process.env.USE_REAL_DB === 'true') ||
-  !process.env.NODE_ENV || process.env.NODE_ENV === 'development' ||
+  !process.env.NODE_ENV ||
+  process.env.NODE_ENV === 'development' ||
   process.env.NODE_ENV === 'production';
 
 if (useRealImplementations) {

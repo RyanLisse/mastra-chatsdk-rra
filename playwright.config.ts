@@ -190,7 +190,7 @@ export default defineConfig({
     ignoreHTTPSErrors: true,
     env: {
       NODE_ENV: 'test',
-      PLAYWRIGHT: 'true',
+      PLAYWRIGHT_TEST: 'true',
     },
   },
 

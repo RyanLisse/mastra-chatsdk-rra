@@ -331,13 +331,16 @@ export async function POST(request: Request) {
     if (error instanceof ChatSDKError) {
       return error.toResponse();
     }
-    
+
     console.error('Unexpected error in chat API:', {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
-    
-    return new ChatSDKError('bad_request:database', 'An unexpected error occurred').toResponse();
+
+    return new ChatSDKError(
+      'bad_request:database',
+      'An unexpected error occurred',
+    ).toResponse();
   }
 }
 

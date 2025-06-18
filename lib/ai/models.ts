@@ -1,4 +1,4 @@
-export const DEFAULT_CHAT_MODEL: string = 'gpt-4o';
+export const DEFAULT_CHAT_MODEL: string = 'gemini-2.5-flash';
 
 export type Provider = 'openai' | 'anthropic' | 'google' | 'groq';
 

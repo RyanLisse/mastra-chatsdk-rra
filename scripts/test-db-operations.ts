@@ -17,12 +17,12 @@ async function testDatabaseOperations() {
     // Test 1: Create a test user
     console.log('1️⃣ Creating test user...');
     const testUserId = '550e8400-e29b-41d4-a716-446655440001';
-    
+
     // Check if user exists
     const existingUser = await connection`
       SELECT * FROM "User" WHERE id = ${testUserId}
     `;
-    
+
     if (existingUser.length > 0) {
       console.log('   ✅ Test user already exists');
     } else {
@@ -36,7 +36,7 @@ async function testDatabaseOperations() {
     // Test 2: Create a test chat
     console.log('\n2️⃣ Creating test chat...');
     const chatId = generateUUID();
-    
+
     try {
       await connection`
         INSERT INTO "Chat" (id, "createdAt", title, "userId", visibility)
@@ -51,7 +51,7 @@ async function testDatabaseOperations() {
     // Test 3: Create a test message
     console.log('\n3️⃣ Creating test message...');
     const messageId = generateUUID();
-    
+
     try {
       await connection`
         INSERT INTO "Message_v2" (id, "chatId", role, parts, attachments, "createdAt")
@@ -78,7 +78,7 @@ async function testDatabaseOperations() {
       JOIN "User" u ON c."userId" = u.id
       WHERE c.id = ${chatId}
     `;
-    
+
     console.log(`   ✅ Found ${chats.length} chat(s)`);
     if (chats.length > 0) {
       console.log(`      - Chat: ${chats[0].title} by ${chats[0].email}`);
@@ -93,7 +93,6 @@ async function testDatabaseOperations() {
     // Close connection
     await testDb.cleanup();
     console.log('\n✅ All database operations completed successfully!');
-    
   } catch (error) {
     console.error('\n❌ Database operation test failed:', error);
     process.exit(1);

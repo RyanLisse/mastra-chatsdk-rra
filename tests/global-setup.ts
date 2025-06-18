@@ -113,10 +113,10 @@ async function globalSetup(config: FullConfig) {
     console.log('   🔄 Resetting test database...');
     await testDb.reset();
     console.log('   ✅ Database reset completed');
-    
+
     console.log('   🌱 Seeding test data...');
     await testDb.seed();
-    console.log('   ✅ Test data seeded')
+    console.log('   ✅ Test data seeded');
 
     // Step 4: Verify database is ready
     console.log('4️⃣ Verifying test database readiness...');

@@ -27,9 +27,12 @@ export function SidebarUserNav({ user }: { user: User }) {
   const { data, status } = useSession();
   const { setTheme, resolvedTheme } = useTheme();
 
-  const isGuest = guestRegex.test(data?.user?.email ?? '') || data?.user?.type === 'guest';
+  const isGuest =
+    guestRegex.test(data?.user?.email ?? '') || data?.user?.type === 'guest';
   // In test environment, show the actual email for test guest users
-  const isTestGuest = data?.user?.type === 'guest' && data?.user?.email === 'test-operator@roborail.com';
+  const isTestGuest =
+    data?.user?.type === 'guest' &&
+    data?.user?.email === 'test-operator@roborail.com';
 
   return (
     <SidebarMenu>
@@ -57,7 +60,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                   {isGuest ? 'G' : user?.email?.[0]?.toUpperCase() || 'U'}
                 </div>
                 <span data-testid="user-email" className="truncate">
-                  {isTestGuest ? user?.email : (isGuest ? 'Guest' : user?.email)}
+                  {isTestGuest ? user?.email : isGuest ? 'Guest' : user?.email}
                 </span>
                 <ChevronUp className="ml-auto" />
               </SidebarMenuButton>

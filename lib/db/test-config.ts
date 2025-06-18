@@ -211,8 +211,10 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
         'Suggestion', 'chat_sessions'
       )
     `);
-    
-    const existingTables = new Set(tableExistsResult.map((row: any) => row.tablename));
+
+    const existingTables = new Set(
+      tableExistsResult.map((row: any) => row.tablename),
+    );
     console.log(`   📋 Found ${existingTables.size} tables to clean`);
 
     // Helper function to safely delete from a table if it exists
@@ -221,7 +223,7 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
         console.log(`   ⚠️  Table ${tableName} doesn't exist, skipping...`);
         return;
       }
-      
+
       try {
         await db.execute(sql.raw(query));
       } catch (error: any) {
@@ -231,82 +233,118 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
     };
 
     // Clean up test data in reverse dependency order
-    await safeDelete(`
+    await safeDelete(
+      `
       DELETE FROM "Vote_v2" WHERE "chatId" IN (
         SELECT id FROM "Chat" WHERE "userId" IN (
           SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
         )
       )
-    `, 'Vote_v2');
+    `,
+      'Vote_v2',
+    );
 
-    await safeDelete(`
+    await safeDelete(
+      `
       DELETE FROM "Vote" WHERE "chatId" IN (
         SELECT id FROM "Chat" WHERE "userId" IN (
           SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
         )
       )
-    `, 'Vote');
+    `,
+      'Vote',
+    );
 
-    await safeDelete(`
+    await safeDelete(
+      `
       DELETE FROM "Message_v2" WHERE "chatId" IN (
         SELECT id FROM "Chat" WHERE "userId" IN (
           SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
         )
       )
-    `, 'Message_v2');
+    `,
+      'Message_v2',
+    );
 
-    await safeDelete(`
+    await safeDelete(
+      `
       DELETE FROM "Message" WHERE "chatId" IN (
         SELECT id FROM "Chat" WHERE "userId" IN (
           SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
         )
       )
-    `, 'Message');
+    `,
+      'Message',
+    );
 
-    await safeDelete(`
+    await safeDelete(
+      `
       DELETE FROM "Suggestion" WHERE "userId" IN (
         SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
       )
-    `, 'Suggestion');
+    `,
+      'Suggestion',
+    );
 
-    await safeDelete(`
+    await safeDelete(
+      `
       DELETE FROM "Document" WHERE "userId" IN (
         SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
       )
-    `, 'Document');
+    `,
+      'Document',
+    );
 
     // Handle DocumentChunk - simplified deletion to avoid referencing potentially non-existent tables
-    await safeDelete(`
+    await safeDelete(
+      `
       DELETE FROM "DocumentChunk" WHERE 1=1
-    `, 'DocumentChunk');
+    `,
+      'DocumentChunk',
+    );
 
-    await safeDelete(`
+    await safeDelete(
+      `
       DELETE FROM "DocumentProcessing" WHERE "userId" IN (
         SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
       )
-    `, 'DocumentProcessing');
+    `,
+      'DocumentProcessing',
+    );
 
-    await safeDelete(`
+    await safeDelete(
+      `
       DELETE FROM "Stream" WHERE "chatId" IN (
         SELECT id FROM "Chat" WHERE "userId" IN (
           SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
         )
       )
-    `, 'Stream');
+    `,
+      'Stream',
+    );
 
-    await safeDelete(`
+    await safeDelete(
+      `
       DELETE FROM "Chat" WHERE "userId" IN (
         SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
       )
-    `, 'Chat');
+    `,
+      'Chat',
+    );
 
-    await safeDelete(`
+    await safeDelete(
+      `
       DELETE FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
-    `, 'User');
+    `,
+      'User',
+    );
 
-    await safeDelete(`
+    await safeDelete(
+      `
       DELETE FROM chat_sessions WHERE session_id LIKE 'test-%' OR session_id LIKE '%test%'
-    `, 'chat_sessions');
+    `,
+      'chat_sessions',
+    );
 
     console.log('✅ Test database reset completed');
   };
@@ -416,8 +454,13 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
         ON CONFLICT (id) DO NOTHING;
       `);
     } catch (error: any) {
-      if (error?.message?.includes('does not exist') || error?.cause?.message?.includes('does not exist')) {
-        console.log('   ⚠️  DocumentProcessing table doesn\'t exist, skipping document seed...');
+      if (
+        error?.message?.includes('does not exist') ||
+        error?.cause?.message?.includes('does not exist')
+      ) {
+        console.log(
+          "   ⚠️  DocumentProcessing table doesn't exist, skipping document seed...",
+        );
       } else {
         throw error;
       }
@@ -462,8 +505,13 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
         ON CONFLICT (id) DO NOTHING;
       `);
     } catch (error: any) {
-      if (error?.message?.includes('does not exist') || error?.cause?.message?.includes('does not exist')) {
-        console.log('   ⚠️  DocumentChunk table doesn\'t exist, skipping chunk seed...');
+      if (
+        error?.message?.includes('does not exist') ||
+        error?.cause?.message?.includes('does not exist')
+      ) {
+        console.log(
+          "   ⚠️  DocumentChunk table doesn't exist, skipping chunk seed...",
+        );
       } else {
         throw error;
       }

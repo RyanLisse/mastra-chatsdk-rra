@@ -26,10 +26,14 @@ test.describe('Artifacts activity', () => {
     await chatPage.page.waitForTimeout(2000);
 
     // Check if artifact was created - if not, this test should be skipped or marked as expected to fail
-    const artifactExists = await artifactPage.artifact.isVisible().catch(() => false);
-    
+    const artifactExists = await artifactPage.artifact
+      .isVisible()
+      .catch(() => false);
+
     if (!artifactExists) {
-      console.log('⚠️  Artifact not created - this may be expected behavior for the current model configuration');
+      console.log(
+        '⚠️  Artifact not created - this may be expected behavior for the current model configuration',
+      );
       // Just verify we got a response
       const assistantMessage = await chatPage.getRecentAssistantMessage();
       expect(assistantMessage.content.length).toBeGreaterThan(0);
@@ -60,8 +64,10 @@ test.describe('Artifacts activity', () => {
     await chatPage.page.waitForTimeout(2000);
 
     // Check if artifact was created
-    const artifactExists = await artifactPage.artifact.isVisible().catch(() => false);
-    
+    const artifactExists = await artifactPage.artifact
+      .isVisible()
+      .catch(() => false);
+
     if (!artifactExists) {
       console.log('⚠️  Artifact not created - skipping toggle test');
       return;
@@ -91,13 +97,17 @@ test.describe('Artifacts activity', () => {
     await chatPage.page.waitForTimeout(2000);
 
     // Check if artifact was created
-    const artifactExists = await artifactPage.artifact.isVisible().catch(() => false);
-    
+    const artifactExists = await artifactPage.artifact
+      .isVisible()
+      .catch(() => false);
+
     if (!artifactExists) {
-      console.log('⚠️  Artifact not created - testing follow-up without artifact');
+      console.log(
+        '⚠️  Artifact not created - testing follow-up without artifact',
+      );
       await chatPage.sendUserMessage('Thanks!');
       await chatPage.isGenerationComplete();
-      
+
       const secondAssistantMessage = await chatPage.getRecentAssistantMessage();
       expect(secondAssistantMessage.content.length).toBeGreaterThan(0);
       return;
@@ -115,6 +125,8 @@ test.describe('Artifacts activity', () => {
 
     const secondAssistantMessage = await chatPage.getRecentAssistantMessage();
     // More flexible expectation - just check we got a polite response
-    expect(secondAssistantMessage.content.toLowerCase()).toMatch(/welcome|glad|happy|pleased|you/);
+    expect(secondAssistantMessage.content.toLowerCase()).toMatch(
+      /welcome|glad|happy|pleased|you/,
+    );
   });
 });
