@@ -109,12 +109,14 @@ async function globalSetup(config: FullConfig) {
     console.log('3️⃣ Preparing test database...');
     const testDb = await createTestDatabase();
 
-    // Only seed if specifically requested or if database is empty
-    if (process.env.TEST_DB_SEED_SAMPLE_DATA === 'true') {
-      console.log('   🌱 Seeding sample data...');
-      await testDb.seed();
-      console.log('   ✅ Sample data seeded');
-    }
+    // Always reset and seed for consistent test environment
+    console.log('   🔄 Resetting test database...');
+    await testDb.reset();
+    console.log('   ✅ Database reset completed');
+    
+    console.log('   🌱 Seeding test data...');
+    await testDb.seed();
+    console.log('   ✅ Test data seeded')
 
     // Step 4: Verify database is ready
     console.log('4️⃣ Verifying test database readiness...');

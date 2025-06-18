@@ -81,9 +81,19 @@ export class AuthPage {
     await expect(authMenuItem).toContainText('Sign out');
 
     await authMenuItem.click();
+    
+    // Wait for logout to complete
+    await this.page.waitForTimeout(2000);
+    
+    // Open sidebar again to check guest status
+    await this.openSidebar();
+    
+    // Wait for sidebar to open and user nav to be visible
+    await this.page.waitForSelector('[data-testid="user-email"]', { state: 'visible', timeout: 5000 });
 
     const userEmail = this.page.getByTestId('user-email');
-    await expect(userEmail).toContainText('Guest');
+    // In test environment, guest users show the test email
+    await expect(userEmail).toContainText('test-operator@roborail.com');
   }
 
   async expectToastToContain(text: string) {

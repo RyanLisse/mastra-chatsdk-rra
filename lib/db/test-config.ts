@@ -123,7 +123,8 @@ export function validateTestDatabaseConfig(): TestDatabaseConfig {
   if (
     !isNeonTestBranch &&
     !postgresUrl.includes('test') &&
-    !postgresUrl.includes('localhost')
+    !postgresUrl.includes('localhost') &&
+    !postgresUrl.includes('neondb_test')
   ) {
     console.warn(
       '⚠️  WARNING: Database URL does not appear to be a test database. Please ensure you are using a test database.',
@@ -199,66 +200,113 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
   const reset = async () => {
     console.log('🔄 Resetting test database');
 
-    // Clean up test data while preserving schema
-    await db.execute(sql`
-      -- Clean up test data in reverse dependency order
+    // Check which tables exist
+    const tableExistsResult = await db.execute(sql`
+      SELECT tablename 
+      FROM pg_tables 
+      WHERE schemaname = 'public' 
+      AND tablename IN (
+        'User', 'Chat', 'Message', 'Message_v2', 'Vote', 'Vote_v2', 
+        'Document', 'DocumentProcessing', 'DocumentChunk', 'Stream', 
+        'Suggestion', 'chat_sessions'
+      )
+    `);
+    
+    const existingTables = new Set(tableExistsResult.map((row: any) => row.tablename));
+    console.log(`   📋 Found ${existingTables.size} tables to clean`);
+
+    // Helper function to safely delete from a table if it exists
+    const safeDelete = async (query: string, tableName: string) => {
+      if (!existingTables.has(tableName)) {
+        console.log(`   ⚠️  Table ${tableName} doesn't exist, skipping...`);
+        return;
+      }
+      
+      try {
+        await db.execute(sql.raw(query));
+      } catch (error: any) {
+        console.error(`   ❌ Error deleting from ${tableName}:`, error.message);
+        throw error;
+      }
+    };
+
+    // Clean up test data in reverse dependency order
+    await safeDelete(`
       DELETE FROM "Vote_v2" WHERE "chatId" IN (
         SELECT id FROM "Chat" WHERE "userId" IN (
-          SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%'
+          SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
         )
-      );
-      
+      )
+    `, 'Vote_v2');
+
+    await safeDelete(`
       DELETE FROM "Vote" WHERE "chatId" IN (
         SELECT id FROM "Chat" WHERE "userId" IN (
-          SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%'
+          SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
         )
-      );
-      
+      )
+    `, 'Vote');
+
+    await safeDelete(`
       DELETE FROM "Message_v2" WHERE "chatId" IN (
         SELECT id FROM "Chat" WHERE "userId" IN (
-          SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%'
+          SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
         )
-      );
-      
+      )
+    `, 'Message_v2');
+
+    await safeDelete(`
       DELETE FROM "Message" WHERE "chatId" IN (
         SELECT id FROM "Chat" WHERE "userId" IN (
-          SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%'
+          SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
         )
-      );
-      
+      )
+    `, 'Message');
+
+    await safeDelete(`
       DELETE FROM "Suggestion" WHERE "userId" IN (
-        SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%'
-      );
-      
+        SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
+      )
+    `, 'Suggestion');
+
+    await safeDelete(`
       DELETE FROM "Document" WHERE "userId" IN (
-        SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%'
-      );
-      
+        SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
+      )
+    `, 'Document');
+
+    // Handle DocumentChunk - simplified deletion to avoid referencing potentially non-existent tables
+    await safeDelete(`
+      DELETE FROM "DocumentChunk" WHERE 1=1
+    `, 'DocumentChunk');
+
+    await safeDelete(`
       DELETE FROM "DocumentProcessing" WHERE "userId" IN (
-        SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%'
-      );
-      
-      DELETE FROM "DocumentChunk" WHERE "documentId" IN (
-        SELECT id FROM "DocumentProcessing" WHERE "userId" IN (
-          SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%'
-        )
-      );
-      
+        SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
+      )
+    `, 'DocumentProcessing');
+
+    await safeDelete(`
       DELETE FROM "Stream" WHERE "chatId" IN (
         SELECT id FROM "Chat" WHERE "userId" IN (
-          SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%'
+          SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
         )
-      );
-      
+      )
+    `, 'Stream');
+
+    await safeDelete(`
       DELETE FROM "Chat" WHERE "userId" IN (
-        SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%'
-      );
-      
-      DELETE FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%';
-      
-      -- Clean up chat sessions table if it exists
-      DELETE FROM chat_sessions WHERE session_id LIKE 'test-%' OR session_id LIKE '%test%';
-    `);
+        SELECT id FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
+      )
+    `, 'Chat');
+
+    await safeDelete(`
+      DELETE FROM "User" WHERE email LIKE '%@test.%' OR email LIKE '%@playwright.%' OR email LIKE '%@roborail.com%'
+    `, 'User');
+
+    await safeDelete(`
+      DELETE FROM chat_sessions WHERE session_id LIKE 'test-%' OR session_id LIKE '%test%'
+    `, 'chat_sessions');
 
     console.log('✅ Test database reset completed');
   };
@@ -323,87 +371,103 @@ export async function createTestDatabase(): Promise<DatabaseTestSetup> {
       ON CONFLICT (id) DO NOTHING;
     `);
 
-    // Create sample documents for RAG testing
-    await db.execute(sql`
-      INSERT INTO "DocumentProcessing" (
-        id, 
-        "documentId", 
-        filename, 
-        status, 
-        stage, 
-        progress, 
-        "chunkCount", 
-        metadata, 
-        "userId",
-        "createdAt",
-        "updatedAt"
-      ) VALUES
-      (
-        '550e8400-e29b-41d4-a716-446655440030',
-        '550e8400-e29b-41d4-a716-446655440040',
-        'roborail-manual.pdf',
-        'completed',
-        'completed',
-        100,
-        15,
-        '{"type": "manual", "version": "2.1", "language": "en"}',
-        '550e8400-e29b-41d4-a716-446655440001',
-        NOW(),
-        NOW()
-      ),
-      (
-        '550e8400-e29b-41d4-a716-446655440031',
-        '550e8400-e29b-41d4-a716-446655440041',
-        'safety-procedures.pdf',
-        'completed',
-        'completed',
-        100,
-        8,
-        '{"type": "safety", "version": "1.5", "language": "en"}',
-        '550e8400-e29b-41d4-a716-446655440002',
-        NOW(),
-        NOW()
-      )
-      ON CONFLICT (id) DO NOTHING;
-    `);
+    // Create sample documents for RAG testing (if tables exist)
+    try {
+      await db.execute(sql`
+        INSERT INTO "DocumentProcessing" (
+          id, 
+          "documentId", 
+          filename, 
+          status, 
+          stage, 
+          progress, 
+          "chunkCount", 
+          metadata, 
+          "userId",
+          "createdAt",
+          "updatedAt"
+        ) VALUES
+        (
+          '550e8400-e29b-41d4-a716-446655440030',
+          '550e8400-e29b-41d4-a716-446655440040',
+          'roborail-manual.pdf',
+          'completed',
+          'completed',
+          100,
+          15,
+          '{"type": "manual", "version": "2.1", "language": "en"}',
+          '550e8400-e29b-41d4-a716-446655440001',
+          NOW(),
+          NOW()
+        ),
+        (
+          '550e8400-e29b-41d4-a716-446655440031',
+          '550e8400-e29b-41d4-a716-446655440041',
+          'safety-procedures.pdf',
+          'completed',
+          'completed',
+          100,
+          8,
+          '{"type": "safety", "version": "1.5", "language": "en"}',
+          '550e8400-e29b-41d4-a716-446655440002',
+          NOW(),
+          NOW()
+        )
+        ON CONFLICT (id) DO NOTHING;
+      `);
+    } catch (error: any) {
+      if (error?.message?.includes('does not exist') || error?.cause?.message?.includes('does not exist')) {
+        console.log('   ⚠️  DocumentProcessing table doesn\'t exist, skipping document seed...');
+      } else {
+        throw error;
+      }
+    }
 
-    // Create sample document chunks for RAG testing
-    await db.execute(sql`
-      INSERT INTO "DocumentChunk" (content, "documentId", filename, "chunkIndex", metadata, "createdAt") VALUES
-      (
-        'RoboRail System Overview: The RoboRail automated railway system is designed for high-efficiency cargo transport. The system consists of multiple rail segments, automated loading stations, and central control systems.',
-        '550e8400-e29b-41d4-a716-446655440040',
-        'roborail-manual.pdf',
-        1,
-        '{"section": "overview", "page": 1}',
-        NOW()
-      ),
-      (
-        'Startup Procedures: Before operating the RoboRail system, ensure all safety protocols are followed. Check that emergency stop buttons are accessible and functional. Verify that the track is clear of obstacles.',
-        '550e8400-e29b-41d4-a716-446655440040',
-        'roborail-manual.pdf',
-        2,
-        '{"section": "startup", "page": 3}',
-        NOW()
-      ),
-      (
-        'Safety Requirements: All personnel must wear appropriate personal protective equipment (PPE) when working near the RoboRail system. This includes safety glasses, steel-toed boots, and high-visibility clothing.',
-        '550e8400-e29b-41d4-a716-446655440041',
-        'safety-procedures.pdf',
-        1,
-        '{"section": "ppe", "page": 1}',
-        NOW()
-      ),
-      (
-        'Emergency Procedures: In case of system malfunction, immediately press the nearest emergency stop button. Evacuate personnel from the danger zone and contact the maintenance team immediately.',
-        '550e8400-e29b-41d4-a716-446655440041',
-        'safety-procedures.pdf',
-        2,
-        '{"section": "emergency", "page": 2}',
-        NOW()
-      )
-      ON CONFLICT (id) DO NOTHING;
-    `);
+    // Create sample document chunks for RAG testing (if tables exist)
+    try {
+      await db.execute(sql`
+        INSERT INTO "DocumentChunk" (content, "documentId", filename, "chunkIndex", metadata, "createdAt") VALUES
+        (
+          'RoboRail System Overview: The RoboRail automated railway system is designed for high-efficiency cargo transport. The system consists of multiple rail segments, automated loading stations, and central control systems.',
+          '550e8400-e29b-41d4-a716-446655440040',
+          'roborail-manual.pdf',
+          1,
+          '{"section": "overview", "page": 1}',
+          NOW()
+        ),
+        (
+          'Startup Procedures: Before operating the RoboRail system, ensure all safety protocols are followed. Check that emergency stop buttons are accessible and functional. Verify that the track is clear of obstacles.',
+          '550e8400-e29b-41d4-a716-446655440040',
+          'roborail-manual.pdf',
+          2,
+          '{"section": "startup", "page": 3}',
+          NOW()
+        ),
+        (
+          'Safety Requirements: All personnel must wear appropriate personal protective equipment (PPE) when working near the RoboRail system. This includes safety glasses, steel-toed boots, and high-visibility clothing.',
+          '550e8400-e29b-41d4-a716-446655440041',
+          'safety-procedures.pdf',
+          1,
+          '{"section": "ppe", "page": 1}',
+          NOW()
+        ),
+        (
+          'Emergency Procedures: In case of system malfunction, immediately press the nearest emergency stop button. Evacuate personnel from the danger zone and contact the maintenance team immediately.',
+          '550e8400-e29b-41d4-a716-446655440041',
+          'safety-procedures.pdf',
+          2,
+          '{"section": "emergency", "page": 2}',
+          NOW()
+        )
+        ON CONFLICT (id) DO NOTHING;
+      `);
+    } catch (error: any) {
+      if (error?.message?.includes('does not exist') || error?.cause?.message?.includes('does not exist')) {
+        console.log('   ⚠️  DocumentChunk table doesn\'t exist, skipping chunk seed...');
+      } else {
+        throw error;
+      }
+    }
 
     // Ensure pgvector extension is available for embeddings
     try {

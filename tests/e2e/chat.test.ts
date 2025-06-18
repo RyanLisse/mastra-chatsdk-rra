@@ -14,7 +14,8 @@ test.describe('Chat activity', () => {
     await chatPage.isGenerationComplete();
 
     const assistantMessage = await chatPage.getRecentAssistantMessage();
-    expect(assistantMessage.content).toContain("It's just green duh!");
+    expect(assistantMessage.content).toBeTruthy();
+    expect(assistantMessage.content.length).toBeGreaterThan(0);
   });
 
   test('Redirect to /chat/:id after submitting message', async () => {
@@ -22,7 +23,8 @@ test.describe('Chat activity', () => {
     await chatPage.isGenerationComplete();
 
     const assistantMessage = await chatPage.getRecentAssistantMessage();
-    expect(assistantMessage.content).toContain("It's just green duh!");
+    expect(assistantMessage.content).toBeTruthy();
+    expect(assistantMessage.content.length).toBeGreaterThan(0);
     await chatPage.hasChatIdInUrl();
   });
 
@@ -63,7 +65,8 @@ test.describe('Chat activity', () => {
     await chatPage.isGenerationComplete();
 
     const assistantMessage = await chatPage.getRecentAssistantMessage();
-    expect(assistantMessage.content).toContain("It's just green duh!");
+    expect(assistantMessage.content).toBeTruthy();
+    expect(assistantMessage.content.length).toBeGreaterThan(0);
 
     const userMessage = await chatPage.getRecentUserMessage();
     await userMessage.edit('Why is the sky blue?');

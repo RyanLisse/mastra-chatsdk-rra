@@ -128,12 +128,35 @@ export async function POST(request: Request) {
         message,
       });
 
-      await saveChat({
-        id,
-        userId: session.user.id,
-        title,
-        visibility: selectedVisibilityType,
-      });
+      try {
+        await saveChat({
+          id,
+          userId: session.user.id,
+          title,
+          visibility: selectedVisibilityType,
+        });
+      } catch (error) {
+        console.error('Error saving chat:', {
+          id,
+          userId: session.user.id,
+          title,
+          visibility: selectedVisibilityType,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        // Check if it's a duplicate key error
+        if (error instanceof Error && error.message.includes('duplicate key')) {
+          // Chat might have been created by another request, try to get it again
+          const existingChat = await getChatById({ id });
+          if (existingChat && existingChat.userId === session.user.id) {
+            // Chat exists and belongs to the user, continue
+            console.log('Chat already exists, continuing...');
+          } else {
+            throw error;
+          }
+        } else {
+          throw error;
+        }
+      }
     } else {
       if (chat.userId !== session.user.id) {
         return new ChatSDKError('forbidden:chat').toResponse();
@@ -308,6 +331,13 @@ export async function POST(request: Request) {
     if (error instanceof ChatSDKError) {
       return error.toResponse();
     }
+    
+    console.error('Unexpected error in chat API:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    
+    return new ChatSDKError('bad_request:database', 'An unexpected error occurred').toResponse();
   }
 }
 

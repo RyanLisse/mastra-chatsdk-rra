@@ -147,6 +147,14 @@ export async function saveChat({
       visibility,
     });
   } catch (error) {
+    console.error('Failed to save chat:', {
+      id,
+      userId,
+      title,
+      visibility,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     throw new ChatSDKError('bad_request:database', 'Failed to save chat');
   }
 }
@@ -267,6 +275,12 @@ export async function saveMessages({
     const db = getDatabase();
     return await db.insert(message).values(messages);
   } catch (error) {
+    console.error('Failed to save messages:', {
+      messagesCount: messages.length,
+      messageIds: messages.map(m => m.id),
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     throw new ChatSDKError('bad_request:database', 'Failed to save messages');
   }
 }
