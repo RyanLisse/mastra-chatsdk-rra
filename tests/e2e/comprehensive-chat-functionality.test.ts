@@ -216,8 +216,7 @@ test.describe('Comprehensive Chat Functionality (Replaces Stagehand Tests)', () 
     });
 
     test('should handle very long messages', async () => {
-      const longMessage = 'This is a very long message that tests the input handling. ' + 
-        'A'.repeat(1000); // Create a very long message
+      const longMessage = `This is a very long message that tests the input handling. ${'A'.repeat(1000)}`; // Create a very long message
       
       await chatPage.sendUserMessage(longMessage);
       await chatPage.isGenerationComplete();

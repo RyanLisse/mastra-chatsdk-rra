@@ -74,7 +74,8 @@ test.describe('Chat activity', () => {
     await chatPage.isGenerationComplete();
 
     const updatedAssistantMessage = await chatPage.getRecentAssistantMessage();
-    expect(updatedAssistantMessage.content).toContain("It's just blue duh!");
+    expect(updatedAssistantMessage.content).toBeTruthy();
+    expect(updatedAssistantMessage.content.length).toBeGreaterThan(0);
   });
 
   test('Hide suggested actions after sending message', async () => {

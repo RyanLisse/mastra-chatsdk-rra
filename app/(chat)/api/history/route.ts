@@ -1,4 +1,4 @@
-import { auth } from '@/app/(auth)/auth';
+
 import { getTestAwareSession } from '@/lib/auth/test-auth';
 import type { NextRequest } from 'next/server';
 import { getChatsByUserId } from '@/lib/db/queries';

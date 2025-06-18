@@ -368,7 +368,7 @@ export class ChatPage {
     await expect(userEmail).toBeVisible({ timeout: 5000 });
   }
 
-  async setSidebarOpenState(open: boolean = true) {
+  async setSidebarOpenState(open = true) {
     // Set sidebar cookie to ensure consistent state
     await this.page.context().addCookies([
       {

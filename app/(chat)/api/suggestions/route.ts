@@ -1,4 +1,4 @@
-import { auth } from '@/app/(auth)/auth';
+
 import { getTestAwareSession } from '@/lib/auth/test-auth';
 import { getSuggestionsByDocumentId } from '@/lib/db/queries';
 import { ChatSDKError } from '@/lib/errors';

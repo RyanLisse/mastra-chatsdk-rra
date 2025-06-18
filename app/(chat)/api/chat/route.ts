@@ -5,7 +5,7 @@ import {
   smoothStream,
   streamText,
 } from 'ai';
-import { auth, type UserType } from '@/app/(auth)/auth';
+import type { UserType } from '@/app/(auth)/auth';
 import { getTestAwareSession } from '@/lib/auth/test-auth';
 import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
 import {

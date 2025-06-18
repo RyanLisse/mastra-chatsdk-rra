@@ -15,7 +15,6 @@
  * 4. Emergency cleanup on any test failure
  */
 import { test, expect } from '@playwright/test';
-import { z } from 'zod';
 
 // Import Stagehand conditionally to handle potential import issues
 let StagehandClass: any;
@@ -88,7 +87,7 @@ async function forceCleanupStagehand(stagehand: any): Promise<void> {
 
     // Step 2: Force termination with SIGTERM
     console.log('🔨 Attempting force termination...');
-    if (stagehand.browser && stagehand.browser.process()) {
+    if (stagehand.browser?.process()) {
       const browserProcess = stagehand.browser.process();
       if (browserProcess && !browserProcess.killed) {
         console.log(`💀 Sending SIGTERM to browser process ${browserProcess.pid}`);
@@ -108,7 +107,7 @@ async function forceCleanupStagehand(stagehand: any): Promise<void> {
     // Step 3: Emergency cleanup - kill any remaining browser processes
     if (process.platform !== 'win32') {
       try {
-        const { execSync } = require('child_process');
+        const { execSync } = require('node:child_process');
         execSync('pkill -f chrome || pkill -f chromium || pkill -f browser || true', {
           stdio: 'ignore',
         });
