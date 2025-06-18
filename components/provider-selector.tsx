@@ -35,6 +35,7 @@ interface ProviderSelectorProps {
   disabled?: boolean;
   availableModels?: any[];
   showModelCount?: boolean;
+  availableProviders?: Provider[];
 }
 
 export function ProviderSelector({
@@ -44,6 +45,7 @@ export function ProviderSelector({
   disabled = false,
   availableModels = [],
   showModelCount = true,
+  availableProviders,
 }: ProviderSelectorProps) {
   const [open, setOpen] = useState(false);
 
@@ -75,11 +77,17 @@ export function ProviderSelector({
         align="start"
         className="min-w-[320px] max-w-[400px]"
       >
-        {Object.entries(providers).map(([providerId, providerData]) => {
-          const provider = providerId as Provider;
-          const isSelected = provider === selectedProvider;
+        {Object.entries(providers)
+          .filter(([providerId]) =>
+            availableProviders
+              ? availableProviders.includes(providerId as Provider)
+              : true,
+          )
+          .map(([providerId, providerData]) => {
+            const provider = providerId as Provider;
+            const isSelected = provider === selectedProvider;
 
-          return (
+            return (
             <DropdownMenuItem
               data-testid={`provider-selector-item-${provider}`}
               key={provider}
@@ -185,7 +193,7 @@ export function getProviderStats(provider: Provider, availableModels: any[]) {
       (model) => model.capabilities.supportsVision,
     ),
     hasReasoning: providerModels.some(
-      (model) => model.capabilities.supportsReeasoning,
+      (model) => model.capabilities.supportsReasoning,
     ),
     hasTools: providerModels.some((model) => model.capabilities.supportsTools),
     maxContextWindow: Math.max(

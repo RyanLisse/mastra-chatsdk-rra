@@ -4,13 +4,32 @@ import { test, expect } from '@playwright/test';
 let StagehandClass: any;
 let stagehandAvailable = false;
 
-// Stagehand library has compatibility issues with current environment
-// Disabling until compatible version is available
-stagehandAvailable = false;
-console.log(
-  '⚠️  Stagehand tests disabled due to library compatibility issues with current Node.js/Playwright version',
-  '📝 Model testing functionality has been replaced with standard Playwright tests',
-);
+try {
+  const { Stagehand } = require('@browserbasehq/stagehand');
+  StagehandClass = Stagehand;
+
+  // Check for valid API key
+  const hasValidApiKey =
+    process.env.OPENAI_API_KEY &&
+    !process.env.OPENAI_API_KEY.startsWith('test-') &&
+    process.env.OPENAI_API_KEY.startsWith('sk-');
+
+  if (hasValidApiKey) {
+    stagehandAvailable = true;
+    console.log('✅ Stagehand library loaded successfully');
+  } else {
+    console.log('⚠️  Stagehand tests require a valid OpenAI API key');
+    console.log(
+      '💡 Set OPENAI_API_KEY in .env.test with a real API key to run Stagehand tests',
+    );
+  }
+} catch (error) {
+  console.log(
+    '⚠️  Stagehand library not available:',
+    error instanceof Error ? error.message : 'Unknown error',
+  );
+  console.log('📝 Stagehand tests will be skipped');
+}
 
 const TEST_PROMPT =
   "Hello! Please respond with just 'Model working' to confirm you're functioning.";

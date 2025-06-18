@@ -26,9 +26,9 @@ function validateApiKeyFormat(
     { pattern: RegExp; description: string }
   > = {
     openai: {
-      pattern: /^sk-[a-zA-Z0-9\-_]{20,}$/,
+      pattern: /^sk-(?:proj-)?[a-zA-Z0-9\-_]{20,}$/,
       description:
-        'Should start with "sk-" followed by alphanumeric characters',
+        'Should start with "sk-" or "sk-proj-" followed by alphanumeric characters',
     },
     anthropic: {
       pattern: /^sk-ant-[a-zA-Z0-9\-_]{20,}$/,

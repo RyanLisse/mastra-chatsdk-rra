@@ -1,12 +1,12 @@
 export const DEFAULT_CHAT_MODEL: string = 'gemini-2.5-flash';
 
-export type Provider = 'openai' | 'anthropic' | 'google' | 'groq';
+export type Provider = 'openai' | 'anthropic' | 'google' | 'groq' | 'cohere' | 'xai' | 'openrouter' | 'perplexity' | 'mistral' | 'together';
 
 export interface ModelCapabilities {
   contextWindow: number;
   maxTokens?: number;
   supportsVision?: boolean;
-  supportsReeasoning?: boolean;
+  supportsReasoning?: boolean;
   supportsTools?: boolean;
   specialty?: string;
 }
@@ -40,6 +40,30 @@ export const providers: Record<
     name: 'Groq',
     description: 'High-speed inference with LLaMA models',
   },
+  cohere: {
+    name: 'Cohere',
+    description: 'Command models for text generation and understanding',
+  },
+  xai: {
+    name: 'xAI',
+    description: 'Grok models with real-time knowledge',
+  },
+  openrouter: {
+    name: 'OpenRouter',
+    description: 'Unified API for multiple model providers',
+  },
+  perplexity: {
+    name: 'Perplexity',
+    description: 'Models optimized for search and factual responses',
+  },
+  mistral: {
+    name: 'Mistral AI',
+    description: 'Open-weight models with strong performance',
+  },
+  together: {
+    name: 'Together AI',
+    description: 'Open-source models with fast inference',
+  },
 };
 
 export const chatModels: Array<ChatModel> = [
@@ -53,7 +77,7 @@ export const chatModels: Array<ChatModel> = [
     capabilities: {
       contextWindow: 200000,
       maxTokens: 4096,
-      supportsReeasoning: true,
+      supportsReasoning: true,
       supportsTools: true,
       specialty: 'Advanced reasoning and complex problem solving',
     },
@@ -67,7 +91,7 @@ export const chatModels: Array<ChatModel> = [
     capabilities: {
       contextWindow: 128000,
       maxTokens: 4096,
-      supportsReeasoning: true,
+      supportsReasoning: true,
       supportsTools: true,
       specialty: 'Reasoning and problem solving',
     },
@@ -81,7 +105,7 @@ export const chatModels: Array<ChatModel> = [
     capabilities: {
       contextWindow: 64000,
       maxTokens: 2048,
-      supportsReeasoning: true,
+      supportsReasoning: true,
       supportsTools: true,
       specialty: 'Fast reasoning',
     },
@@ -166,7 +190,7 @@ export const chatModels: Array<ChatModel> = [
     capabilities: {
       contextWindow: 200000,
       maxTokens: 4096,
-      supportsReeasoning: true,
+      supportsReasoning: true,
       supportsTools: true,
       specialty: 'Complex reasoning and analysis',
     },
@@ -181,7 +205,7 @@ export const chatModels: Array<ChatModel> = [
     capabilities: {
       contextWindow: 200000,
       maxTokens: 4096,
-      supportsReeasoning: true,
+      supportsReasoning: true,
       supportsTools: true,
       specialty: 'General purpose with strong reasoning',
     },
@@ -344,6 +368,228 @@ export const chatModels: Array<ChatModel> = [
     tier: 'free',
   },
 
+  // Cohere Models
+  {
+    id: 'command-r-plus',
+    name: 'Command R+',
+    description: 'Most capable Cohere model for complex tasks',
+    provider: 'cohere',
+    capabilities: {
+      contextWindow: 128000,
+      maxTokens: 4096,
+      supportsTools: true,
+      specialty: 'RAG and tool use',
+    },
+    tier: 'premium',
+  },
+  {
+    id: 'command-r',
+    name: 'Command R',
+    description: 'Efficient model for production workloads',
+    provider: 'cohere',
+    capabilities: {
+      contextWindow: 128000,
+      maxTokens: 4096,
+      supportsTools: true,
+      specialty: 'Efficient RAG',
+    },
+    tier: 'free',
+  },
+  {
+    id: 'command-light',
+    name: 'Command Light',
+    description: 'Fast lightweight model for simple tasks',
+    provider: 'cohere',
+    capabilities: {
+      contextWindow: 4000,
+      maxTokens: 1024,
+      specialty: 'Fast responses',
+    },
+    tier: 'free',
+  },
+
+  // xAI Models
+  {
+    id: 'grok-2',
+    name: 'Grok-2',
+    description: 'Advanced model with real-time knowledge',
+    provider: 'xai',
+    capabilities: {
+      contextWindow: 128000,
+      maxTokens: 4096,
+      supportsTools: true,
+      specialty: 'Real-time information',
+    },
+    tier: 'premium',
+  },
+  {
+    id: 'grok-2-mini',
+    name: 'Grok-2 Mini',
+    description: 'Faster model for quick responses',
+    provider: 'xai',
+    capabilities: {
+      contextWindow: 32000,
+      maxTokens: 2048,
+      supportsTools: true,
+      specialty: 'Fast real-time access',
+    },
+    tier: 'free',
+  },
+
+  // Mistral Models
+  {
+    id: 'mistral-large',
+    name: 'Mistral Large',
+    description: 'Most powerful Mistral model for complex reasoning',
+    provider: 'mistral',
+    capabilities: {
+      contextWindow: 128000,
+      maxTokens: 4096,
+      supportsTools: true,
+      supportsReasoning: true,
+      specialty: 'Complex reasoning',
+    },
+    tier: 'premium',
+  },
+  {
+    id: 'mistral-medium',
+    name: 'Mistral Medium',
+    description: 'Balanced model for general tasks',
+    provider: 'mistral',
+    capabilities: {
+      contextWindow: 32000,
+      maxTokens: 2048,
+      supportsTools: true,
+      specialty: 'General purpose',
+    },
+    tier: 'free',
+  },
+  {
+    id: 'mixtral-8x7b',
+    name: 'Mixtral 8x7B',
+    description: 'MoE model with excellent performance',
+    provider: 'mistral',
+    capabilities: {
+      contextWindow: 32000,
+      maxTokens: 2048,
+      supportsTools: true,
+      specialty: 'Mixture of experts',
+    },
+    tier: 'free',
+  },
+
+  // Perplexity Models
+  {
+    id: 'pplx-70b-online',
+    name: 'Perplexity 70B Online',
+    description: 'Model with real-time web access',
+    provider: 'perplexity',
+    capabilities: {
+      contextWindow: 8192,
+      maxTokens: 2048,
+      supportsTools: true,
+      specialty: 'Web-grounded responses',
+    },
+    tier: 'premium',
+  },
+  {
+    id: 'pplx-7b-online',
+    name: 'Perplexity 7B Online',
+    description: 'Efficient model with web access',
+    provider: 'perplexity',
+    capabilities: {
+      contextWindow: 4096,
+      maxTokens: 1024,
+      supportsTools: true,
+      specialty: 'Fast web search',
+    },
+    tier: 'free',
+  },
+
+  // Together AI Models
+  {
+    id: 'deepseek-coder-v2',
+    name: 'DeepSeek Coder V2',
+    description: 'Specialized model for code generation',
+    provider: 'together',
+    capabilities: {
+      contextWindow: 128000,
+      maxTokens: 4096,
+      supportsTools: true,
+      specialty: 'Code generation',
+    },
+    tier: 'premium',
+  },
+  {
+    id: 'qwen-2-72b',
+    name: 'Qwen 2 72B',
+    description: 'Large multilingual model',
+    provider: 'together',
+    capabilities: {
+      contextWindow: 32000,
+      maxTokens: 4096,
+      supportsTools: true,
+      specialty: 'Multilingual',
+    },
+    tier: 'free',
+  },
+  {
+    id: 'nous-hermes-2-mixtral',
+    name: 'Nous Hermes 2 Mixtral',
+    description: 'Fine-tuned Mixtral for conversations',
+    provider: 'together',
+    capabilities: {
+      contextWindow: 32000,
+      maxTokens: 2048,
+      supportsTools: true,
+      specialty: 'Conversational AI',
+    },
+    tier: 'free',
+  },
+
+  // OpenRouter Models (Gateway to multiple providers)
+  {
+    id: 'openrouter/auto',
+    name: 'Auto (Best Available)',
+    description: 'Automatically selects the best available model',
+    provider: 'openrouter',
+    capabilities: {
+      contextWindow: 128000,
+      maxTokens: 4096,
+      supportsTools: true,
+      specialty: 'Automatic selection',
+    },
+    tier: 'premium',
+  },
+  {
+    id: 'openrouter/claude-3-opus',
+    name: 'Claude 3 Opus (via OR)',
+    description: 'Access Claude 3 Opus through OpenRouter',
+    provider: 'openrouter',
+    capabilities: {
+      contextWindow: 200000,
+      maxTokens: 4096,
+      supportsVision: true,
+      supportsTools: true,
+      specialty: 'Complex reasoning',
+    },
+    tier: 'pro',
+  },
+  {
+    id: 'openrouter/gpt-4-turbo',
+    name: 'GPT-4 Turbo (via OR)',
+    description: 'Access GPT-4 Turbo through OpenRouter',
+    provider: 'openrouter',
+    capabilities: {
+      contextWindow: 128000,
+      maxTokens: 4096,
+      supportsVision: true,
+      supportsTools: true,
+      specialty: 'General purpose',
+    },
+    tier: 'premium',
+  },
+
   // Legacy models for backward compatibility
   {
     id: 'chat-model',
@@ -366,7 +612,7 @@ export const chatModels: Array<ChatModel> = [
     capabilities: {
       contextWindow: 128000,
       maxTokens: 4096,
-      supportsReeasoning: true,
+      supportsReasoning: true,
       supportsTools: true,
       specialty: 'Advanced reasoning (Legacy)',
     },

@@ -16,22 +16,40 @@
  */
 import { test, expect } from '@playwright/test';
 
-// Import Stagehand conditionally to handle potential import issues
+// Import Stagehand with proper error handling
 let StagehandClass: any;
 let stagehandAvailable = false;
 
-// Stagehand library has compatibility issues with current environment
-// Disabling until compatible version is available
-stagehandAvailable = false;
-console.log(
-  '⚠️  Stagehand tests disabled due to library compatibility issues with current Node.js/Playwright version',
-  '📝 These tests have been replaced with equivalent standard Playwright tests in /tests/e2e/',
-);
+try {
+  const { Stagehand } = require('@browserbasehq/stagehand');
+  StagehandClass = Stagehand;
+  stagehandAvailable = true;
+  console.log('✅ Stagehand library loaded successfully');
+} catch (error) {
+  console.log(
+    '⚠️  Stagehand library not available:',
+    error instanceof Error ? error.message : 'Unknown error',
+  );
+  console.log('📝 Stagehand tests will be skipped');
+}
 
-// Additional check for Playwright environment
+// Additional checks for test environment
 const isPlaywrightEnv = process.env.PLAYWRIGHT === 'true';
+const hasValidApiKey =
+  process.env.OPENAI_API_KEY &&
+  !process.env.OPENAI_API_KEY.startsWith('test-') &&
+  process.env.OPENAI_API_KEY.startsWith('sk-');
+
 if (!isPlaywrightEnv) {
   console.log('⚠️  Stagehand tests require PLAYWRIGHT=true environment');
+  stagehandAvailable = false;
+}
+
+if (!hasValidApiKey) {
+  console.log('⚠️  Stagehand tests require a valid OpenAI API key');
+  console.log(
+    '💡 Set OPENAI_API_KEY in .env.test with a real API key to run Stagehand tests',
+  );
   stagehandAvailable = false;
 }
 
@@ -138,14 +156,34 @@ test.describe(stagehandAvailable
   test.beforeEach(async () => {
     if (stagehandAvailable) {
       console.log('🚀 Setting up fresh Stagehand instance...');
-      stagehand = new StagehandClass({
-        env: 'LOCAL',
-        verbose: 1,
-        debugDom: false,
-        headless: process.env.CI === 'true',
-        domSettleTimeoutMs: 30000,
-      });
 
+      // Use configuration from stagehand.config.ts
+      const config = {
+        env: 'LOCAL',
+        verbose: process.env.CI === 'true' ? 0 : 1,
+        debugDom: process.env.CI !== 'true',
+        headless: process.env.CI === 'true',
+        domSettleTimeoutMs: 15000, // Reduced for faster tests
+        timeout: 45000,
+        navigationTimeout: 30000,
+        actionTimeout: 10000,
+        enableCleanup: true,
+        disablePino: true, // Disable logging in tests
+        launchOptions: {
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--disable-web-security',
+            '--disable-features=TranslateUI',
+            '--disable-ipc-flooding-protection',
+          ],
+          timeout: 30000,
+        },
+      };
+
+      stagehand = new StagehandClass(config);
       await stagehand.init();
       console.log('✅ Stagehand instance ready');
     }
@@ -188,9 +226,17 @@ test.describe(stagehandAvailable
 
     if (hasSignIn) {
       console.log('🔐 Signing in as guest...');
-      await stagehand.page.act(
-        'Click the "Continue as Guest" button or sign in option',
+      // Use observe() first to get the action, then act() - following best practices
+      const signInActions = await stagehand.page.observe(
+        'find sign in or continue as guest button',
       );
+      if (signInActions.length > 0) {
+        await stagehand.page.act(signInActions[0]);
+      } else {
+        await stagehand.page.act(
+          'Click the "Continue as Guest" button or sign in option',
+        );
+      }
       await stagehand.page.waitForTimeout(2000);
     }
 
@@ -235,10 +281,13 @@ test.describe(stagehandAvailable
     console.log('💬 Sending test message...');
     const testMessage = 'Hello, this is a test message from Stagehand!';
 
-    // Send the message using Stagehand's act method
-    await stagehand.page.act(
-      `Type "${testMessage}" in the text area and send it`,
-    );
+    // Send the message using Stagehand's act method with variables (best practice)
+    await stagehand.page.act({
+      action: 'Type %message% in the text area and send it',
+      variables: {
+        message: testMessage,
+      },
+    });
 
     // Wait for the message to appear
     await stagehand.page.waitForTimeout(3000);

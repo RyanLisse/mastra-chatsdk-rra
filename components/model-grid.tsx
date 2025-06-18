@@ -321,7 +321,7 @@ export function ModelGrid({
                       Vision
                     </Badge>
                   )}
-                  {model.capabilities.supportsReeasoning && (
+                  {model.capabilities.supportsReasoning && (
                     <Badge
                       variant="secondary"
                       className="text-xs px-1.5 py-0.5"

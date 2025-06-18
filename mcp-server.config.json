@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "mcp-browserbase": {
+      "command": "node",
+      "args": [
+        "/Users/neo/Developer/mcp_servers/mcp-server-browserbase/browserbase/dist/index.js"
+      ],
+      "env": {
+        "BROWSERBASE_API_KEY": "${BROWSERBASE_API_KEY}",
+        "BROWSERBASE_PROJECT_ID": "${BROWSERBASE_PROJECT_ID}"
+      }
+    },
+    "mcp-stagehand": {
+      "command": "node",
+      "args": [
+        "/Users/neo/Developer/mcp_servers/mcp-server-browserbase/stagehand/dist/index.js"
+      ],
+      "env": {
+        "BROWSERBASE_API_KEY": "${BROWSERBASE_API_KEY}",
+        "BROWSERBASE_PROJECT_ID": "${BROWSERBASE_PROJECT_ID}",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "STAGEHAND_ENV": "${STAGEHAND_ENV:-BROWSERBASE}",
+        "STAGEHAND_VERBOSE": "${STAGEHAND_VERBOSE:-1}",
+        "STAGEHAND_DEBUG_DOM": "${STAGEHAND_DEBUG_DOM:-false}",
+        "STAGEHAND_HEADLESS": "${STAGEHAND_HEADLESS:-true}"
+      }
+    }
+  }
+}
