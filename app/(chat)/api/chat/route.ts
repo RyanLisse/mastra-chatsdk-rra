@@ -6,6 +6,7 @@ import {
   streamText,
 } from 'ai';
 import { auth, type UserType } from '@/app/(auth)/auth';
+import { getTestAwareSession } from '@/lib/auth/test-auth';
 import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
 import {
   createStreamId,
@@ -103,7 +104,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const session = await auth();
+    const session = await getTestAwareSession();
 
     if (!session?.user) {
       return new ChatSDKError('unauthorized:chat').toResponse();
@@ -325,7 +326,7 @@ export async function GET(request: Request) {
     return new ChatSDKError('bad_request:api').toResponse();
   }
 
-  const session = await auth();
+  const session = await getTestAwareSession();
 
   if (!session?.user) {
     return new ChatSDKError('unauthorized:chat').toResponse();
@@ -413,7 +414,7 @@ export async function DELETE(request: Request) {
     return new ChatSDKError('bad_request:api').toResponse();
   }
 
-  const session = await auth();
+  const session = await getTestAwareSession();
 
   if (!session?.user) {
     return new ChatSDKError('unauthorized:chat').toResponse();
