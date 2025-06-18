@@ -21,16 +21,16 @@ const DEFAULT_PREFERENCES: ModelPreferences = {
   lastUsedModels: {
     openai: 'gpt-4o',
     anthropic: 'claude-3.5-sonnet',
-    google: 'gemini-2.0-flash',
+    google: 'gemini-2.5-flash',
     groq: 'llama-3.3-70b',
   },
-  providerPreference: 'openai',
+  providerPreference: 'google',
   autoSelectLatest: false,
 };
 
 export function useModelSettings(userType: UserType, initialModelId?: string) {
   const [selectedModelId, setSelectedModelId] = useState<string>(
-    initialModelId || 'gpt-4o',
+    initialModelId || 'gemini-2.5-flash',
   );
   const [preferences, setPreferences] =
     useState<ModelPreferences>(DEFAULT_PREFERENCES);

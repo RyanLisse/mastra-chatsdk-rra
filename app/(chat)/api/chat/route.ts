@@ -95,12 +95,12 @@ export async function POST(request: Request) {
       if (modelInfo) {
         effectiveModel = getFallbackModel(modelInfo.provider);
       } else {
-        effectiveModel = 'gpt-4o-mini'; // Default fallback
+        effectiveModel = 'gemini-2.5-flash'; // Default fallback
       }
 
       // Verify fallback is available
       if (!isModelAvailable(effectiveModel)) {
-        effectiveModel = 'gpt-4o-mini'; // Ultimate fallback
+        effectiveModel = 'gpt-4o-mini'; // Ultimate fallback (OpenAI as most reliable)
       }
     }
 

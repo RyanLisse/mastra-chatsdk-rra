@@ -161,6 +161,11 @@ test.describe(stagehandAvailable
   });
 
   test('should load the homepage and display chat interface', async () => {
+    if (!stagehandAvailable || !stagehand) {
+      console.log('⚠️  Stagehand not available, skipping test');
+      return;
+    }
+
     console.log('🌐 Navigating to homepage...');
     await stagehand.page.goto('http://localhost:3000', {
       timeout: 30000,
@@ -202,6 +207,11 @@ test.describe(stagehandAvailable
   });
 
   test('should be able to send a message', async () => {
+    if (!stagehandAvailable || !stagehand) {
+      console.log('⚠️  Stagehand not available, skipping test');
+      return;
+    }
+
     console.log('🌐 Navigating to chat page...');
     await stagehand.page.goto('http://localhost:3000', {
       timeout: 30000,
@@ -247,6 +257,11 @@ test.describe(stagehandAvailable
   });
 
   test('should display model selector and allow model changes', async () => {
+    if (!stagehandAvailable || !stagehand) {
+      console.log('⚠️  Stagehand not available, skipping test');
+      return;
+    }
+
     console.log('🌐 Navigating to chat page...');
     await stagehand.page.goto('http://localhost:3000', {
       timeout: 30000,
@@ -288,6 +303,11 @@ test.describe(stagehandAvailable
   });
 
   test('should handle error scenarios gracefully', async () => {
+    if (!stagehandAvailable || !stagehand) {
+      console.log('⚠️  Stagehand not available, skipping test');
+      return;
+    }
+
     console.log('🌐 Testing error handling...');
 
     // Navigate to a non-existent page to trigger error handling
