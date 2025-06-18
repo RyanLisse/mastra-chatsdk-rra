@@ -38,6 +38,12 @@ import {
   Star,
   Zap,
   AlertCircle,
+  Layers,
+  Bot,
+  Router,
+  Search,
+  Code,
+  Users,
 } from 'lucide-react';
 import { useProviderStatus } from '@/hooks/use-provider-status';
 
@@ -46,6 +52,12 @@ const providerIcons: Record<Provider, React.ReactNode> = {
   anthropic: <Brain className="h-3 w-3" />,
   google: <Star className="h-3 w-3" />,
   groq: <Zap className="h-3 w-3" />,
+  cohere: <Layers className="h-3 w-3" />,
+  xai: <Bot className="h-3 w-3" />,
+  openrouter: <Router className="h-3 w-3" />,
+  perplexity: <Search className="h-3 w-3" />,
+  mistral: <Code className="h-3 w-3" />,
+  together: <Users className="h-3 w-3" />,
 };
 
 const tierColors = {
@@ -70,16 +82,17 @@ export function ModelSettings({
   const [open, setOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<Provider>('openai');
   const [filterByProvider, setFilterByProvider] = useState(false);
-  
+
   const { availableProviders, loading, error } = useProviderStatus();
 
   const userType = session?.user?.type || 'free';
   const { availableChatModelIds } = entitlementsByUserType[userType];
 
   // Filter models based on both user entitlements and provider availability
-  const availableChatModels = chatModels.filter((chatModel) =>
-    availableChatModelIds.includes(chatModel.id) &&
-    availableProviders.includes(chatModel.provider),
+  const availableChatModels = chatModels.filter(
+    (chatModel) =>
+      availableChatModelIds.includes(chatModel.id) &&
+      availableProviders.includes(chatModel.provider),
   );
 
   const selectedChatModel = useMemo(
@@ -138,7 +151,9 @@ export function ModelSettings({
           <span className="font-medium text-sm">Model Settings</span>
         </div>
         <div className="flex items-center justify-center p-4">
-          <span className="text-sm text-muted-foreground">Loading providers...</span>
+          <span className="text-sm text-muted-foreground">
+            Loading providers...
+          </span>
         </div>
       </div>
     );
@@ -157,10 +172,13 @@ export function ModelSettings({
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
               <div className="space-y-1">
-                <p className="text-sm font-medium">No AI providers configured</p>
+                <p className="text-sm font-medium">
+                  No AI providers configured
+                </p>
                 <p className="text-xs text-muted-foreground">
                   Please add at least one API key in your environment variables:
-                  OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY, or GROQ_API_KEY
+                  OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY, or
+                  GROQ_API_KEY
                 </p>
               </div>
             </div>

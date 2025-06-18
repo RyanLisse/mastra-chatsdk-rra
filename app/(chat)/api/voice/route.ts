@@ -1,11 +1,11 @@
+import { ChatSDKError } from '@/lib/errors';
+import type { NextRequest } from 'next/server';
 // app/(chat)/api/voice/route.ts
 import { auth } from '@/app/(auth)/auth';
 import { createRoboRailVoiceAgent } from '@/lib/ai/agents/roborail-voice-agent';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
-import { getMessageCountByUserId } from '@/lib/db/queries';
-import { ChatSDKError } from '@/lib/errors';
 import { generateUUID } from '@/lib/utils';
-import type { NextRequest } from 'next/server';
+import { getMessageCountByUserId } from '@/lib/db/queries';
 
 export const maxDuration = 60;
 
@@ -134,15 +134,33 @@ export async function GET(request: NextRequest) {
         );
 
         voiceInstance.on('speaker', ({ audio }: { audio: any }) => {
-          controller.enqueue(
-            new TextEncoder().encode(
-              `data: ${JSON.stringify({
-                type: 'audio',
-                audioLength: audio.length,
-                sessionId,
-              })}\n\n`,
-            ),
-          );
+          try {
+            const audioLength = audio?.length || 0;
+            console.log(
+              `Voice audio received: ${audioLength} bytes for session ${sessionId}`,
+            );
+
+            controller.enqueue(
+              new TextEncoder().encode(
+                `data: ${JSON.stringify({
+                  type: 'audio',
+                  audioLength,
+                  sessionId,
+                })}\n\n`,
+              ),
+            );
+          } catch (error) {
+            console.error('Error processing speaker audio:', error);
+            controller.enqueue(
+              new TextEncoder().encode(
+                `data: ${JSON.stringify({
+                  type: 'error',
+                  error: 'Failed to process audio data',
+                  sessionId,
+                })}\n\n`,
+              ),
+            );
+          }
         });
 
         voiceInstance.on('error', (error: any) => {

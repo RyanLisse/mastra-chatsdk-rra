@@ -33,6 +33,11 @@ import {
   Search,
   Filter,
   CheckCircle,
+  Layers,
+  Bot,
+  Router,
+  Code,
+  Users,
 } from 'lucide-react';
 
 const providerIcons: Record<Provider, React.ReactNode> = {
@@ -40,6 +45,12 @@ const providerIcons: Record<Provider, React.ReactNode> = {
   anthropic: <Brain className="h-4 w-4" />,
   google: <Star className="h-4 w-4" />,
   groq: <Zap className="h-4 w-4" />,
+  cohere: <Layers className="h-4 w-4" />,
+  xai: <Bot className="h-4 w-4" />,
+  openrouter: <Router className="h-4 w-4" />,
+  perplexity: <Search className="h-4 w-4" />,
+  mistral: <Code className="h-4 w-4" />,
+  together: <Users className="h-4 w-4" />,
 };
 
 const providerColors: Record<Provider, string> = {
@@ -47,6 +58,12 @@ const providerColors: Record<Provider, string> = {
   anthropic: 'from-orange-500 to-red-600',
   google: 'from-blue-500 to-purple-600',
   groq: 'from-yellow-500 to-orange-600',
+  cohere: 'from-teal-500 to-cyan-600',
+  xai: 'from-gray-500 to-slate-600',
+  openrouter: 'from-indigo-500 to-blue-600',
+  perplexity: 'from-violet-500 to-purple-600',
+  mistral: 'from-red-500 to-pink-600',
+  together: 'from-emerald-500 to-green-600',
 };
 
 const tierColors = {

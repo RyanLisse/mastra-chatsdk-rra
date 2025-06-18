@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
 import type { Provider } from '@/lib/ai/models';
 
 interface ProviderStatus {
@@ -25,6 +26,12 @@ export function useProviderStatus(): ProviderStatus {
         anthropic: false,
         google: false,
         groq: false,
+        cohere: false,
+        xai: false,
+        openrouter: false,
+        perplexity: false,
+        mistral: false,
+        together: false,
       },
       warnings: [],
     },
@@ -42,7 +49,7 @@ export function useProviderStatus(): ProviderStatus {
         if (!response.ok) {
           throw new Error('Failed to fetch provider status');
         }
-        
+
         const data = await response.json();
         setStatus({
           ...data,
