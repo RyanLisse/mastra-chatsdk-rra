@@ -1,5 +1,5 @@
 import { Artifact } from '@/components/create-artifact';
-import { CopyIcon, RedoIcon, UndoIcon } from '@/components/icons';
+import { Copy, Redo, Undo } from 'lucide-react';
 import { ImageEditor } from '@/components/image-editor';
 import { toast } from 'sonner';
 
@@ -19,7 +19,7 @@ export const imageArtifact = new Artifact({
   content: ImageEditor,
   actions: [
     {
-      icon: <UndoIcon size={18} />,
+      icon: <Undo size={18} />,
       description: 'View Previous version',
       onClick: ({ handleVersionChange }) => {
         handleVersionChange('prev');
@@ -33,7 +33,7 @@ export const imageArtifact = new Artifact({
       },
     },
     {
-      icon: <RedoIcon size={18} />,
+      icon: <Redo size={18} />,
       description: 'View Next version',
       onClick: ({ handleVersionChange }) => {
         handleVersionChange('next');
@@ -47,7 +47,7 @@ export const imageArtifact = new Artifact({
       },
     },
     {
-      icon: <CopyIcon size={18} />,
+      icon: <Copy size={18} />,
       description: 'Copy image to clipboard',
       onClick: ({ content }) => {
         const img = new Image();

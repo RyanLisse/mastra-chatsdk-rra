@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
-  PlayIcon,
-  StopIcon,
-  TrashIcon,
-  CheckCircleFillIcon,
-  WarningIcon,
-  LoaderIcon,
-} from '@/components/icons';
+  Play,
+  Square,
+  Trash2,
+  CheckCircle,
+  AlertTriangle,
+  Loader2,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProcessingCard, type ProcessingState } from './processing-card';
 import type { UploadFile } from './document-upload-zone';
@@ -145,7 +145,7 @@ export function FileQueue({
                 className="h-9"
               >
                 <span className="mr-2">
-                  <PlayIcon size={16} />
+                  <Play size={16} />
                 </span>
                 Start Processing
               </Button>
@@ -158,7 +158,7 @@ export function FileQueue({
                 className="h-9"
               >
                 <span className="mr-2">
-                  <StopIcon size={16} />
+                  <Square size={16} />
                 </span>
                 Stop
               </Button>
@@ -178,7 +178,7 @@ export function FileQueue({
             {stats.processing > 0 && (
               <span className="flex items-center gap-1">
                 <span className="animate-spin text-blue-500">
-                  <LoaderIcon size={12} />
+                  <Loader2 size={12} />
                 </span>
                 {stats.processing} Processing
               </span>
@@ -186,7 +186,7 @@ export function FileQueue({
             {stats.completed > 0 && (
               <span className="flex items-center gap-1">
                 <span className="text-green-500">
-                  <CheckCircleFillIcon size={12} />
+                  <CheckCircle size={12} />
                 </span>
                 {stats.completed} Completed
               </span>
@@ -194,7 +194,7 @@ export function FileQueue({
             {stats.failed > 0 && (
               <span className="flex items-center gap-1">
                 <span className="text-red-500">
-                  <WarningIcon size={12} />
+                  <AlertTriangle size={12} />
                 </span>
                 {stats.failed} Failed
               </span>
@@ -228,7 +228,7 @@ export function FileQueue({
                   className="h-8"
                 >
                   <span className="mr-1">
-                    <TrashIcon size={14} />
+                    <Trash2 size={14} />
                   </span>
                   Remove Selected
                 </Button>
@@ -297,7 +297,7 @@ export function FileQueue({
                       <div className="flex-shrink-0">
                         {item.error ? (
                           <span className="text-destructive">
-                            <WarningIcon size={16} />
+                            <AlertTriangle size={16} />
                           </span>
                         ) : (
                           <div className="w-2 h-2 rounded-full bg-gray-400" />
@@ -337,7 +337,7 @@ export function FileQueue({
                       className="h-8 w-8 p-0 hover:bg-destructive/10"
                       aria-label={`Remove ${item.file.name}`}
                     >
-                      <TrashIcon size={14} />
+                      <Trash2 size={14} />
                     </Button>
                   </CardContent>
                 </Card>

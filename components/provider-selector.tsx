@@ -10,9 +10,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { providers, type Provider } from '@/lib/ai/models';
 import { cn } from '@/lib/utils';
-import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
-import { Badge } from '@/components/ui/badge';
 import {
+  CheckCircle,
+  ChevronDown,
   Brain,
   Sparkles,
   Star,
@@ -24,6 +24,7 @@ import {
   Code,
   Users,
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const providerIcons: Record<Provider, React.ReactNode> = {
   openai: <Sparkles className="h-4 w-4" />,
@@ -93,7 +94,7 @@ export function ProviderSelector({
             {providerIcons[selectedProvider]}
             <span className="truncate">{selectedProviderData.name}</span>
           </div>
-          <ChevronDownIcon />
+          <ChevronDown />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -192,7 +193,7 @@ export function ProviderSelector({
                         isSelected ? 'opacity-100' : 'opacity-0',
                       )}
                     >
-                      <CheckCircleFillIcon />
+                      <CheckCircle />
                     </div>
                   </div>
                 </button>

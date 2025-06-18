@@ -16,7 +16,7 @@ import {
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
-import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
+import { ArrowUp, Paperclip, Square, ArrowDown, Loader2 } from 'lucide-react';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
@@ -24,7 +24,6 @@ import { SuggestedActions } from './suggested-actions';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowDown, Loader2 } from 'lucide-react';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
 import type { UseVoiceAssistantReturn } from '@/hooks/use-voice-assistant';
@@ -384,7 +383,7 @@ function PureAttachmentsButton({
         disabled={isDisabled}
         variant="ghost"
       >
-        <PaperclipIcon size={14} />
+        <Paperclip size={14} />
       </Button>
     </motion.div>
   );
@@ -429,7 +428,7 @@ function PureStopButton({
             <Loader2 size={14} className="text-red-600" />
           </motion.div>
         ) : (
-          <StopIcon size={14} />
+          <Square size={14} />
         )}
       </Button>
     </motion.div>
@@ -490,7 +489,7 @@ function PureSendButton({
             <span className="text-xs hidden sm:inline">Uploading...</span>
           </div>
         ) : (
-          <ArrowUpIcon size={14} />
+          <ArrowUp size={14} />
         )}
       </Button>
     </motion.div>

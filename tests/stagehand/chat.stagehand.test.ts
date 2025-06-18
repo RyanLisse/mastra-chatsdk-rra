@@ -173,7 +173,7 @@ test.describe(usingMock
     }
   });
 
-  test('should load the homepage and display chat interface', async ({ }, testInfo) => {
+  test('should load the homepage and display chat interface', async ({ page }, testInfo) => {
     if (!stagehand) {
       console.log('⚠️  Stagehand not initialized, skipping test');
       return;
@@ -232,7 +232,7 @@ test.describe(usingMock
     }
   });
 
-  test('should be able to send a message', async ({ }, testInfo) => {
+  test('should be able to send a message', async ({ page }, testInfo) => {
     if (!stagehand) {
       console.log('⚠️  Stagehand not initialized, skipping test');
       return;
@@ -327,7 +327,7 @@ test.describe(usingMock
     }
   });
 
-  test('should display model selector and allow model changes', async ({ }, testInfo) => {
+  test('should display model selector and allow model changes', async ({ page }, testInfo) => {
     if (!stagehand) {
       console.log('⚠️  Stagehand not initialized, skipping test');
       return;
@@ -415,7 +415,7 @@ test.describe(usingMock
     }
   });
 
-  test('should handle error scenarios gracefully', async ({ }, testInfo) => {
+  test('should handle error scenarios gracefully', async ({ page }, testInfo) => {
     if (!stagehand) {
       console.log('⚠️  Stagehand not initialized, skipping test');
       return;

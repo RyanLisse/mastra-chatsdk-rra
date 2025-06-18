@@ -3,7 +3,7 @@
 import type { User } from 'next-auth';
 import { useRouter } from 'next/navigation';
 
-import { PlusIcon, FileIcon } from '@/components/icons';
+import { Plus, File } from 'lucide-react';
 import { SidebarHistory } from '@/components/sidebar-history';
 import { SidebarUserNav } from '@/components/sidebar-user-nav';
 import { Button } from '@/components/ui/button';
@@ -50,7 +50,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                     router.refresh();
                   }}
                 >
-                  <PlusIcon />
+                  <Plus size={16} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent align="end">New Chat</TooltipContent>
@@ -66,7 +66,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
               onClick={() => setOpenMobile(false)}
               className="flex items-center gap-3 px-2 py-2 text-sm hover:bg-muted rounded-md transition-colors"
             >
-              <FileIcon size={16} />
+              <File size={16} />
               Document Upload
             </Link>
           </div>

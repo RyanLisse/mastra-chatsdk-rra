@@ -5,11 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  WarningIcon,
-  InfoIcon,
-  CrossIcon,
-  ArrowUpIcon,
-} from '@/components/icons';
+  AlertTriangle,
+  Info,
+  X,
+  ArrowUp,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type ErrorType =
@@ -55,7 +55,7 @@ const errorTypeConfig: Record<
   upload_error: {
     title: 'Upload Failed',
     color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    icon: WarningIcon,
+    icon: AlertTriangle,
     defaultSuggestions: [
       'Check your internet connection',
       'Try uploading a smaller file',
@@ -65,7 +65,7 @@ const errorTypeConfig: Record<
   validation_error: {
     title: 'File Validation Error',
     color: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300',
-    icon: InfoIcon,
+    icon: Info,
     defaultSuggestions: [
       'Ensure file is in Markdown (.md) or JSON (.json) format',
       'Check file size is under 50MB',
@@ -75,7 +75,7 @@ const errorTypeConfig: Record<
   processing_error: {
     title: 'Processing Failed',
     color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    icon: WarningIcon,
+    icon: AlertTriangle,
     defaultSuggestions: [
       'Try uploading the file again',
       'Check if the file content is valid',
@@ -86,7 +86,7 @@ const errorTypeConfig: Record<
     title: 'Connection Error',
     color:
       'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-    icon: WarningIcon,
+    icon: AlertTriangle,
     defaultSuggestions: [
       'Check your internet connection',
       'Refresh the page to reconnect',
@@ -96,7 +96,7 @@ const errorTypeConfig: Record<
   auth_error: {
     title: 'Authentication Error',
     color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    icon: WarningIcon,
+    icon: AlertTriangle,
     defaultSuggestions: [
       'Please log in again',
       'Check if your session has expired',
@@ -106,7 +106,7 @@ const errorTypeConfig: Record<
   server_error: {
     title: 'Server Error',
     color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    icon: WarningIcon,
+    icon: AlertTriangle,
     defaultSuggestions: [
       'Try again in a few moments',
       'Check service status',
@@ -116,7 +116,7 @@ const errorTypeConfig: Record<
   file_size_error: {
     title: 'File Too Large',
     color: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300',
-    icon: InfoIcon,
+    icon: Info,
     defaultSuggestions: [
       'File must be smaller than 50MB',
       'Try compressing the file',
@@ -126,7 +126,7 @@ const errorTypeConfig: Record<
   file_type_error: {
     title: 'Unsupported File Type',
     color: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300',
-    icon: InfoIcon,
+    icon: Info,
     defaultSuggestions: [
       'Only Markdown (.md) and JSON (.json) files are supported',
       'Convert your file to a supported format',
@@ -195,7 +195,7 @@ export function ErrorDisplay({
               className="h-7 w-7 p-0"
               aria-label="Dismiss error"
             >
-              <CrossIcon size={12} />
+              <X size={12} />
             </Button>
           )}
         </div>
@@ -239,7 +239,7 @@ export function ErrorDisplay({
               className="h-8 w-8 p-0"
               aria-label="Dismiss error"
             >
-              <CrossIcon size={16} />
+              <X size={16} />
             </Button>
           )}
         </div>
@@ -287,7 +287,7 @@ export function ErrorDisplay({
             {canRetry && (
               <Button onClick={onRetry} size="sm" className="h-8">
                 <span className="mr-1">
-                  <ArrowUpIcon size={14} />
+                  <ArrowUp size={14} />
                 </span>
                 Try Again
               </Button>

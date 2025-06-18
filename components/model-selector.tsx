@@ -16,10 +16,9 @@ import { Badge } from '@/components/ui/badge';
 import { chatModels, providers, type Provider } from '@/lib/ai/models';
 import { cn } from '@/lib/utils';
 
-import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
+import { CheckCircle, ChevronDown, Eye, Brain, Wrench, Zap, Crown, Sparkles, Star, Layers, Search, Users, Router, Bot, Code, AlertCircle } from 'lucide-react';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import type { Session } from 'next-auth';
-import { Eye, Brain, Wrench, Zap, Crown, Sparkles, Star, Layers, Search, Users, Router, Bot, Code, AlertCircle } from 'lucide-react';
 import { useProviderStatus } from '@/hooks/use-provider-status';
 
 const providerIcons: Record<Provider, React.ReactNode> = {
@@ -178,7 +177,7 @@ export function ModelSelector({
               {selectedChatModel?.name || 'Select Model'}
             </span>
           </div>
-          <ChevronDownIcon />
+          <ChevronDown />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -297,7 +296,7 @@ export function ModelSelector({
                           isSelected ? 'opacity-100' : 'opacity-0',
                         )}
                       >
-                        <CheckCircleFillIcon />
+                        <CheckCircle />
                       </div>
                     </div>
                   </button>

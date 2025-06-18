@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  FileIcon,
-  LoaderIcon,
-  CheckCircleFillIcon,
-  WarningIcon,
-  MoreHorizontalIcon,
-} from '@/components/icons';
+  File,
+  Loader2,
+  CheckCircle,
+  AlertTriangle,
+  MoreHorizontal,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProgressBar } from './progress-bar';
 import type {
@@ -64,23 +64,23 @@ export function ProcessingCard({
       case 'processing':
         return (
           <span className="animate-spin">
-            <LoaderIcon size={16} />
+            <Loader2 size={16} />
           </span>
         );
       case 'completed':
         return (
           <span className="text-green-600">
-            <CheckCircleFillIcon size={16} />
+            <CheckCircle size={16} />
           </span>
         );
       case 'failed':
         return (
           <span className="text-destructive">
-            <WarningIcon size={16} />
+            <AlertTriangle size={16} />
           </span>
         );
       default:
-        return <FileIcon size={16} />;
+        return <File size={16} />;
     }
   };
 
@@ -178,7 +178,7 @@ export function ProcessingCard({
                   className="h-8 w-8 p-0"
                   aria-label="View details"
                 >
-                  <MoreHorizontalIcon size={16} />
+                  <MoreHorizontal size={16} />
                 </Button>
               )}
             </div>
@@ -202,7 +202,7 @@ export function ProcessingCard({
               aria-live="polite"
             >
               <span className="text-destructive mt-0.5 flex-shrink-0">
-                <WarningIcon size={16} />
+                <AlertTriangle size={16} />
               </span>
               <div className="text-sm">
                 <p className="font-medium text-destructive">Processing Error</p>
@@ -214,7 +214,7 @@ export function ProcessingCard({
           {status === 'completed' && (
             <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
               <span className="text-green-600">
-                <CheckCircleFillIcon size={16} />
+                <CheckCircle size={16} />
               </span>
               <div className="text-sm">
                 <p className="font-medium text-green-800 dark:text-green-300">

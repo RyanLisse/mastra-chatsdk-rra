@@ -462,14 +462,14 @@ test.describe('Authentication & Session Management E2E', () => {
       page,
     }) => {
       // Try to access a protected route without authentication
-      await page.goto('/protected-route');
+      // Using /documents which is an actual protected route that requires authentication
+      await page.goto('/documents', { waitUntil: 'networkidle' });
 
-      // Should redirect to login or home page
-      // The exact behavior depends on your routing implementation
-      await page.waitForTimeout(2000);
+      // Should redirect to login page
+      await page.waitForURL('/login', { timeout: 10000 });
 
       const currentUrl = page.url();
-      expect(currentUrl).toMatch(/login|\/$/);
+      expect(currentUrl).toContain('/login');
     });
 
     test('should allow authenticated users to access protected routes', async ({

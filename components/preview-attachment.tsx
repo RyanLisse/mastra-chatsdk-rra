@@ -1,6 +1,6 @@
 import type { Attachment } from 'ai';
 
-import { LoaderIcon } from './icons';
+import { Loader2 } from 'lucide-react';
 
 export const PreviewAttachment = ({
   attachment,
@@ -36,7 +36,7 @@ export const PreviewAttachment = ({
             data-testid="input-attachment-loader"
             className="animate-spin absolute text-zinc-500"
           >
-            <LoaderIcon />
+            <Loader2 />
           </div>
         )}
       </div>

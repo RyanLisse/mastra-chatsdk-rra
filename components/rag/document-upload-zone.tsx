@@ -4,7 +4,7 @@ import React, { useCallback, useState, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UploadIcon, FileIcon, CrossIcon } from '@/components/icons';
+import { Upload, File, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { validateFile, detectFileType } from '@/lib/rag/validation';
 import type { SupportedFileType } from '@/lib/rag/validation';
@@ -153,7 +153,7 @@ export function DocumentUploadZone({
 
             <div className="flex flex-col items-center gap-4">
               <div className="p-4 rounded-full bg-muted">
-                <UploadIcon size={24} />
+                <Upload size={24} />
               </div>
 
               {isDragActive ? (
@@ -253,7 +253,7 @@ function FilePreviewCard({
       )}
     >
       <div className="flex-shrink-0 p-2 rounded bg-muted">
-        <FileIcon size={16} />
+        <File size={16} />
       </div>
 
       <div className="flex-1 min-w-0">
@@ -289,7 +289,7 @@ function FilePreviewCard({
         className="h-8 w-8 p-0 hover:bg-destructive/10"
         aria-label={`Remove ${file.name}`}
       >
-        <CrossIcon size={16} />
+        <X size={16} />
       </Button>
     </div>
   );

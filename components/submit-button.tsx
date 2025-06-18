@@ -2,7 +2,7 @@
 
 import { useFormStatus } from 'react-dom';
 
-import { LoaderIcon } from '@/components/icons';
+import { Loader2 } from 'lucide-react';
 
 import { Button } from './ui/button';
 
@@ -30,7 +30,7 @@ export function SubmitButton({
           className="animate-spin absolute right-4"
           data-testid="loading-spinner"
         >
-          <LoaderIcon />
+          <Loader2 size={16} />
         </span>
       )}
 

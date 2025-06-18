@@ -25,9 +25,9 @@ import {
 } from '@/lib/ai/models';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { cn } from '@/lib/utils';
-import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
-import type { Session } from 'next-auth';
 import {
+  CheckCircle,
+  ChevronDown,
   Settings,
   Eye,
   Brain,
@@ -45,6 +45,7 @@ import {
   Code,
   Users,
 } from 'lucide-react';
+import type { Session } from 'next-auth';
 import { useProviderStatus } from '@/hooks/use-provider-status';
 
 const providerIcons: Record<Provider, React.ReactNode> = {
@@ -232,7 +233,7 @@ export function ModelSettings({
                 )}
               </div>
             </div>
-            <ChevronDownIcon />
+            <ChevronDown />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -351,7 +352,7 @@ export function ModelSettings({
                         </div>
                       </div>
 
-                      {model.id === selectedModelId && <CheckCircleFillIcon />}
+                      {model.id === selectedModelId && <CheckCircle />}
                     </div>
                   </button>
                 ))}
