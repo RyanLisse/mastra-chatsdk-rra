@@ -125,7 +125,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "neonctl": "^2.8.0",
     "@playwright/test": "^1.53.0",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.6.3",
@@ -143,7 +142,9 @@
     "eslint-config-next": "15.3.3",
     "eslint-config-prettier": "^10.1.5",
     "eslint-import-resolver-typescript": "^4.4.3",
+    "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-tailwindcss": "^3.18.0",
+    "neonctl": "^2.8.0",
     "postcss": "^8.5.5",
     "stagehand": "^1.0.1",
     "tailwindcss": "^3.4.0",
