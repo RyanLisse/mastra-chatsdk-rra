@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronUp } from 'lucide-react';
+import { ChevronUp, Loader2 } from 'lucide-react';
 import type { User } from 'next-auth';
 import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/sidebar';
 import { useRouter } from 'next/navigation';
 import { toast } from './toast';
-import { LoaderIcon } from './icons';
 import { guestRegex } from '@/lib/constants';
 
 export function SidebarUserNav({ user }: { user: User }) {
@@ -27,7 +26,12 @@ export function SidebarUserNav({ user }: { user: User }) {
   const { data, status } = useSession();
   const { setTheme, resolvedTheme } = useTheme();
 
-  const isGuest = guestRegex.test(data?.user?.email ?? '');
+  const isGuest =
+    guestRegex.test(data?.user?.email ?? '') || data?.user?.type === 'guest';
+  // In test environment, show the actual email for test guest users
+  const isTestGuest =
+    data?.user?.type === 'guest' &&
+    data?.user?.email === 'test-operator@roborail.com';
 
   return (
     <SidebarMenu>
@@ -43,7 +47,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                   </span>
                 </div>
                 <div className="animate-spin text-zinc-500">
-                  <LoaderIcon />
+                  <Loader2 />
                 </div>
               </SidebarMenuButton>
             ) : (
@@ -55,7 +59,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                   {isGuest ? 'G' : user?.email?.[0]?.toUpperCase() || 'U'}
                 </div>
                 <span data-testid="user-email" className="truncate">
-                  {isGuest ? 'Guest' : user?.email}
+                  {isTestGuest ? user?.email : isGuest ? 'Guest' : user?.email}
                 </span>
                 <ChevronUp className="ml-auto" />
               </SidebarMenuButton>

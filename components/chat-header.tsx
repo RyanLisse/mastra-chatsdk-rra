@@ -6,8 +6,7 @@ import { useWindowSize } from 'usehooks-ts';
 import { ModelSelector } from '@/components/model-selector';
 import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Button } from '@/components/ui/button';
-import { PlusIcon } from './icons';
-import { RefreshCwIcon, Sparkles } from 'lucide-react';
+import { Plus, RefreshCwIcon, Sparkles } from 'lucide-react';
 import { useSidebar } from './ui/sidebar';
 import { memo } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
@@ -73,7 +72,7 @@ function PureChatHeader({
                   router.refresh();
                 }}
               >
-                <PlusIcon size={16} />
+                <Plus size={16} />
                 <span className="ml-1 hidden sm:inline">New Chat</span>
               </Button>
             </TooltipTrigger>

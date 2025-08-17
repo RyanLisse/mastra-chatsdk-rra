@@ -1,7 +1,7 @@
 import type { CoreAssistantMessage, CoreToolMessage, UIMessage } from 'ai';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { v4 as uuidv4 } from 'uuid';
+
 import type { Document } from '@/lib/db/schema';
 import { ChatSDKError, type ErrorCode } from './errors';
 
@@ -50,7 +50,7 @@ export function getLocalStorage(key: string) {
 }
 
 export function generateUUID(): string {
-  return uuidv4();
+  return crypto.randomUUID();
 }
 
 type ResponseMessageWithoutId = CoreToolMessage | CoreAssistantMessage;

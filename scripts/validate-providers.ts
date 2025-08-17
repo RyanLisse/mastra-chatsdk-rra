@@ -10,6 +10,12 @@
  *   bun run scripts/validate-providers.ts
  */
 
+import { config } from 'dotenv';
+
+// Load environment variables
+config({ path: '.env.local' });
+config({ path: '.env' });
+
 import {
   validateEnvironment,
   getEnvironmentSetupInstructions,

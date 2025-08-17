@@ -51,14 +51,24 @@ interface GlobalErrorProviderProps {
   children: ReactNode;
 }
 
+// Error ID counter to avoid Math.random() during SSR
+let errorIdCounter = 0;
+
 export function GlobalErrorProvider({ children }: GlobalErrorProviderProps) {
   const [errors, setErrors] = useState<GlobalError[]>([]);
-  const [isOnline, setIsOnline] = useState(
-    typeof navigator !== 'undefined' ? navigator.onLine : true,
-  );
+  const [isOnline, setIsOnline] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+
+  // Initialize client-side state after hydration
+  React.useEffect(() => {
+    setIsClient(true);
+    setIsOnline(navigator.onLine);
+  }, []);
 
   // Monitor online/offline status
   React.useEffect(() => {
+    if (!isClient) return;
+
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
@@ -69,13 +79,13 @@ export function GlobalErrorProvider({ children }: GlobalErrorProviderProps) {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [isClient]);
 
   const addError = useCallback(
     (errorData: Omit<GlobalError, 'id' | 'timestamp'>) => {
       const error: GlobalError = {
         ...errorData,
-        id: Math.random().toString(36).substr(2, 9),
+        id: `error-${++errorIdCounter}`,
         timestamp: new Date(),
       };
 
@@ -312,8 +322,15 @@ interface NetworkStatusIndicatorProps {
 
 function NetworkStatusIndicator({ isOnline }: NetworkStatusIndicatorProps) {
   const [showOffline, setShowOffline] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (!mounted) return;
+
     if (!isOnline) {
       setShowOffline(true);
     } else {
@@ -323,7 +340,10 @@ function NetworkStatusIndicator({ isOnline }: NetworkStatusIndicatorProps) {
         return () => clearTimeout(timer);
       }
     }
-  }, [isOnline, showOffline]);
+  }, [isOnline, showOffline, mounted]);
+
+  // Don't render anything until mounted to avoid hydration issues
+  if (!mounted) return null;
 
   return (
     <AnimatePresence>

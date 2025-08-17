@@ -10,7 +10,9 @@ export async function GET(request: Request) {
   // Prevent infinite redirect loops by checking if redirectUrl points back to this endpoint
   const currentPath = '/api/auth/guest';
   if (redirectUrl.includes(currentPath)) {
-    console.log('Detected potential infinite redirect, defaulting to home page');
+    console.log(
+      'Detected potential infinite redirect, defaulting to home page',
+    );
     redirectUrl = '/';
   }
 

@@ -1,33 +1,50 @@
-// app/(chat)/api/voice/route.ts
+import { ChatSDKError } from '@/lib/errors';
+import type { NextRequest } from 'next/server';
 import { auth } from '@/app/(auth)/auth';
 import { createRoboRailVoiceAgent } from '@/lib/ai/agents/roborail-voice-agent';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
-import { getMessageCountByUserId } from '@/lib/db/queries';
-import { ChatSDKError } from '@/lib/errors';
 import { generateUUID } from '@/lib/utils';
-import type { NextRequest } from 'next/server';
+import { getMessageCountByUserId } from '@/lib/db/queries';
+import {
+  createVoiceSession,
+  getVoiceSession,
+  updateVoiceSessionActivity,
+  updateVoiceSessionStatus,
+  cleanupInactiveSessions,
+  getActiveSessionsByUser,
+} from '@/lib/db/queries/voice-sessions';
 
 export const maxDuration = 60;
 
-// Store active voice sessions
-const activeSessions = new Map<string, { agent: any; lastActivity: number }>();
+// Store active voice agent instances in memory (for current request lifecycle only)
+const activeAgents = new Map<string, any>();
 
-// Clean up inactive sessions periodically
-setInterval(
-  () => {
-    const now = Date.now();
-    const TIMEOUT = 30 * 60 * 1000; // 30 minutes
-
-    for (const [sessionId, session] of activeSessions.entries()) {
-      if (now - session.lastActivity > TIMEOUT) {
-        session.agent.disconnect().catch(console.error);
-        activeSessions.delete(sessionId);
-        console.log(`Cleaned up inactive voice session: ${sessionId}`);
+/**
+ * Cleanup handler for serverless environments
+ * Called at the end of each request to clean up expired sessions
+ */
+async function performSessionCleanup() {
+  try {
+    const expiredSessionIds = await cleanupInactiveSessions();
+    
+    // Disconnect agents for expired sessions
+    for (const sessionId of expiredSessionIds) {
+      const agent = activeAgents.get(sessionId);
+      if (agent) {
+        try {
+          await agent.disconnect();
+        } catch (error) {
+          console.error(`Error disconnecting agent for session ${sessionId}:`, error);
+        }
+        activeAgents.delete(sessionId);
       }
     }
-  },
-  5 * 60 * 1000,
-); // Check every 5 minutes
+    
+    console.log(`Cleaned up ${expiredSessionIds.length} expired voice sessions`);
+  } catch (error) {
+    console.error('Error during session cleanup:', error);
+  }
+}
 
 /**
  * Initialize a new voice session
@@ -54,6 +71,12 @@ export async function POST(request: NextRequest) {
     const { sessionId, model, speaker } = await request.json();
     const voiceSessionId = sessionId || `voice-${generateUUID()}`;
 
+    // Check for existing active sessions and limit per user
+    const activeSessions = await getActiveSessionsByUser(session.user.id);
+    if (activeSessions.length >= 3) {
+      return new ChatSDKError('too_many_sessions:voice').toResponse();
+    }
+
     // Create new voice agent
     const voiceAgent = createRoboRailVoiceAgent({
       sessionId: voiceSessionId,
@@ -64,11 +87,23 @@ export async function POST(request: NextRequest) {
     // Connect the agent
     await voiceAgent.connect();
 
-    // Store the session
-    activeSessions.set(voiceSessionId, {
-      agent: voiceAgent,
-      lastActivity: Date.now(),
+    // Store in memory for current request lifecycle
+    activeAgents.set(voiceSessionId, voiceAgent);
+
+    // Persist session in database
+    await createVoiceSession({
+      sessionId: voiceSessionId,
+      userId: session.user.id,
+      model: model || 'gpt-4o-mini-realtime-preview-2024-12-17',
+      speaker: speaker || 'alloy',
+      metadata: {
+        userAgent: request.headers.get('user-agent'),
+        initiatedAt: new Date().toISOString(),
+      },
     });
+
+    // Perform cleanup in background (don't await)
+    performSessionCleanup().catch(console.error);
 
     return Response.json({
       sessionId: voiceSessionId,
@@ -101,19 +136,35 @@ export async function GET(request: NextRequest) {
       ).toResponse();
     }
 
-    const voiceSession = activeSessions.get(sessionId);
-    if (!voiceSession) {
+    // Get session from database
+    const voiceSession = await getVoiceSession(sessionId);
+    if (!voiceSession || voiceSession.userId !== session.user.id) {
       return new ChatSDKError('not_found:voice_session').toResponse();
     }
 
+    if (voiceSession.status !== 'active') {
+      return new ChatSDKError('session_expired:voice').toResponse();
+    }
+
     // Update last activity
-    voiceSession.lastActivity = Date.now();
+    await updateVoiceSessionActivity(sessionId);
+
+    // Get or recreate agent
+    let voiceAgent = activeAgents.get(sessionId);
+    if (!voiceAgent) {
+      // Recreate agent if not in memory (e.g., after server restart)
+      voiceAgent = createRoboRailVoiceAgent({
+        sessionId: voiceSession.sessionId,
+        model: voiceSession.model,
+        speaker: voiceSession.speaker,
+      });
+      await voiceAgent.connect();
+      activeAgents.set(sessionId, voiceAgent);
+    }
 
     // Create a readable stream for real-time voice communication
     const stream = new ReadableStream({
       start(controller) {
-        const voiceAgent = voiceSession.agent;
-
         // Set up event handlers for streaming voice data
         const voiceInstance = voiceAgent.getVoiceInstance();
 
@@ -134,15 +185,39 @@ export async function GET(request: NextRequest) {
         );
 
         voiceInstance.on('speaker', ({ audio }: { audio: any }) => {
-          controller.enqueue(
-            new TextEncoder().encode(
-              `data: ${JSON.stringify({
-                type: 'audio',
-                audioLength: audio.length,
-                sessionId,
-              })}\n\n`,
-            ),
-          );
+          try {
+            // Validate audio buffer before accessing properties
+            if (!audio || typeof audio !== 'object') {
+              console.warn(`Invalid audio data received for session ${sessionId}`);
+              return;
+            }
+
+            const audioLength = audio?.length || 0;
+            console.log(
+              `Voice audio received: ${audioLength} bytes for session ${sessionId}`,
+            );
+
+            controller.enqueue(
+              new TextEncoder().encode(
+                `data: ${JSON.stringify({
+                  type: 'audio',
+                  audioLength,
+                  sessionId,
+                })}\n\n`,
+              ),
+            );
+          } catch (error) {
+            console.error('Error processing speaker audio:', error);
+            controller.enqueue(
+              new TextEncoder().encode(
+                `data: ${JSON.stringify({
+                  type: 'error',
+                  error: 'Failed to process audio data',
+                  sessionId,
+                })}\n\n`,
+              ),
+            );
+          }
         });
 
         voiceInstance.on('error', (error: any) => {
@@ -181,12 +256,17 @@ export async function GET(request: NextRequest) {
         );
       },
 
-      cancel() {
+      async cancel() {
         // Clean up when stream is cancelled
-        const voiceSession = activeSessions.get(sessionId);
-        if (voiceSession) {
-          voiceSession.agent.disconnect().catch(console.error);
-          activeSessions.delete(sessionId);
+        try {
+          await updateVoiceSessionStatus(sessionId, 'disconnected');
+          const agent = activeAgents.get(sessionId);
+          if (agent) {
+            await agent.disconnect().catch(console.error);
+            activeAgents.delete(sessionId);
+          }
+        } catch (error) {
+          console.error('Error during stream cancellation:', error);
         }
       },
     });
@@ -204,6 +284,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error establishing voice stream:', error);
     return new ChatSDKError('bad_request:api').toResponse();
+  } finally {
+    // Perform cleanup in background
+    performSessionCleanup().catch(console.error);
   }
 }
 
@@ -226,14 +309,30 @@ export async function PUT(request: NextRequest) {
       ).toResponse();
     }
 
-    const voiceSession = activeSessions.get(sessionId);
-    if (!voiceSession) {
+    // Get session from database
+    const voiceSession = await getVoiceSession(sessionId);
+    if (!voiceSession || voiceSession.userId !== session.user.id) {
       return new ChatSDKError('not_found:voice_session').toResponse();
     }
 
+    if (voiceSession.status !== 'active') {
+      return new ChatSDKError('session_expired:voice').toResponse();
+    }
+
     // Update last activity
-    voiceSession.lastActivity = Date.now();
-    const voiceAgent = voiceSession.agent;
+    await updateVoiceSessionActivity(sessionId);
+
+    // Get or recreate agent
+    let voiceAgent = activeAgents.get(sessionId);
+    if (!voiceAgent) {
+      voiceAgent = createRoboRailVoiceAgent({
+        sessionId: voiceSession.sessionId,
+        model: voiceSession.model,
+        speaker: voiceSession.speaker,
+      });
+      await voiceAgent.connect();
+      activeAgents.set(sessionId, voiceAgent);
+    }
 
     switch (action) {
       case 'speak':
@@ -247,14 +346,34 @@ export async function PUT(request: NextRequest) {
         if (!audioData) {
           return new ChatSDKError('bad_request:audio_required').toResponse();
         }
-        // Convert base64 audio data to Int16Array
-        const audioBuffer = Buffer.from(audioData, 'base64');
-        const audioArray = new Int16Array(
-          audioBuffer.buffer,
-          audioBuffer.byteOffset,
-          audioBuffer.length / 2,
-        );
-        await voiceAgent.sendAudio(audioArray);
+        
+        try {
+          // Convert base64 audio data to buffer with validation
+          const audioBuffer = Buffer.from(audioData, 'base64');
+          
+          // Validate buffer before creating Int16Array
+          if (!audioBuffer || audioBuffer.length === 0) {
+            return new ChatSDKError('bad_request:invalid_audio_data').toResponse();
+          }
+          
+          // Ensure buffer length is even for Int16Array
+          if (audioBuffer.length % 2 !== 0) {
+            return new ChatSDKError('bad_request:invalid_audio_format').toResponse();
+          }
+          
+          // Create Int16Array with proper validation
+          const audioArray = new Int16Array(
+            audioBuffer.buffer.slice(
+              audioBuffer.byteOffset,
+              audioBuffer.byteOffset + audioBuffer.length
+            )
+          );
+          
+          await voiceAgent.sendAudio(audioArray);
+        } catch (error) {
+          console.error('Error processing audio data:', error);
+          return new ChatSDKError('bad_request:audio_processing_failed').toResponse();
+        }
         break;
       }
 
@@ -262,15 +381,27 @@ export async function PUT(request: NextRequest) {
         if (!audioData) {
           return new ChatSDKError('bad_request:audio_required').toResponse();
         }
-        // Convert base64 audio data to ReadableStream for listening
-        const listenBuffer = Buffer.from(audioData, 'base64');
-        const listenStream = new ReadableStream({
-          start(controller) {
-            controller.enqueue(listenBuffer);
-            controller.close();
-          },
-        });
-        await voiceAgent.listen(listenStream);
+        
+        try {
+          // Convert base64 audio data to ReadableStream for listening
+          const listenBuffer = Buffer.from(audioData, 'base64');
+          
+          // Validate buffer
+          if (!listenBuffer || listenBuffer.length === 0) {
+            return new ChatSDKError('bad_request:invalid_audio_data').toResponse();
+          }
+          
+          const listenStream = new ReadableStream({
+            start(controller) {
+              controller.enqueue(listenBuffer);
+              controller.close();
+            },
+          });
+          await voiceAgent.listen(listenStream);
+        } catch (error) {
+          console.error('Error processing listen audio:', error);
+          return new ChatSDKError('bad_request:audio_processing_failed').toResponse();
+        }
         break;
       }
 
@@ -286,6 +417,9 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Error handling voice action:', error);
     return new ChatSDKError('bad_request:api').toResponse();
+  } finally {
+    // Perform cleanup in background
+    performSessionCleanup().catch(console.error);
   }
 }
 
@@ -309,10 +443,18 @@ export async function DELETE(request: NextRequest) {
       ).toResponse();
     }
 
-    const voiceSession = activeSessions.get(sessionId);
-    if (voiceSession) {
-      await voiceSession.agent.disconnect();
-      activeSessions.delete(sessionId);
+    // Get session from database
+    const voiceSession = await getVoiceSession(sessionId);
+    if (voiceSession && voiceSession.userId === session.user.id) {
+      // Update status in database
+      await updateVoiceSessionStatus(sessionId, 'disconnected');
+      
+      // Disconnect agent if exists
+      const agent = activeAgents.get(sessionId);
+      if (agent) {
+        await agent.disconnect();
+        activeAgents.delete(sessionId);
+      }
     }
 
     return Response.json({
@@ -323,5 +465,8 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error('Error disconnecting voice session:', error);
     return new ChatSDKError('bad_request:api').toResponse();
+  } finally {
+    // Perform cleanup in background
+    performSessionCleanup().catch(console.error);
   }
 }

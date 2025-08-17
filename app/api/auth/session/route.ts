@@ -10,8 +10,8 @@ export async function GET(request: Request) {
     );
     return NextResponse.json({
       user: {
-        id: 'test-user-id',
-        email: 'guest-test',
+        id: '550e8400-e29b-41d4-a716-446655440001', // Use existing test user ID from seed data
+        email: 'test-operator@roborail.com',
         type: 'guest',
       },
       expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),

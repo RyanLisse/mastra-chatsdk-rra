@@ -5,7 +5,8 @@ import {
   smoothStream,
   streamText,
 } from 'ai';
-import { auth, type UserType } from '@/app/(auth)/auth';
+import type { UserType } from '@/app/(auth)/auth';
+import { getTestAwareSession } from '@/lib/auth/test-auth';
 import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
 import {
   createStreamId,
@@ -94,16 +95,16 @@ export async function POST(request: Request) {
       if (modelInfo) {
         effectiveModel = getFallbackModel(modelInfo.provider);
       } else {
-        effectiveModel = 'gpt-4o-mini'; // Default fallback
+        effectiveModel = 'gemini-2.5-flash'; // Default fallback
       }
 
       // Verify fallback is available
       if (!isModelAvailable(effectiveModel)) {
-        effectiveModel = 'gpt-4o-mini'; // Ultimate fallback
+        effectiveModel = 'gpt-4o-mini'; // Ultimate fallback (OpenAI as most reliable)
       }
     }
 
-    const session = await auth();
+    const session = await getTestAwareSession();
 
     if (!session?.user) {
       return new ChatSDKError('unauthorized:chat').toResponse();
@@ -127,12 +128,35 @@ export async function POST(request: Request) {
         message,
       });
 
-      await saveChat({
-        id,
-        userId: session.user.id,
-        title,
-        visibility: selectedVisibilityType,
-      });
+      try {
+        await saveChat({
+          id,
+          userId: session.user.id,
+          title,
+          visibility: selectedVisibilityType,
+        });
+      } catch (error) {
+        console.error('Error saving chat:', {
+          id,
+          userId: session.user.id,
+          title,
+          visibility: selectedVisibilityType,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        // Check if it's a duplicate key error
+        if (error instanceof Error && error.message.includes('duplicate key')) {
+          // Chat might have been created by another request, try to get it again
+          const existingChat = await getChatById({ id });
+          if (existingChat && existingChat.userId === session.user.id) {
+            // Chat exists and belongs to the user, continue
+            console.log('Chat already exists, continuing...');
+          } else {
+            throw error;
+          }
+        } else {
+          throw error;
+        }
+      }
     } else {
       if (chat.userId !== session.user.id) {
         return new ChatSDKError('forbidden:chat').toResponse();
@@ -307,6 +331,16 @@ export async function POST(request: Request) {
     if (error instanceof ChatSDKError) {
       return error.toResponse();
     }
+
+    console.error('Unexpected error in chat API:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    return new ChatSDKError(
+      'bad_request:database',
+      'An unexpected error occurred',
+    ).toResponse();
   }
 }
 
@@ -325,7 +359,7 @@ export async function GET(request: Request) {
     return new ChatSDKError('bad_request:api').toResponse();
   }
 
-  const session = await auth();
+  const session = await getTestAwareSession();
 
   if (!session?.user) {
     return new ChatSDKError('unauthorized:chat').toResponse();
@@ -413,7 +447,7 @@ export async function DELETE(request: Request) {
     return new ChatSDKError('bad_request:api').toResponse();
   }
 
-  const session = await auth();
+  const session = await getTestAwareSession();
 
   if (!session?.user) {
     return new ChatSDKError('unauthorized:chat').toResponse();

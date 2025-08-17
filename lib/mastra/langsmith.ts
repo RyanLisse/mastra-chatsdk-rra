@@ -16,6 +16,14 @@ let client: Client | null = null;
  * Returns null if LangSmith is not configured (allows graceful degradation)
  */
 export function getLangSmithClient(): Client | null {
+  // Disable LangSmith in test environments
+  if (
+    process.env.NODE_ENV === 'test' ||
+    process.env.PLAYWRIGHT_TEST === 'true'
+  ) {
+    return null;
+  }
+
   if (client) {
     return client;
   }

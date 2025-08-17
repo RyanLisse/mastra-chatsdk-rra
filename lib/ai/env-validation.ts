@@ -21,14 +21,19 @@ function validateApiKeyFormat(
     return { isValid: false, reason: 'API key is empty' };
   }
 
+  // In test environment, accept test keys
+  if (process.env.NODE_ENV === 'test' && apiKey.startsWith('test-')) {
+    return { isValid: true };
+  }
+
   const validations: Record<
     Provider,
     { pattern: RegExp; description: string }
   > = {
     openai: {
-      pattern: /^sk-[a-zA-Z0-9\-_]{20,}$/,
+      pattern: /^sk-(?:proj-)?[a-zA-Z0-9\-_]{20,}$/,
       description:
-        'Should start with "sk-" followed by alphanumeric characters',
+        'Should start with "sk-" or "sk-proj-" followed by alphanumeric characters',
     },
     anthropic: {
       pattern: /^sk-ant-[a-zA-Z0-9\-_]{20,}$/,
@@ -44,6 +49,33 @@ function validateApiKeyFormat(
       pattern: /^gsk_[a-zA-Z0-9\-_]{20,}$/,
       description:
         'Should start with "gsk_" followed by alphanumeric characters',
+    },
+    cohere: {
+      pattern: /^[a-zA-Z0-9\-_]{20,}$/,
+      description: 'Should be alphanumeric characters',
+    },
+    xai: {
+      pattern: /^xai-[a-zA-Z0-9\-_]{20,}$/,
+      description:
+        'Should start with "xai-" followed by alphanumeric characters',
+    },
+    openrouter: {
+      pattern: /^sk-or-[a-zA-Z0-9\-_]{20,}$/,
+      description:
+        'Should start with "sk-or-" followed by alphanumeric characters',
+    },
+    perplexity: {
+      pattern: /^pplx-[a-zA-Z0-9\-_]{20,}$/,
+      description:
+        'Should start with "pplx-" followed by alphanumeric characters',
+    },
+    mistral: {
+      pattern: /^[a-zA-Z0-9\-_]{20,}$/,
+      description: 'Should be alphanumeric characters',
+    },
+    together: {
+      pattern: /^[a-zA-Z0-9\-_]{20,}$/,
+      description: 'Should be alphanumeric characters',
     },
   };
 
@@ -67,7 +99,18 @@ function validateApiKeyFormat(
  */
 export function validateEnvironment(): EnvironmentStatus {
   const env = getProviderEnvironment();
-  const allProviders: Provider[] = ['openai', 'anthropic', 'google', 'groq'];
+  const allProviders: Provider[] = [
+    'openai',
+    'anthropic',
+    'google',
+    'groq',
+    'cohere',
+    'xai',
+    'openrouter',
+    'perplexity',
+    'mistral',
+    'together',
+  ];
   const availableProviders: Provider[] = [];
   const missingProviders: Provider[] = [];
   const warnings: string[] = [];
@@ -138,6 +181,18 @@ function getApiKey(env: any, provider: Provider): string | undefined {
       return env.google.apiKey;
     case 'groq':
       return env.groq.apiKey;
+    case 'cohere':
+      return env.cohere.apiKey;
+    case 'xai':
+      return env.xai.apiKey;
+    case 'openrouter':
+      return env.openrouter.apiKey;
+    case 'perplexity':
+      return env.perplexity.apiKey;
+    case 'mistral':
+      return env.mistral.apiKey;
+    case 'together':
+      return env.together.apiKey;
     default:
       return undefined;
   }
@@ -152,6 +207,12 @@ function getEnvVarName(provider: Provider): string {
     anthropic: 'ANTHROPIC_API_KEY',
     google: 'GOOGLE_API_KEY',
     groq: 'GROQ_API_KEY',
+    cohere: 'COHERE_API_KEY',
+    xai: 'XAI_API_KEY',
+    openrouter: 'OPENROUTER_API_KEY',
+    perplexity: 'PERPLEXITY_API_KEY',
+    mistral: 'MISTRAL_API_KEY',
+    together: 'TOGETHER_API_KEY',
   };
 
   return envVarMap[provider];

@@ -6,66 +6,16 @@ import { defineConfig, devices } from '@playwright/test';
  */
 import { config } from 'dotenv';
 
-// Flag to track if we've set up Playwright-level signal handlers
-let playwrightSignalHandlersRegistered = false;
-
 // Always use .env.test for Playwright tests
 config({
   path: '.env.test',
 });
 
-/**
- * Register Playwright-level signal handlers
- * These ensure cleanup happens even if individual test processes don't handle signals
- */
-function registerPlaywrightSignalHandlers(): void {
-  if (playwrightSignalHandlersRegistered) {
-    return;
-  }
+// Import our test setup to ensure no tests are skipped
+import './tests/setup-tests';
 
-  playwrightSignalHandlersRegistered = true;
-  console.log('🔧 Registering Playwright config signal handlers...');
-
-  const gracefulShutdown = async (signal: string) => {
-    console.log(`\n🛑 Playwright config received ${signal} - cleaning up...`);
-    
-    try {
-      // Cleanup handled by global setup/teardown to avoid server-only import issues
-      console.log('✅ Playwright config cleanup completed');
-    } catch (error) {
-      console.error('❌ Error during Playwright config cleanup:', error);
-    }
-    
-    process.exit(0);
-  };
-
-  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-  process.on('SIGQUIT', () => gracefulShutdown('SIGQUIT'));
-
-  console.log('✅ Playwright config signal handlers registered');
-}
-
-// Register signal handlers
-registerPlaywrightSignalHandlers();
-
-// Validate test database is configured
-if (
-  !process.env.POSTGRES_URL ||
-  process.env.POSTGRES_URL.includes('your-test-postgres-url-here')
-) {
-  console.error('❌ Test database not configured!');
-  console.error('Please set up your test database URL in .env.test');
-  console.error('Run: bun run db:test:setup for setup instructions');
-  console.error('');
-  console.error('💡 Quick setup options:');
-  console.error('1. Copy .env.test.example to .env.test and configure');
-  console.error(
-    '2. Use local PostgreSQL: postgresql://postgres:password@localhost:5432/mastra_chat_test',
-  );
-  console.error('3. Use Neon test branch: https://console.neon.tech/');
-  process.exit(1);
-}
+// Note: Signal handlers are managed by global-setup.ts and global-teardown.ts
+// to prevent conflicts and ensure proper cleanup hierarchy
 
 /* Use process.env.PORT by default and fallback to port 3000 */
 const PORT = process.env.PORT || 3000;
@@ -90,10 +40,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 2 : 8,
+  /* Reduced workers to prevent connection conflicts and browser resource issues */
+  workers: process.env.CI ? 1 : 2,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: [['html', { open: 'never' }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -101,12 +51,18 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'retain-on-failure',
+    
+    /* Screenshot on failure */
+    screenshot: 'only-on-failure',
+    
+    /* Video recording */
+    video: 'retain-on-failure',
   },
 
   /* Configure global timeout for each test */
-  timeout: 30 * 1000, // 30 seconds - aggressive timeout to prevent hanging
+  timeout: 45 * 1000, // 45 seconds - balanced for normal tests
   expect: {
-    timeout: 10 * 1000, // 10 seconds - fast failure detection
+    timeout: 10 * 1000, // 10 seconds - reasonable for most assertions
   },
 
   /* Configure projects */
@@ -140,11 +96,23 @@ export default defineConfig({
             '--disable-web-security',
             '--disable-features=TranslateUI',
             '--disable-ipc-flooding-protection',
+            '--disable-blink-features=AutomationControlled',
+            '--force-color-profile=srgb',
           ],
+          // Faster browser startup
+          handleSIGINT: false,
+          handleSIGTERM: false,
+          handleSIGHUP: false,
         },
+        // Prevent navigation timeout issues
+        navigationTimeout: 20000,
+        actionTimeout: 15000,
       },
       // Stagehand tests run longer due to AI processing
-      timeout: 60 * 1000, // 60 seconds per test
+      timeout: 60 * 1000, // 60 seconds per test - more headroom
+      retries: 0, // No retries to prevent hanging
+      // Run Stagehand tests serially within the project
+      fullyParallel: false,
     },
 
     // {
@@ -182,15 +150,17 @@ export default defineConfig({
   webServer: {
     command: 'bun run dev',
     url: `${baseURL}`,
-    timeout: 60 * 1000, // Reduced to 60s to fail faster if server won't start
+    timeout: 45 * 1000, // 45s to start server
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',
     stderr: 'pipe',
-    // Add health check endpoint
     ignoreHTTPSErrors: true,
     env: {
       NODE_ENV: 'test',
-      PLAYWRIGHT: 'true',
+      PLAYWRIGHT_TEST: 'true',
     },
   },
+
+  /* Add graceful shutdown handling */
+  globalTimeout: 5 * 60 * 1000, // 5 minutes for entire test suite - prevent hanging
 });

@@ -1,8 +1,8 @@
-import { openai } from '@ai-sdk/openai';
+import type { Provider } from './models';
 import { anthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
 import { groq } from '@ai-sdk/groq';
-import type { Provider } from './models';
+import { openai } from '@ai-sdk/openai';
 
 /**
  * Environment variable configuration for AI providers
@@ -18,6 +18,24 @@ export interface ProviderEnvironment {
     apiKey?: string;
   };
   groq: {
+    apiKey?: string;
+  };
+  cohere: {
+    apiKey?: string;
+  };
+  xai: {
+    apiKey?: string;
+  };
+  openrouter: {
+    apiKey?: string;
+  };
+  perplexity: {
+    apiKey?: string;
+  };
+  mistral: {
+    apiKey?: string;
+  };
+  together: {
     apiKey?: string;
   };
 }
@@ -39,6 +57,24 @@ export function getProviderEnvironment(): ProviderEnvironment {
     groq: {
       apiKey: process.env.GROQ_API_KEY,
     },
+    cohere: {
+      apiKey: process.env.COHERE_API_KEY,
+    },
+    xai: {
+      apiKey: process.env.XAI_API_KEY,
+    },
+    openrouter: {
+      apiKey: process.env.OPENROUTER_API_KEY,
+    },
+    perplexity: {
+      apiKey: process.env.PERPLEXITY_API_KEY,
+    },
+    mistral: {
+      apiKey: process.env.MISTRAL_API_KEY,
+    },
+    together: {
+      apiKey: process.env.TOGETHER_API_KEY,
+    },
   };
 }
 
@@ -57,6 +93,18 @@ export function isProviderAvailable(provider: Provider): boolean {
       return !!env.google.apiKey;
     case 'groq':
       return !!env.groq.apiKey;
+    case 'cohere':
+      return !!env.cohere.apiKey;
+    case 'xai':
+      return !!env.xai.apiKey;
+    case 'openrouter':
+      return !!env.openrouter.apiKey;
+    case 'perplexity':
+      return !!env.perplexity.apiKey;
+    case 'mistral':
+      return !!env.mistral.apiKey;
+    case 'together':
+      return !!env.together.apiKey;
     default:
       return false;
   }
@@ -66,7 +114,18 @@ export function isProviderAvailable(provider: Provider): boolean {
  * Get available providers based on environment configuration
  */
 export function getAvailableProviders(): Provider[] {
-  const providers: Provider[] = ['openai', 'anthropic', 'google', 'groq'];
+  const providers: Provider[] = [
+    'openai',
+    'anthropic',
+    'google',
+    'groq',
+    'cohere',
+    'xai',
+    'openrouter',
+    'perplexity',
+    'mistral',
+    'together',
+  ];
   return providers.filter(isProviderAvailable);
 }
 
@@ -160,6 +219,12 @@ export function getFallbackModel(provider: Provider): string {
     anthropic: 'claude-3.5-haiku',
     google: 'gemini-2.0-flash',
     groq: 'llama-3-groq-8b-tool-use',
+    cohere: 'command-r',
+    xai: 'grok-2',
+    openrouter: 'openrouter/auto',
+    perplexity: 'llama-3.1-sonar-small-128k-online',
+    mistral: 'mistral-large',
+    together: 'nous-hermes-2-mixtral',
   };
 
   return fallbacks[provider];

@@ -5,7 +5,7 @@
  */
 
 import { createNeonBranchManager } from '../lib/db/neon-branch-manager';
-import { writeFileSync, } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { config } from 'dotenv';
 
 // Load environment
@@ -20,42 +20,48 @@ interface SetupOptions {
 
 async function setupNeonTestBranch(options: SetupOptions = {}) {
   const manager = createNeonBranchManager();
-  
+
   try {
     console.log('🔍 Validating Neon setup...');
     await manager.validateSetup();
-    
+
     // Generate branch name
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const branchName = options.branchName || 
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, '-')
+      .slice(0, 19);
+    const branchName =
+      options.branchName ||
       (options.ciMode ? `ci-test-${timestamp}` : `test-run-${timestamp}`);
-    
+
     console.log(`🌿 Creating test branch: ${branchName}`);
     const branch = await manager.createBranch({
       name: branchName,
     });
-    
+
     console.log(`✅ Branch created: ${branch.name}`);
-    
+
     // Get connection string
     console.log('🔗 Getting connection string...');
-    const connectionString = await manager.getBranchConnectionString(branch.name);
-    
+    const connectionString = await manager.getBranchConnectionString(
+      branch.name,
+    );
+
     console.log(`✅ Connection string obtained`);
-    
+
     // Write to environment file if requested
     if (options.writeEnvFile) {
       const envFile = options.ciMode ? '.env.ci' : '.env.test';
       const envContent = `DATABASE_URL_TEST=${connectionString}\nNEON_TEST_BRANCH=${branch.name}\n`;
-      
+
       writeFileSync(envFile, envContent);
       console.log(`📝 Environment file written: ${envFile}`);
     }
-    
+
     // Output for Makefile consumption
     console.log(`BRANCH_NAME=${branch.name}`);
     console.log(`CONNECTION_STRING=${connectionString}`);
-    
+
     return {
       branchName: branch.name,
       connectionString,
@@ -67,7 +73,6 @@ async function setupNeonTestBranch(options: SetupOptions = {}) {
         }
       },
     };
-    
   } catch (error) {
     console.error('❌ Failed to setup Neon test branch:', error);
     process.exit(1);
@@ -78,7 +83,7 @@ async function setupNeonTestBranch(options: SetupOptions = {}) {
 if (require.main === module) {
   const args = process.argv.slice(2);
   const options: SetupOptions = {};
-  
+
   // Parse command line arguments
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
@@ -114,7 +119,7 @@ Examples:
         process.exit(0);
     }
   }
-  
+
   setupNeonTestBranch(options);
 }
 

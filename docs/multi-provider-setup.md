@@ -233,7 +233,7 @@ console.log(status);
 
 ### Custom Model Preferences
 ```env
-DEFAULT_CHAT_MODEL_ID=gpt-4o
+DEFAULT_CHAT_MODEL_ID=gemini-2.5-flash
 PREFERRED_REASONING_MODEL=o3-mini
 PREFERRED_FAST_MODEL=gpt-4o-mini
 ```

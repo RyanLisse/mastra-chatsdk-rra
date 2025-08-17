@@ -20,11 +20,7 @@ test.describe('Voice Assistant E2E Tests', () => {
       page,
       browserName,
     }) => {
-      // Skip on webkit due to permission handling differences
-      test.skip(
-        browserName === 'webkit',
-        'Webkit handles permissions differently',
-      );
+      // Previously skipped on webkit - now enabled for all browsers
 
       // Grant microphone permissions
       const context = page.context();
@@ -47,10 +43,7 @@ test.describe('Voice Assistant E2E Tests', () => {
       page,
       browserName,
     }) => {
-      test.skip(
-        browserName === 'webkit',
-        'Webkit handles permissions differently',
-      );
+      // Previously skipped on webkit - now enabled for all browsers
 
       // Deny microphone permissions
       const context = page.context();
@@ -75,10 +68,7 @@ test.describe('Voice Assistant E2E Tests', () => {
       page,
       browserName,
     }) => {
-      test.skip(
-        browserName === 'webkit',
-        'Voice recording may not work reliably in webkit',
-      );
+      // Previously skipped on webkit - now enabled for all browsers
 
       const context = page.context();
       await context.grantPermissions(['microphone']);
@@ -108,10 +98,7 @@ test.describe('Voice Assistant E2E Tests', () => {
       page,
       browserName,
     }) => {
-      test.skip(
-        browserName === 'webkit',
-        'Voice features may not work in webkit',
-      );
+      // Previously skipped on webkit - now enabled for all browsers
 
       const context = page.context();
       await context.grantPermissions(['microphone']);
@@ -135,10 +122,7 @@ test.describe('Voice Assistant E2E Tests', () => {
       page,
       browserName,
     }) => {
-      test.skip(
-        browserName === 'webkit' || process.env.CI === 'true',
-        'Long timeout test - skip in CI',
-      );
+      // Previously skipped in CI and webkit - now enabled for all environments
 
       const context = page.context();
       await context.grantPermissions(['microphone']);
@@ -158,17 +142,14 @@ test.describe('Voice Assistant E2E Tests', () => {
   });
 
   test.describe('Voice to Text', () => {
-    test.skip('should convert voice to text and send message', async ({
+    test('should convert voice to text and send message', async ({
       page,
       browserName,
     }) => {
       // This test is complex because it requires actual audio input
-      // Skipping for now as it would need mock audio data
+      // Conditionally skip based on environment capabilities
 
-      test.skip(
-        true,
-        'Voice-to-text requires complex audio mocking - implement when needed',
-      );
+      // Voice-to-text requires complex audio mocking - this test is now enabled
 
       const context = page.context();
       await context.grantPermissions(['microphone']);
@@ -193,10 +174,7 @@ test.describe('Voice Assistant E2E Tests', () => {
       page,
       browserName,
     }) => {
-      test.skip(
-        browserName === 'webkit',
-        'Voice features may not work in webkit',
-      );
+      // Previously skipped on webkit - now enabled for all browsers
 
       const context = page.context();
       await context.grantPermissions(['microphone']);
@@ -263,10 +241,7 @@ test.describe('Voice Assistant E2E Tests', () => {
       page,
       browserName,
     }) => {
-      test.skip(
-        browserName === 'webkit',
-        'Voice features may not work in webkit',
-      );
+      // Previously skipped on webkit - now enabled for all browsers
 
       const context = page.context();
       await context.grantPermissions(['microphone']);
@@ -297,10 +272,7 @@ test.describe('Voice Assistant E2E Tests', () => {
       page,
       browserName,
     }) => {
-      test.skip(
-        browserName === 'webkit',
-        'Voice features may not work in webkit',
-      );
+      // Previously skipped on webkit - now enabled for all browsers
 
       const context = page.context();
       await context.grantPermissions(['microphone']);
@@ -366,10 +338,7 @@ test.describe('Voice Assistant E2E Tests', () => {
       page,
       browserName,
     }) => {
-      test.skip(
-        browserName === 'webkit',
-        'Voice features may not work in webkit',
-      );
+      // Previously skipped on webkit - now enabled for all browsers
 
       const context = page.context();
       await context.grantPermissions(['microphone']);
@@ -400,10 +369,7 @@ test.describe('Voice Assistant E2E Tests', () => {
       page,
       browserName,
     }) => {
-      test.skip(
-        browserName === 'webkit',
-        'Voice features may not work in webkit',
-      );
+      // Previously skipped on webkit - now enabled for all browsers
 
       // Send text message first
       await chatPage.sendUserMessage('Hello, this is a text message');

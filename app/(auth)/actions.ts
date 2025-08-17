@@ -25,14 +25,22 @@ export const login = async (
       password: formData.get('password'),
     });
 
-    await signIn('credentials', {
+    const signInResult = await signIn('credentials', {
       email: validatedData.email,
       password: validatedData.password,
       redirect: false,
     });
 
+    // Check if signIn was successful
+    if (signInResult?.error) {
+      console.error('Sign in failed:', signInResult.error);
+      return { status: 'failed' };
+    }
+
     return { status: 'success' };
   } catch (error) {
+    console.error('Login error:', error);
+
     if (error instanceof z.ZodError) {
       return { status: 'invalid_data' };
     }
@@ -66,15 +74,25 @@ export const register = async (
     if (user) {
       return { status: 'user_exists' } as RegisterActionState;
     }
+
     await createUser(validatedData.email, validatedData.password);
-    await signIn('credentials', {
+
+    const signInResult = await signIn('credentials', {
       email: validatedData.email,
       password: validatedData.password,
       redirect: false,
     });
 
+    // Check if signIn was successful
+    if (signInResult?.error) {
+      console.error('Sign in failed after registration:', signInResult.error);
+      return { status: 'failed' };
+    }
+
     return { status: 'success' };
   } catch (error) {
+    console.error('Registration error:', error);
+
     if (error instanceof z.ZodError) {
       return { status: 'invalid_data' };
     }

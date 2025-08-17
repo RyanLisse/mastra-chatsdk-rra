@@ -28,6 +28,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.env.test
 
 # turbo
 .turbo
@@ -41,3 +42,11 @@ yarn-error.log*
 /playwright-report/
 /blob-report/
 /playwright/*
+
+# TypeScript
+tsconfig.tsbuildinfo
+
+# Test screenshots
+*.png
+!app/**/*.png
+!public/**/*.png

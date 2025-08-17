@@ -19,72 +19,76 @@ interface CleanupOptions {
 
 async function cleanupNeonTestBranches(options: CleanupOptions = {}) {
   const manager = createNeonBranchManager();
-  
+
   try {
     console.log('🔍 Validating Neon setup...');
     await manager.validateSetup();
-    
+
     console.log('📋 Listing branches...');
     const branches = await manager.listBranches();
-    
+
     const maxAgeMs = (options.maxAge || 24) * 60 * 60 * 1000; // Default 24 hours
     const cutoffTime = new Date(Date.now() - maxAgeMs);
-    
+
     // Filter branches based on criteria
-    const branchesToDelete = branches.filter(branch => {
+    const branchesToDelete = branches.filter((branch) => {
       // Skip primary and protected branches
       if (branch.primary || branch.protected) {
         return false;
       }
-      
+
       // Check pattern matching
-      const matchesPattern = options.pattern 
+      const matchesPattern = options.pattern
         ? branch.name.includes(options.pattern)
-        : (branch.name.includes('test') || branch.name.startsWith('test-'));
-      
+        : branch.name.includes('test') || branch.name.startsWith('test-');
+
       if (!matchesPattern) {
         return false;
       }
-      
+
       // CI-only mode
       if (options.ciOnly && !branch.name.includes('ci-test')) {
         return false;
       }
-      
+
       // Check age
       const branchAge = new Date(branch.created_at);
       return branchAge < cutoffTime;
     });
-    
+
     if (branchesToDelete.length === 0) {
       console.log('✅ No branches match cleanup criteria');
       return { deleted: [], errors: [] };
     }
-    
+
     console.log(`🧹 Found ${branchesToDelete.length} branches to clean up:`);
-    branchesToDelete.forEach(branch => {
-      const age = Math.round((Date.now() - new Date(branch.created_at).getTime()) / (1000 * 60 * 60));
+    branchesToDelete.forEach((branch) => {
+      const age = Math.round(
+        (Date.now() - new Date(branch.created_at).getTime()) / (1000 * 60 * 60),
+      );
       console.log(`  🗑️  ${branch.name} (${age}h old)`);
     });
-    
+
     if (options.dryRun) {
       console.log('🔍 Dry run - no branches will be deleted');
       return { deleted: [], errors: [] };
     }
-    
+
     // Confirm deletion
     if (process.stdin.isTTY) {
-      const confirm = prompt(`Delete ${branchesToDelete.length} branches? (y/N): `);
+      const confirm = prompt(
+        `Delete ${branchesToDelete.length} branches? (y/N): `,
+      );
       if (confirm?.toLowerCase() !== 'y') {
         console.log('❌ Cleanup cancelled');
         return { deleted: [], errors: [] };
       }
     }
-    
+
     console.log('🗑️  Deleting branches...');
     const deleted: string[] = [];
     const errors: Array<{ branch: string; error: string }> = [];
-    
+
     for (const branch of branchesToDelete) {
       try {
         await manager.deleteBranch(branch.name, undefined, true);
@@ -96,11 +100,12 @@ async function cleanupNeonTestBranches(options: CleanupOptions = {}) {
         console.error(`❌ Failed to delete ${branch.name}: ${errorMsg}`);
       }
     }
-    
-    console.log(`✅ Cleanup completed: ${deleted.length} deleted, ${errors.length} errors`);
-    
+
+    console.log(
+      `✅ Cleanup completed: ${deleted.length} deleted, ${errors.length} errors`,
+    );
+
     return { deleted, errors };
-    
   } catch (error) {
     console.error('❌ Failed to cleanup Neon test branches:', error);
     process.exit(1);
@@ -111,7 +116,7 @@ async function cleanupNeonTestBranches(options: CleanupOptions = {}) {
 if (require.main === module) {
   const args = process.argv.slice(2);
   const options: CleanupOptions = {};
-  
+
   // Parse command line arguments
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
@@ -148,7 +153,7 @@ Examples:
         process.exit(0);
     }
   }
-  
+
   cleanupNeonTestBranches(options);
 }
 

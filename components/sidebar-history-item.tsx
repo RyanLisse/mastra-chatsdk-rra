@@ -16,13 +16,13 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import {
-  CheckCircleFillIcon,
-  GlobeIcon,
-  LockIcon,
-  MoreHorizontalIcon,
-  ShareIcon,
-  TrashIcon,
-} from './icons';
+  CheckCircle,
+  Globe,
+  Lock,
+  MoreHorizontal,
+  Share2,
+  Trash2,
+} from 'lucide-react';
 import { memo } from 'react';
 import { useChatVisibility } from '@/hooks/use-chat-visibility';
 
@@ -56,7 +56,7 @@ const PureChatItem = ({
             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mr-0.5"
             showOnHover={!isActive}
           >
-            <MoreHorizontalIcon />
+            <MoreHorizontal />
             <span className="sr-only">More</span>
           </SidebarMenuAction>
         </DropdownMenuTrigger>
@@ -64,7 +64,7 @@ const PureChatItem = ({
         <DropdownMenuContent side="bottom" align="end">
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="cursor-pointer">
-              <ShareIcon />
+              <Share2 />
               <span>Share</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
@@ -76,11 +76,11 @@ const PureChatItem = ({
                   }}
                 >
                   <div className="flex flex-row gap-2 items-center">
-                    <LockIcon size={12} />
+                    <Lock size={12} />
                     <span>Private</span>
                   </div>
                   {visibilityType === 'private' ? (
-                    <CheckCircleFillIcon />
+                    <CheckCircle />
                   ) : null}
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -90,10 +90,10 @@ const PureChatItem = ({
                   }}
                 >
                   <div className="flex flex-row gap-2 items-center">
-                    <GlobeIcon />
+                    <Globe />
                     <span>Public</span>
                   </div>
-                  {visibilityType === 'public' ? <CheckCircleFillIcon /> : null}
+                  {visibilityType === 'public' ? <CheckCircle /> : null}
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
@@ -103,7 +103,7 @@ const PureChatItem = ({
             className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
             onSelect={() => onDelete(chat.id)}
           >
-            <TrashIcon />
+            <Trash2 />
             <span>Delete</span>
           </DropdownMenuItem>
         </DropdownMenuContent>

@@ -1,13 +1,13 @@
 import { Artifact } from '@/components/create-artifact';
 import { CodeEditor } from '@/components/code-editor';
 import {
-  CopyIcon,
-  LogsIcon,
-  MessageIcon,
-  PlayIcon,
-  RedoIcon,
-  UndoIcon,
-} from '@/components/icons';
+  Copy,
+  FileText,
+  MessageSquare,
+  Play,
+  Redo,
+  Undo,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { generateUUID } from '@/lib/utils';
 import {
@@ -113,7 +113,7 @@ export const codeArtifact = new Artifact<'code', Metadata>({
   },
   actions: [
     {
-      icon: <PlayIcon size={18} />,
+      icon: <Play size={18} />,
       label: 'Run',
       description: 'Execute code',
       onClick: async ({ content, setMetadata }) => {
@@ -209,7 +209,7 @@ export const codeArtifact = new Artifact<'code', Metadata>({
       },
     },
     {
-      icon: <UndoIcon size={18} />,
+      icon: <Undo size={18} />,
       description: 'View Previous version',
       onClick: ({ handleVersionChange }) => {
         handleVersionChange('prev');
@@ -223,7 +223,7 @@ export const codeArtifact = new Artifact<'code', Metadata>({
       },
     },
     {
-      icon: <RedoIcon size={18} />,
+      icon: <Redo size={18} />,
       description: 'View Next version',
       onClick: ({ handleVersionChange }) => {
         handleVersionChange('next');
@@ -237,7 +237,7 @@ export const codeArtifact = new Artifact<'code', Metadata>({
       },
     },
     {
-      icon: <CopyIcon size={18} />,
+      icon: <Copy size={18} />,
       description: 'Copy code to clipboard',
       onClick: ({ content }) => {
         navigator.clipboard.writeText(content);
@@ -247,7 +247,7 @@ export const codeArtifact = new Artifact<'code', Metadata>({
   ],
   toolbar: [
     {
-      icon: <MessageIcon />,
+      icon: <MessageSquare size={16} />,
       description: 'Add comments',
       onClick: ({ appendMessage }) => {
         appendMessage({
@@ -257,7 +257,7 @@ export const codeArtifact = new Artifact<'code', Metadata>({
       },
     },
     {
-      icon: <LogsIcon />,
+      icon: <FileText size={16} />,
       description: 'Add logs',
       onClick: ({ appendMessage }) => {
         appendMessage({

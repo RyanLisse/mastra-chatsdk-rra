@@ -25,9 +25,9 @@ import {
 } from '@/lib/ai/models';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { cn } from '@/lib/utils';
-import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
-import type { Session } from 'next-auth';
 import {
+  CheckCircle,
+  ChevronDown,
   Settings,
   Eye,
   Brain,
@@ -37,13 +37,28 @@ import {
   Sparkles,
   Star,
   Zap,
+  AlertCircle,
+  Layers,
+  Bot,
+  Router,
+  Search,
+  Code,
+  Users,
 } from 'lucide-react';
+import type { Session } from 'next-auth';
+import { useProviderStatus } from '@/hooks/use-provider-status';
 
 const providerIcons: Record<Provider, React.ReactNode> = {
   openai: <Sparkles className="h-3 w-3" />,
   anthropic: <Brain className="h-3 w-3" />,
   google: <Star className="h-3 w-3" />,
   groq: <Zap className="h-3 w-3" />,
+  cohere: <Layers className="h-3 w-3" />,
+  xai: <Bot className="h-3 w-3" />,
+  openrouter: <Router className="h-3 w-3" />,
+  perplexity: <Search className="h-3 w-3" />,
+  mistral: <Code className="h-3 w-3" />,
+  together: <Users className="h-3 w-3" />,
 };
 
 const tierColors = {
@@ -69,11 +84,16 @@ export function ModelSettings({
   const [selectedProvider, setSelectedProvider] = useState<Provider>('openai');
   const [filterByProvider, setFilterByProvider] = useState(false);
 
+  const { availableProviders, loading, error } = useProviderStatus();
+
   const userType = session?.user?.type || 'free';
   const { availableChatModelIds } = entitlementsByUserType[userType];
 
-  const availableChatModels = chatModels.filter((chatModel) =>
-    availableChatModelIds.includes(chatModel.id),
+  // Filter models based on both user entitlements and provider availability
+  const availableChatModels = chatModels.filter(
+    (chatModel) =>
+      availableChatModelIds.includes(chatModel.id) &&
+      availableProviders.includes(chatModel.provider),
   );
 
   const selectedChatModel = useMemo(
@@ -123,6 +143,52 @@ export function ModelSettings({
     return tokens.toString();
   }
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className={cn('space-y-4', className)}>
+        <div className="flex items-center gap-2">
+          <Settings className="h-4 w-4" />
+          <span className="font-medium text-sm">Model Settings</span>
+        </div>
+        <div className="flex items-center justify-center p-4">
+          <span className="text-sm text-muted-foreground">
+            Loading providers...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show warning if no providers are available
+  if (availableProviders.length === 0) {
+    return (
+      <div className={cn('space-y-4', className)}>
+        <div className="flex items-center gap-2">
+          <Settings className="h-4 w-4" />
+          <span className="font-medium text-sm">Model Settings</span>
+        </div>
+        <Card className="border-warning">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium">
+                  No AI providers configured
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Please add at least one API key in your environment variables:
+                  OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY, or
+                  GROQ_API_KEY
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className={cn('space-y-4', className)}>
       {/* Settings Header */}
@@ -167,7 +233,7 @@ export function ModelSettings({
                 )}
               </div>
             </div>
-            <ChevronDownIcon />
+            <ChevronDown />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -190,6 +256,7 @@ export function ModelSettings({
                 availableModels={availableChatModels}
                 showModelCount={true}
                 className="flex-1"
+                availableProviders={availableProviders}
               />
               <Button
                 variant={filterByProvider ? 'default' : 'outline'}
@@ -266,7 +333,7 @@ export function ModelSettings({
                               <Eye className="h-2 w-2" />
                             </Badge>
                           )}
-                          {model.capabilities.supportsReeasoning && (
+                          {model.capabilities.supportsReasoning && (
                             <Badge
                               variant="secondary"
                               className="text-xs px-1 py-0"
@@ -285,7 +352,7 @@ export function ModelSettings({
                         </div>
                       </div>
 
-                      {model.id === selectedModelId && <CheckCircleFillIcon />}
+                      {model.id === selectedModelId && <CheckCircle />}
                     </div>
                   </button>
                 ))}
@@ -331,7 +398,7 @@ export function ModelSettings({
                     Vision
                   </Badge>
                 )}
-                {selectedChatModel.capabilities.supportsReeasoning && (
+                {selectedChatModel.capabilities.supportsReasoning && (
                   <Badge variant="secondary" className="text-xs">
                     <Brain className="h-2 w-2 mr-1" />
                     Reasoning

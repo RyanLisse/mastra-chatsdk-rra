@@ -8,7 +8,7 @@ import { DocumentUploadZone, type UploadFile } from './document-upload-zone';
 import { FileQueue, type QueueItem } from './file-queue';
 import { ErrorList, type ErrorInfo } from './error-display';
 import { useDocumentProgress } from '@/hooks/use-document-progress';
-import { InfoIcon, FileIcon } from '@/components/icons';
+import { Info, File } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface UploadStats {
@@ -341,7 +341,7 @@ export function DocumentUploadPage() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              <FileIcon size={20} />
+              <File size={20} />
               Upload Statistics
             </CardTitle>
           </CardHeader>
@@ -411,7 +411,7 @@ export function DocumentUploadPage() {
       <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <InfoIcon size={16} />
+            <Info size={16} />
             Quick Start Guide
           </CardTitle>
         </CardHeader>

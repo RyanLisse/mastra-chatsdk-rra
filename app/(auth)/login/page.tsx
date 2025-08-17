@@ -16,6 +16,7 @@ export default function Page() {
 
   const [email, setEmail] = useState('');
   const [isSuccessful, setIsSuccessful] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [state, formAction] = useActionState<LoginActionState, FormData>(
     login,
@@ -32,19 +33,41 @@ export default function Page() {
         type: 'error',
         description: 'Invalid credentials!',
       });
+      setIsSubmitting(false);
     } else if (state.status === 'invalid_data') {
       toast({
         type: 'error',
         description: 'Failed validating your submission!',
       });
+      setIsSubmitting(false);
     } else if (state.status === 'success') {
-      setIsSuccessful(true);
-      updateSession();
-      router.refresh();
+      if (!isSuccessful) {
+        // Prevent duplicate processing
+        setIsSuccessful(true);
+
+        // Use a timeout to allow the state to display before navigation
+        const navigateTimeout = setTimeout(async () => {
+          try {
+            await updateSession();
+            // Use direct navigation for more reliability in tests
+            window.location.href = '/';
+          } catch (error) {
+            console.error('Navigation error:', error);
+            // Fallback navigation
+            window.location.href = '/';
+          }
+        }, 500);
+
+        return () => clearTimeout(navigateTimeout);
+      }
     }
-  }, [state.status]);
+  }, [state.status, updateSession, router, isSuccessful]);
 
   const handleSubmit = (formData: FormData) => {
+    if (isSubmitting || isSuccessful) {
+      return; // Prevent double submission
+    }
+    setIsSubmitting(true);
     setEmail(formData.get('email') as string);
     formAction(formData);
   };
@@ -59,7 +82,9 @@ export default function Page() {
           </p>
         </div>
         <AuthForm action={handleSubmit} defaultEmail={email}>
-          <SubmitButton isSuccessful={isSuccessful}>Sign in</SubmitButton>
+          <SubmitButton isSuccessful={isSuccessful || isSubmitting}>
+            Sign in
+          </SubmitButton>
           <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
             {"Don't have an account? "}
             <Link

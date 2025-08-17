@@ -5,9 +5,9 @@ import {
   runTestMigrations,
   createTestDatabase,
 } from '../lib/db/test-config';
-import { 
-  cleanupAllConnections, 
-  forceCleanupAllConnections 
+import {
+  cleanupAllConnections,
+  forceCleanupAllConnections,
 } from '../lib/db/cleanup';
 
 // Global flag to prevent multiple signal handler executions
@@ -20,7 +20,10 @@ config({ path: '.env.test' });
 /**
  * Graceful shutdown handler for Playwright global setup
  */
-async function gracefulPlaywrightShutdown(signal: string, initialExitCode = 0): Promise<void> {
+async function gracefulPlaywrightShutdown(
+  signal: string,
+  initialExitCode = 0,
+): Promise<void> {
   if (isShuttingDown) {
     console.log(`⚠️  Already shutting down, ignoring ${signal}`);
     return;
@@ -28,7 +31,9 @@ async function gracefulPlaywrightShutdown(signal: string, initialExitCode = 0): 
 
   let exitCode = initialExitCode;
   isShuttingDown = true;
-  console.log(`\n🛑 Playwright global-setup received ${signal} - cleaning up...`);
+  console.log(
+    `\n🛑 Playwright global-setup received ${signal} - cleaning up...`,
+  );
 
   try {
     await cleanupAllConnections();
@@ -48,38 +53,36 @@ async function gracefulPlaywrightShutdown(signal: string, initialExitCode = 0): 
 
 /**
  * Register signal handlers for Playwright global setup
+ * Only register in non-CI environments to prevent conflicts
  */
 function registerPlaywrightSetupSignalHandlers(): void {
-  if (signalHandlersRegistered) {
+  if (signalHandlersRegistered || process.env.CI === 'true') {
     return;
   }
 
   signalHandlersRegistered = true;
   console.log('🔧 Registering Playwright global-setup signal handlers...');
 
-  process.on('SIGTERM', () => gracefulPlaywrightShutdown('SIGTERM', 0));
-  process.on('SIGINT', () => gracefulPlaywrightShutdown('SIGINT', 130));
-  process.on('SIGQUIT', () => gracefulPlaywrightShutdown('SIGQUIT', 131));
+  // Use once() to prevent multiple registrations
+  process.once('SIGTERM', () => gracefulPlaywrightShutdown('SIGTERM', 0));
+  process.once('SIGINT', () => gracefulPlaywrightShutdown('SIGINT', 130));
+  process.once('SIGQUIT', () => gracefulPlaywrightShutdown('SIGQUIT', 131));
 
-  process.on('uncaughtException', async (error) => {
+  // Only handle critical errors
+  process.once('uncaughtException', async (error) => {
     console.error('💥 Uncaught Exception in Playwright global-setup:', error);
     if (!isShuttingDown) {
       await gracefulPlaywrightShutdown('uncaughtException', 1);
     }
   });
 
-  process.on('unhandledRejection', async (reason) => {
-    console.error('💥 Unhandled Rejection in Playwright global-setup:', reason);
-    if (!isShuttingDown) {
-      await gracefulPlaywrightShutdown('unhandledRejection', 1);
-    }
-  });
-
   console.log('✅ Playwright global-setup signal handlers registered');
 }
 
-// Register signal handlers
-registerPlaywrightSetupSignalHandlers();
+// Register signal handlers only if needed
+if (process.env.PLAYWRIGHT_NO_SIGNAL_HANDLERS !== 'true') {
+  registerPlaywrightSetupSignalHandlers();
+}
 
 async function globalSetup(config: FullConfig) {
   console.log('🚀 Starting Playwright global setup...');
@@ -104,12 +107,14 @@ async function globalSetup(config: FullConfig) {
     console.log('3️⃣ Preparing test database...');
     const testDb = await createTestDatabase();
 
-    // Only seed if specifically requested or if database is empty
-    if (process.env.TEST_DB_SEED_SAMPLE_DATA === 'true') {
-      console.log('   🌱 Seeding sample data...');
-      await testDb.seed();
-      console.log('   ✅ Sample data seeded');
-    }
+    // Always reset and seed for consistent test environment
+    console.log('   🔄 Resetting test database...');
+    await testDb.reset();
+    console.log('   ✅ Database reset completed');
+
+    console.log('   🌱 Seeding test data...');
+    await testDb.seed();
+    console.log('   ✅ Test data seeded');
 
     // Step 4: Verify database is ready
     console.log('4️⃣ Verifying test database readiness...');
@@ -155,7 +160,10 @@ async function globalSetup(config: FullConfig) {
     try {
       await cleanupAllConnections();
     } catch (cleanupError) {
-      console.error('❌ Failed to cleanup connections after setup error:', cleanupError);
+      console.error(
+        '❌ Failed to cleanup connections after setup error:',
+        cleanupError,
+      );
     }
 
     // Provide helpful error messages

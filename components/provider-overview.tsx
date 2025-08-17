@@ -27,6 +27,11 @@ import {
   Users,
   BarChart3,
   TrendingUp,
+  Layers,
+  Bot,
+  Router,
+  Search,
+  Code,
 } from 'lucide-react';
 
 const providerIcons: Record<Provider, React.ReactNode> = {
@@ -34,6 +39,12 @@ const providerIcons: Record<Provider, React.ReactNode> = {
   anthropic: <Brain className="h-5 w-5" />,
   google: <Star className="h-5 w-5" />,
   groq: <Zap className="h-5 w-5" />,
+  cohere: <Layers className="h-5 w-5" />,
+  xai: <Bot className="h-5 w-5" />,
+  openrouter: <Router className="h-5 w-5" />,
+  perplexity: <Search className="h-5 w-5" />,
+  mistral: <Code className="h-5 w-5" />,
+  together: <Users className="h-5 w-5" />,
 };
 
 const providerColors: Record<Provider, string> = {
@@ -41,6 +52,12 @@ const providerColors: Record<Provider, string> = {
   anthropic: 'from-orange-500 to-red-600',
   google: 'from-blue-500 to-purple-600',
   groq: 'from-yellow-500 to-orange-600',
+  cohere: 'from-teal-500 to-cyan-600',
+  xai: 'from-gray-500 to-slate-600',
+  openrouter: 'from-indigo-500 to-blue-600',
+  perplexity: 'from-violet-500 to-purple-600',
+  mistral: 'from-red-500 to-pink-600',
+  together: 'from-emerald-500 to-green-600',
 };
 
 const tierColors = {

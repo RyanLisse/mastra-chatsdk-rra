@@ -84,7 +84,7 @@ export class DatabaseTestHelper {
       this.testDb = null;
     }
     DatabaseTestHelper.instance = null;
-    
+
     // Use centralized cleanup to ensure all connections are closed
     await cleanupTestConnections();
   }

@@ -2,14 +2,39 @@
 import { streamText, generateText } from 'ai';
 import { myProvider } from '../providers';
 import { roboRailPrompt } from '../prompts';
-import { PostgresMemory } from '../../mastra/memory';
-import { ragTool } from '../tools/rag';
 import type { Message } from 'ai';
 import { generateUUID } from '../../utils';
-import {
-  traceAgentGeneration,
-  traceMemoryOperation,
-} from '../../mastra/langsmith';
+
+// Conditional imports based on environment to avoid test issues
+let PostgresMemory: any;
+let traceAgentGeneration: any;
+let traceMemoryOperation: any;
+let ragTool: any;
+
+// Use real implementations for integration tests that have actual database connectivity
+// Only use mocks for unit tests that should not depend on external services
+const useRealImplementations =
+  process.env.INTEGRATION_TEST === 'true' ||
+  (process.env.NODE_ENV === 'test' && process.env.USE_REAL_DB === 'true') ||
+  !process.env.NODE_ENV ||
+  process.env.NODE_ENV === 'development' ||
+  process.env.NODE_ENV === 'production';
+
+if (useRealImplementations) {
+  // Use real implementations
+  PostgresMemory = require('../../mastra/memory').PostgresMemory;
+  const langsmith = require('../../mastra/langsmith');
+  traceAgentGeneration = langsmith.traceAgentGeneration;
+  traceMemoryOperation = langsmith.traceMemoryOperation;
+  ragTool = require('../tools/rag').ragTool;
+} else {
+  // Use test mocks to avoid database and external service dependencies
+  PostgresMemory = require('../../mastra/memory.test').PostgresMemory;
+  const langsmithTest = require('../../mastra/langsmith.test');
+  traceAgentGeneration = langsmithTest.traceAgentGeneration;
+  traceMemoryOperation = langsmithTest.traceMemoryOperation;
+  ragTool = require('../tools/rag.test').ragTool;
+}
 
 export interface RoboRailAgentConfig {
   sessionId?: string;
